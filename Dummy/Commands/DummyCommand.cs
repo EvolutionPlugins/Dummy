@@ -37,7 +37,7 @@ namespace Dummy.Commands
             switch (command[0].ToLower())
             {
                 case "create":
-                    CreateDummy(player);
+                    CreateDummy(player, command.Length == 2 && bool.TryParse(command[1], out _));
                     return;
                 case "remove":
                     if (command.Length != 2 || !byte.TryParse(command[1], out var id))
@@ -91,14 +91,14 @@ namespace Dummy.Commands
             }
             Provider.kick(dummy.playerID.steamID, "");
 
-            if(coroutine != null)
+            if (coroutine != null)
                 Dummy.Instance.StopCoroutine(coroutine);
 
             Dummy.Instance.Dummies.Remove(new CSteamID(id));
             UnturnedChat.Say(player, $"Dummy ({id}) was removed", Color.green);
         }
 
-        private void CreateDummy(UnturnedPlayer player)
+        private void CreateDummy(UnturnedPlayer player, bool copy)
         {
             if (Dummy.Instance.Config.AmountDummiesInSameTime != 0
                 && Dummy.Instance.Dummies.Count + 1 > Dummy.Instance.Config.AmountDummiesInSameTime)
@@ -111,12 +111,27 @@ namespace Dummy.Commands
 
             Dummy.Instance.Dummies.Add(id, Dummy.Instance.GetCoroutine(id));
 
-            Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
+            if (copy)
+            {
+                var steamPlayer = player.SteamPlayer();
+                Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
+                true, steamPlayer.face, steamPlayer.hair, steamPlayer.beard, Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
+                Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
+
+                Provider.accept(new SteamPlayerID(id, 1, "dummy", "dummy", "dummy", CSteamID.Nil), true, false, 0,
+                    0, 0, steamPlayer.color, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0, 0, Array.Empty<int>(), Array.Empty<string>(),
+                    Array.Empty<string>(), EPlayerSkillset.NONE, "english", CSteamID.Nil);
+            }
+            else
+            {
+                Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
                 true, 0, 0, 0, Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
                 Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
-            Provider.accept(new SteamPlayerID(id, 1, "dummy", "dummy", "dummy", CSteamID.Nil), true, false, 0,
-                0, 0, Color.white, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0, 0, Array.Empty<int>(), Array.Empty<string>(),
-                Array.Empty<string>(), EPlayerSkillset.NONE, "english", CSteamID.Nil);
+
+                Provider.accept(new SteamPlayerID(id, 1, "dummy", "dummy", "dummy", CSteamID.Nil), true, false, 0,
+                    0, 0, Color.white, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0, 0, Array.Empty<int>(), Array.Empty<string>(),
+                    Array.Empty<string>(), EPlayerSkillset.NONE, "english", CSteamID.Nil);
+            }
 
             var dummy = Provider.clients.Last();
             dummy.player.teleportToLocationUnsafe(player.Position, player.Rotation);
