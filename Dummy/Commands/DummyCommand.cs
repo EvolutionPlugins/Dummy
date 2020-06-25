@@ -6,8 +6,6 @@ using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Dummy.Commands
@@ -51,7 +49,7 @@ namespace Dummy.Commands
                     RemoveDummy(player, id);
                     return;
                 case "clear":
-                    if(command.Length != 2)
+                    if (command.Length != 2)
                     {
                         UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy clear", Color.yellow);
                     }
@@ -81,7 +79,7 @@ namespace Dummy.Commands
 
         private void RemoveDummy(UnturnedPlayer player, byte id)
         {
-            if(!Dummy.Instance.Dummies.Any(k => k.Key.m_SteamID == id))
+            if (!Dummy.Instance.Dummies.Any(k => k.Key.m_SteamID == id))
             {
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
             }
@@ -99,6 +97,12 @@ namespace Dummy.Commands
 
         private void CreateDummy(UnturnedPlayer player)
         {
+            if (Dummy.Instance.Config.AmountDummiesInSameTime != 0 && Dummy.Instance.Dummies.Count + 1 > Dummy.Instance.Config.AmountDummiesInSameTime)
+            {
+                UnturnedChat.Say(player, "Dummy can't be created. Amount dummies overflow", Color.red);
+                return;
+            }
+
             var id = Dummy.GetAvailableID();
 
             Dummy.Instance.Dummies.Add(id, Dummy.Instance.GetCoroutine(id));
