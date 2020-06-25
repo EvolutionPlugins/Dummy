@@ -1,11 +1,10 @@
 ﻿using HarmonyLib;
 using Rocket.Core.Logging;
 using Rocket.Core.Plugins;
+using SDG.Unturned;
+using Steamworks;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Dummy
 {
@@ -16,6 +15,8 @@ namespace Dummy
         private Harmony _harmony;
 
         public static Dummy Instance;
+
+        public readonly List<CSteamID> Dummies = new List<CSteamID>();
 
         protected override void Load()
         {
@@ -35,6 +36,12 @@ namespace Dummy
 
             _harmony.UnpatchAll(HarmonyId);
             _harmony = null;
+
+            foreach (var dummy in Dummies)
+            {
+                Provider.kick(dummy, "");
+            }
+            Dummies.Clear();
         }
     }
 }
