@@ -66,7 +66,17 @@ namespace Dummy.Commands
 
         private void ClearAllDummies(UnturnedPlayer player)
         {
-            throw new NotImplementedException();
+            foreach (var dummy in Dummy.Instance.Dummies)
+            {
+                var _dummy = Provider.clients.Find(k => k.playerID.steamID == dummy);
+                // It can't be null but I add check
+                if (_dummy == null)
+                {
+                    UnturnedChat.Say(player, $"Dummy ({_dummy.playerID.steamID}) failed to remove!", Color.red);
+                }
+                Provider.kick(_dummy.playerID.steamID, "");
+            }
+            UnturnedChat.Say(player, "Dummies were removed", Color.green);
         }
 
         private void RemoveDummy(UnturnedPlayer player, byte id)
