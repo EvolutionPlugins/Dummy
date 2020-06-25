@@ -83,7 +83,6 @@ namespace Dummy.Commands
             {
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
             }
-            Dummy.Instance.Dummies.Remove(new CSteamID(id));
 
             var dummy = Provider.clients.Find(k => k.playerID.steamID.m_SteamID == id);
             // It can't be null but I add check
@@ -92,6 +91,8 @@ namespace Dummy.Commands
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
             }
             Provider.kick(dummy.playerID.steamID, "");
+
+            Dummy.Instance.Dummies.Remove(new CSteamID(id));
             UnturnedChat.Say(player, $"Dummy ({id}) was removed", Color.green);
         }
 
