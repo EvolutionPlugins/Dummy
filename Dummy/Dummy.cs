@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using Rocket.Core.Logging;
 using Rocket.Core.Plugins;
 using SDG.Unturned;
 using Steamworks;
@@ -25,6 +24,7 @@ namespace Dummy
         protected override void Load()
         {
             Instance = this;
+            Config = Configuration.Instance;
 
             Logger.Log("Made with <3 by Evolution Plugins", ConsoleColor.Cyan);
             Logger.Log("https://vk.com/evolutionplugins", ConsoleColor.Cyan);
@@ -37,6 +37,7 @@ namespace Dummy
         protected override void Unload()
         {
             Instance = null;
+            Config = null;
 
             _harmony.UnpatchAll(HarmonyId);
             _harmony = null;
@@ -44,8 +45,8 @@ namespace Dummy
             foreach (var dummy in Dummies)
             {
                 Provider.kick(dummy.Key, "");
-                 
-                if(dummy.Value != null)
+
+                if (dummy.Value != null)
                 {
                     StopCoroutine(dummy.Value);
                 }

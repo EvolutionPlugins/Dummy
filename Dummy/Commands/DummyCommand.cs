@@ -97,7 +97,8 @@ namespace Dummy.Commands
 
         private void CreateDummy(UnturnedPlayer player)
         {
-            if (Dummy.Instance.Config.AmountDummiesInSameTime != 0 && Dummy.Instance.Dummies.Count + 1 > Dummy.Instance.Config.AmountDummiesInSameTime)
+            if (Dummy.Instance.Config.AmountDummiesInSameTime != 0
+                && Dummy.Instance.Dummies.Count + 1 > Dummy.Instance.Config.AmountDummiesInSameTime)
             {
                 UnturnedChat.Say(player, "Dummy can't be created. Amount dummies overflow", Color.red);
                 return;
