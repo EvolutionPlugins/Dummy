@@ -5,6 +5,7 @@ using Steamworks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using Logger = Rocket.Core.Logging.Logger;
 
@@ -32,6 +33,8 @@ namespace Dummy
 
             _harmony = new Harmony(HarmonyId);
             _harmony.PatchAll();
+
+            StartCoroutine(DontAutoKick());
         }
 
         protected override void Unload()
@@ -45,13 +48,10 @@ namespace Dummy
             foreach (var dummy in Dummies)
             {
                 Provider.kick(dummy.Key, "");
-
-                if (dummy.Value != null)
-                {
-                    StopCoroutine(dummy.Value);
-                }
             }
             Dummies.Clear();
+
+            StopAllCoroutines();
         }
 
         internal static CSteamID GetAvailableID()
@@ -68,6 +68,19 @@ namespace Dummy
         public Coroutine GetCoroutine(CSteamID id)
         {
             return Config.KickDummyAfterSeconds != 0 ? StartCoroutine(KickTimer(id)) : null;
+        }
+
+        private IEnumerator DontAutoKick()
+        {
+            while(true)
+            {
+                foreach (var dummy in Dummies)
+                {
+                    var client = Provider.clients.Find(k => k.playerID.steamID == dummy.Key);
+                    client.timeLastPacketWasReceivedFromClient = Time.realtimeSinceStartup;
+                }
+                yield return new WaitForSeconds(5);
+            }
         }
 
         private IEnumerator KickTimer(CSteamID id)

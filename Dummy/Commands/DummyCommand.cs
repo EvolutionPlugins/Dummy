@@ -108,11 +108,12 @@ namespace Dummy.Commands
 
             Dummy.Instance.Dummies.Add(id, Dummy.Instance.GetCoroutine(id));
 
-            var pending = new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, 0, 0,
-                0, Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, Array.Empty<ulong>(),
-                EPlayerSkillset.NONE, "english", CSteamID.Nil);
-            Provider.pending.Add(pending);
-            Provider.accept(pending);
+            Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
+                true, 0, 0, 0, Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
+                Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
+            Provider.accept(new SteamPlayerID(id, 1, "dummy", "dummy", "dummy", CSteamID.Nil), true, true, 0,
+                0, 0, Color.white, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0, 0, Array.Empty<int>(), Array.Empty<string>(),
+                Array.Empty<string>(), EPlayerSkillset.NONE, "english", CSteamID.Nil);
 
             var dummy = Provider.clients.Last();
             dummy.player.teleportToLocationUnsafe(player.Position, player.Rotation);
