@@ -1,6 +1,8 @@
 ﻿using Rocket.API;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
+using SDG.Unturned;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -72,7 +74,15 @@ namespace Dummy.Commands
 
         private void CreateDummy(UnturnedPlayer player)
         {
-            pla
+            var id = Dummy.GetAvailableID();
+
+            var pending = new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
+                true, 0, 0, 0, Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
+                Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil);
+            Provider.pending.Add(pending);
+            Provider.accept(pending);
+
+
         }
     }
 }

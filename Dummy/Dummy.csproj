@@ -67,6 +67,7 @@
   <ItemGroup>
     <Compile Include="Commands\DummyCommand.cs" />
     <Compile Include="Dummy.cs" />
+    <Compile Include="DummyConfiguration.cs" />
     <Compile Include="Patches\Patch_Provider_send.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

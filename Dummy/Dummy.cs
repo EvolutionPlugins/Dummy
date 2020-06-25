@@ -43,5 +43,16 @@ namespace Dummy
             }
             Dummies.Clear();
         }
+
+        internal static CSteamID GetAvailableID()
+        {
+            var result = new CSteamID(1);
+
+            while (Instance.Dummies.Contains(result))
+            {
+                result.m_SteamID++;
+            }
+            return result;
+        }
     }
 }
