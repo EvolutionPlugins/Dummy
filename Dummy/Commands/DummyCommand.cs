@@ -49,11 +49,6 @@ namespace Dummy.Commands
                     RemoveDummy(player, id);
                     return;
                 case "clear":
-                    if (command.Length != 2)
-                    {
-                        UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy clear", Color.yellow);
-                    }
-
                     ClearAllDummies(player);
                     return;
                 default:
