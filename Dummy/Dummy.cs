@@ -35,6 +35,29 @@ namespace Dummy
             _harmony.PatchAll();
 
             StartCoroutine(DontAutoKick());
+
+            DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
+        }
+
+        private void DamageTool_damagePlayerRequested(ref DamagePlayerParameters parameters, ref bool shouldAllow)
+        {
+            if(!Dummies.ContainsKey(parameters.player.channel.owner.playerID.steamID))
+            {
+                return;
+            }
+            float totalTimes = parameters.times;
+
+            if(parameters.respectArmor)
+            {
+                totalTimes *= DamageTool.getPlayerArmor(parameters.limb, parameters.player);
+            }
+            if (parameters.applyGlobalArmorMultiplier)
+            {
+                totalTimes *= Provider.modeConfigData.Players.Armor_Multiplier;
+            }
+            byte totalDamage = (byte)Mathf.Min(255, parameters.damage * totalTimes);
+
+            ChatManager.say(parameters.killer, $"Amount damage to dummy: {totalDamage}", Color.green);
         }
 
         protected override void Unload()
