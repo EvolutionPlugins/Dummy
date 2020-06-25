@@ -33,6 +33,7 @@ namespace Dummy.Commands
             if (command.Length == 0)
             {
                 UnturnedChat.Say(player, $"Wrong command usage. Use correct: {Syntax}", Color.yellow);
+                return;
             }
 
             switch (command[0].ToLower())
@@ -41,9 +42,10 @@ namespace Dummy.Commands
                     CreateDummy(player);
                     return;
                 case "remove":
-                    if (command.Length != 2 && byte.TryParse(command[1], out var id))
+                    if (command.Length != 2 || !byte.TryParse(command[1], out var id))
                     {
                         UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy remove <id>", Color.yellow);
+                        return;
                     }
 
                     RemoveDummy(player, id);
