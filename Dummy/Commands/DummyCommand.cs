@@ -94,7 +94,7 @@ namespace Dummy.Commands
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
             }
             Provider.kick(dummy.playerID.steamID, "");
-            UnturnedChat.Say(player, $"Dummy ({id}) was removed", Color.red);
+            UnturnedChat.Say(player, $"Dummy ({id}) was removed", Color.green);
         }
 
         private void CreateDummy(UnturnedPlayer player)
