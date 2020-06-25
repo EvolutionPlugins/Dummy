@@ -58,6 +58,7 @@ namespace Dummy
             byte totalDamage = (byte)Mathf.Min(255, parameters.damage * totalTimes);
 
             ChatManager.say(parameters.killer, $"Amount damage to dummy: {totalDamage}", Color.green);
+            shouldAllow = false;
         }
 
         protected override void Unload()
