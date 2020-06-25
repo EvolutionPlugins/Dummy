@@ -64,7 +64,12 @@ namespace Dummy
             return result;
         }
 
-        public IEnumerator KickTimer(CSteamID id)
+        public Coroutine GetCoroutine(CSteamID id)
+        {
+            return StartCoroutine(KickTimer(id));
+        }
+
+        private IEnumerator KickTimer(CSteamID id)
         {
             yield return new WaitForSeconds(Config.KickDummyAfterSeconds);
             Provider.kick(id, "");

@@ -68,7 +68,7 @@ namespace Dummy.Commands
         {
             foreach (var dummy in Dummy.Instance.Dummies)
             {
-                var _dummy = Provider.clients.Find(k => k.playerID.steamID == dummy);
+                var _dummy = Provider.clients.Find(k => k.playerID.steamID == dummy.Key);
                 // It can't be null but I add check
                 if (_dummy == null)
                 {
@@ -81,7 +81,7 @@ namespace Dummy.Commands
 
         private void RemoveDummy(UnturnedPlayer player, byte id)
         {
-            if(!Dummy.Instance.Dummies.Any(k => k.m_SteamID == id))
+            if(!Dummy.Instance.Dummies.Any(k => k.Key.m_SteamID == id))
             {
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
             }
@@ -101,7 +101,7 @@ namespace Dummy.Commands
         {
             var id = Dummy.GetAvailableID();
 
-            Dummy.Instance.Dummies.Add(id);
+            Dummy.Instance.Dummies.Add(id, Dummy.Instance.GetCoroutine(id));
 
             var pending = new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, 0, 0,
                 0, Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, Array.Empty<ulong>(),
