@@ -41,12 +41,12 @@ namespace Dummy.Commands
                     CreateDummy(player);
                     return;
                 case "remove":
-                    if (command.Length != 2)
+                    if (command.Length != 2 && byte.TryParse(command[1], out var id))
                     {
                         UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy remove <id>", Color.yellow);
                     }
 
-                    RemoveDummy(player);
+                    RemoveDummy(player, id);
                     return;
                 case "clear":
                     if(command.Length != 2)
@@ -67,9 +67,22 @@ namespace Dummy.Commands
             throw new NotImplementedException();
         }
 
-        private void RemoveDummy(UnturnedPlayer player)
+        private void RemoveDummy(UnturnedPlayer player, byte id)
         {
-            throw new NotImplementedException();
+            if(!Dummy.Instance.Dummies.Any(k => k.m_SteamID == id))
+            {
+                UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
+            }
+            Dummy.Instance.Dummies.Remove(new CSteamID(id));
+
+            var dummy = Provider.clients.Find(k => k.playerID.steamID.m_SteamID == id);
+            // It can't be null but I add check
+            if (dummy == null)
+            {
+                UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
+            }
+            Provider.kick(dummy.playerID.steamID, "");
+            UnturnedChat.Say(player, $"Dummy ({id}) was removed", Color.red);
         }
 
         private void CreateDummy(UnturnedPlayer player)
