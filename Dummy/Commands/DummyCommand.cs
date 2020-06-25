@@ -67,6 +67,9 @@ namespace Dummy.Commands
                 {
                     UnturnedChat.Say(player, $"Dummy ({_dummy.playerID.steamID}) failed to remove!", Color.red);
                 }
+                if (dummy.Value != null)
+                    Dummy.Instance.StopCoroutine(dummy.Value);
+
                 Provider.kick(_dummy.playerID.steamID, "");
             }
             UnturnedChat.Say(player, "Dummies were removed", Color.green);
@@ -78,6 +81,7 @@ namespace Dummy.Commands
             {
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
             }
+            var coroutine = Dummy.Instance.Dummies[(CSteamID)id];
 
             var dummy = Provider.clients.Find(k => k.playerID.steamID.m_SteamID == id);
             // It can't be null but I add check
@@ -86,6 +90,9 @@ namespace Dummy.Commands
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
             }
             Provider.kick(dummy.playerID.steamID, "");
+
+            if(coroutine != null)
+                Dummy.Instance.StopCoroutine(coroutine);
 
             Dummy.Instance.Dummies.Remove(new CSteamID(id));
             UnturnedChat.Say(player, $"Dummy ({id}) was removed", Color.green);
