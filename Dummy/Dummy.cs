@@ -66,7 +66,7 @@ namespace Dummy
 
         public Coroutine GetCoroutine(CSteamID id)
         {
-            return StartCoroutine(KickTimer(id));
+            return Config.KickDummyAfterSeconds != 0 ? StartCoroutine(KickTimer(id)) : null;
         }
 
         private IEnumerator KickTimer(CSteamID id)
