@@ -15,7 +15,7 @@ namespace Dummy.Patches
         // Prevent spam about "Failed send packet to ..."
         public static bool Prefix(CSteamID steamID)
         {
-            return Dummy.Instance.Dummies.Contains(steamID);
+            return Dummy.Instance.Dummies.Any(k => k.Key == steamID);
         }
     }
 }
