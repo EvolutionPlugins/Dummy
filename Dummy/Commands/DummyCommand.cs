@@ -76,13 +76,18 @@ namespace Dummy.Commands
         {
             var id = Dummy.GetAvailableID();
 
-            var pending = new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
-                true, 0, 0, 0, Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
-                Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil);
+            Dummy.Instance.Dummies.Add(id);
+
+            var pending = new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, 0, 0,
+                0, Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, Array.Empty<ulong>(),
+                EPlayerSkillset.NONE, "english", CSteamID.Nil);
             Provider.pending.Add(pending);
             Provider.accept(pending);
 
+            var dummy = Provider.clients.Last();
+            dummy.player.teleportToLocationUnsafe(player.Position, player.Rotation);
 
+            UnturnedChat.Say(player, $"Dummy ({id.m_SteamID}) has created");
         }
     }
 }

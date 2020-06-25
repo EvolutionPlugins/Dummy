@@ -12,9 +12,10 @@ namespace Dummy.Patches
     [HarmonyPatch(typeof(Provider), "send")]
     public static class Patch_Provider_send
     {
+        // Prevent spam about "Failed send packet to ..."
         public static bool Prefix(CSteamID steamID)
         {
-            return steamID == CSteamID.Nil;
+            return Dummy.Instance.Dummies.Contains(steamID);
         }
     }
 }
