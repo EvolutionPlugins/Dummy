@@ -76,6 +76,8 @@ namespace Dummy
             Dummies.Clear();
 
             StopAllCoroutines();
+
+            DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
         }
 
         internal static CSteamID GetAvailableID()
