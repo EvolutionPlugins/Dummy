@@ -16,3 +16,8 @@ Dummy is a plugin for Unturned / RocketMod 4. It spawns a dummy and shows the am
 - AmountDummiesInSameTime _( default: 1 )_ - Max dummies in same time.
 
 - KickDummyAfterSeconds _( default: 300 )_ - Kick automatically dummy after amount of seconds
+
+# TODO
+- [ ] Changeable color, face, hair, beard, stance, gesture
+- [ ] Giving clothes/items
+- [ ] Using an item
