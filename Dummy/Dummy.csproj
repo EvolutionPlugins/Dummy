@@ -63,13 +63,19 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Unturned\Unturned_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Unturned\Unturned_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\DummyCommand.cs" />
     <Compile Include="Dummy.cs" />
     <Compile Include="DummyConfiguration.cs" />
+    <Compile Include="Patches\Patch_Provider_receiveServer.cs" />
     <Compile Include="Patches\Patch_Provider_send.cs" />
+    <Compile Include="Patches\Patch_Provider_verifyNextPlayerInQueue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
