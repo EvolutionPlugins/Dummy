@@ -66,12 +66,15 @@ namespace Dummy.Commands
                 if (_dummy == null)
                 {
                     UnturnedChat.Say(player, $"Dummy ({_dummy.playerID.steamID}) failed to remove!", Color.red);
+                    continue;
                 }
                 if (dummy.Value != null)
                     Dummy.Instance.StopCoroutine(dummy.Value);
 
                 Provider.kick(_dummy.playerID.steamID, "");
             }
+
+            Dummy.Instance.Dummies.Clear();
             UnturnedChat.Say(player, "Dummies were removed", Color.green);
         }
 
@@ -88,7 +91,9 @@ namespace Dummy.Commands
             if (dummy == null)
             {
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
+                return;
             }
+
             Provider.kick(dummy.playerID.steamID, "");
 
             if (coroutine != null)
