@@ -37,7 +37,7 @@ namespace Dummy.Commands
             switch (command[0].ToLower())
             {
                 case "create":
-                    CreateDummy(player, command.Length == 2 && bool.TryParse(command[1], out _));
+                    CreateDummy(player, command.Length == 2 && bool.TryParse(command[1], out var copy) && copy);
                     return;
                 case "remove":
                     if (command.Length != 2 || !byte.TryParse(command[1], out var id))
@@ -62,7 +62,6 @@ namespace Dummy.Commands
             foreach (var dummy in Dummy.Instance.Dummies)
             {
                 var _dummy = Provider.clients.Find(k => k.playerID.steamID == dummy.Key);
-                // It can't be null but I add check
                 if (_dummy == null)
                 {
                     UnturnedChat.Say(player, $"Dummy ({_dummy.playerID.steamID}) failed to remove!", Color.red);
@@ -87,7 +86,6 @@ namespace Dummy.Commands
             var coroutine = Dummy.Instance.Dummies[(CSteamID)id];
 
             var dummy = Provider.clients.Find(k => k.playerID.steamID.m_SteamID == id);
-            // It can't be null but I add check
             if (dummy == null)
             {
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
@@ -119,13 +117,18 @@ namespace Dummy.Commands
             if (copy)
             {
                 var steamPlayer = player.SteamPlayer();
-                Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
-                true, steamPlayer.face, steamPlayer.hair, steamPlayer.beard, Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
-                Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
 
-                Provider.accept(new SteamPlayerID(id, 1, "dummy", "dummy", "dummy", CSteamID.Nil), true, false, 0,
-                    0, 0, steamPlayer.color, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0, 0, Array.Empty<int>(), Array.Empty<string>(),
-                    Array.Empty<string>(), EPlayerSkillset.NONE, "english", CSteamID.Nil);
+                Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
+                    true, steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
+                    Color.white, steamPlayer.hand, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, Array.Empty<ulong>(),
+                    EPlayerSkillset.NONE, "english", CSteamID.Nil));
+
+                Provider.accept(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, false,
+                    steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
+                    Color.white, steamPlayer.hand, steamPlayer.shirtItem, steamPlayer.pantsItem, steamPlayer.hatItem,
+                    steamPlayer.backpackItem, steamPlayer.vestItem, steamPlayer.maskItem, steamPlayer.glassesItem,
+                    steamPlayer.skinItems, steamPlayer.skinTags, steamPlayer.skinDynamicProps, EPlayerSkillset.NONE,
+                    "english", CSteamID.Nil);
             }
             else
             {
