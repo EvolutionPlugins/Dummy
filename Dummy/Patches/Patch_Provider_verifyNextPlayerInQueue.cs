@@ -27,7 +27,7 @@ namespace Dummy.Patches
 				return false;
 			}
 			steamPending.sendVerifyPacket();
-			return true;
+			return false;
 		}
     }
 }

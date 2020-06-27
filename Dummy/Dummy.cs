@@ -103,6 +103,10 @@ namespace Dummy
                 foreach (var dummy in Dummies)
                 {
                     var client = Provider.clients.Find(k => k.playerID.steamID == dummy.Key);
+                    if(client == null)
+                    {
+                        continue;
+                    }
                     client.timeLastPacketWasReceivedFromClient = Time.realtimeSinceStartup;
                 }
                 yield return new WaitForSeconds(5);

@@ -172,7 +172,7 @@ namespace Dummy.Patches
                     Provider.reject(steamID, ESteamRejection.WHITELISTED);
                     return false;
                 }
-                if (Provider.clients.Count + 1 > (int)Provider.maxPlayers && Provider.pending.Count + 1 > (int)Provider.queueSize)
+                if (Provider.clients.Count - Dummy.Instance.Dummies.Count + 1 > Provider.maxPlayers && Provider.pending.Count + 1 > Provider.queueSize)
                 {
                     Provider.reject(steamID, ESteamRejection.SERVER_FULL);
                     return false;
