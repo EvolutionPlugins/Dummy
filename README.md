@@ -40,7 +40,7 @@ Dummy is a plugin for Unturned / RocketMod 4. It spawns a dummy and shows the am
         DRIVING = 6,
         SITTING = 7 ```
         
-- /dummy face &lt;id&gt; &lt;faceIndex&gt; - Send face to a dummy 
+- /dummy face &lt;id&gt; &lt;faceIndex&gt; - Send face to a dummy. FaceIndex can be found [here.](https://github.com/EvolutionPlugins/Dummy#tips)
 
 # Permission
 - dummy
@@ -54,10 +54,11 @@ Dummy is a plugin for Unturned / RocketMod 4. It spawns a dummy and shows the am
 Yes, it's will support when OpenMod is released.
 
 # Tips
-Index of faces:
 
-![image](https://i.redd.it/eqve40c3cuqx.png)
+## Index of faces
 
-Index of beards/hairs:
+![face](https://i.redd.it/eqve40c3cuqx.png)
 
-![image](https://i.redd.it/t9qh0q76l16z.jpg)
+## Index of beards/hairs
+
+![image1](https://i.redd.it/t9qh0q76l16z.jpg)
