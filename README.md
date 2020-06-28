@@ -39,6 +39,8 @@ Dummy is a plugin for Unturned / RocketMod 4. It spawns a dummy and shows the am
         PRONE = 5,
         DRIVING = 6,
         SITTING = 7 ```
+        
+- /dummy face &lt;id&gt; &lt;faceIndex&gt; - Send face to a dummy 
 
 # Permission
 - dummy
@@ -50,3 +52,12 @@ Dummy is a plugin for Unturned / RocketMod 4. It spawns a dummy and shows the am
 
 # Will be a support OpenMod?
 Yes, it's will support when OpenMod is released.
+
+# Tips
+Index of faces:
+
+![image](https://i.redd.it/eqve40c3cuqx.png)
+
+Index of beards/hairs:
+
+![image](https://i.redd.it/t9qh0q76l16z.jpg)
