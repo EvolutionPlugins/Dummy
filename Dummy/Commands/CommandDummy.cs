@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace Dummy.Commands
 {
-    public class DummyCommand : IRocketCommand
+    public class CommandDummy : IRocketCommand
     {
         public AllowedCaller AllowedCaller => AllowedCaller.Player;
 

@@ -68,7 +68,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\DummyCommand.cs" />
+    <Compile Include="Commands\CommandDummy.cs" />
     <Compile Include="Dummy.cs" />
     <Compile Include="DummyConfiguration.cs" />
     <Compile Include="Patches\Patch_Provider_receiveServer.cs" />
