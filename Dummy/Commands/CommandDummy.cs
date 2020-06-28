@@ -38,9 +38,15 @@ namespace Dummy.Commands
             switch (command[0].ToLower())
             {
                 case "create":
-                    CreateDummy(player, command.Length == 2 && bool.TryParse(command[1], out var copy) && copy);
+                    CreateDummy(player, false);
                     return;
+
+                case "copy":
+                    CreateDummy(player, true);
+                    return;
+
                 case "remove":
+                case "kick":
                     if (command.Length != 2 || !byte.TryParse(command[1], out var id))
                     {
                         UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy remove <id>", Color.yellow);
@@ -49,9 +55,11 @@ namespace Dummy.Commands
 
                     RemoveDummy(player, id);
                     return;
+
                 case "clear":
                     ClearAllDummies(player);
                     return;
+
                 case "execute":
                     if (command.Length < 3 || !byte.TryParse(command[1], out id))
                     {
@@ -60,6 +68,7 @@ namespace Dummy.Commands
                     }
                     ExecuteCommandDummy(player, id, string.Join(" ", command.Skip(2)));
                     return;
+
                 case "teleport":
                 case "tp":
                     if (command.Length != 2 || !byte.TryParse(command[1], out id))
@@ -69,10 +78,75 @@ namespace Dummy.Commands
                     }
                     TeleportDummy(player, id);
                     return;
+
+                case "gesture":
+                    if (command.Length != 3 || !byte.TryParse(command[1], out id))
+                    {
+                        UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy gesture <id> <gesture>", Color.yellow);
+                        return;
+                    }
+                    GestureDummy(player, id, command[2]);
+                    return;
+
+                case "stance":
+                    if (command.Length != 3 || !byte.TryParse(command[1], out id))
+                    {
+                        UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy stance <id> <stance>", Color.yellow);
+                        return;
+                    }
+                    StanceDummy(player, id, command[2]);
+                    return;
+
                 default:
                     UnturnedChat.Say(player, $"Wrong command usage. Use correct: {Syntax}", Color.yellow);
                     break;
             }
+        }
+
+        private void StanceDummy(UnturnedPlayer player, byte id, string stance)
+        {
+            if (!Dummy.Instance.Dummies.ContainsKey((CSteamID)id))
+            {
+                UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
+                return;
+            }
+            var dummy = Provider.clients.Find(k => k.playerID.steamID.m_SteamID == id);
+            if (dummy == null)
+            {
+                UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
+                return;
+            }
+
+            if (!Enum.TryParse<EPlayerStance>(stance.ToUpper(), out var estance))
+            {
+                UnturnedChat.Say(player, $"Unable find a stance {stance}");
+                return;
+            }
+
+            dummy.player.stance.checkStance(estance, false);
+        }
+
+        private void GestureDummy(UnturnedPlayer player, byte id, string gesture)
+        {
+            if(!Dummy.Instance.Dummies.ContainsKey((CSteamID)id))
+            {
+                UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
+                return;
+            }
+            var dummy = Provider.clients.Find(k => k.playerID.steamID.m_SteamID == id);
+            if(dummy == null)
+            {
+                UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
+                return;
+            }
+
+            if(!Enum.TryParse<EPlayerGesture>(gesture.ToUpper(), out var egesture))
+            {
+                UnturnedChat.Say(player, $"Unable find a gesture {gesture}");
+                return;
+            }
+
+            dummy.player.animator.sendGesture(egesture, false);
         }
 
         private void TeleportDummy(UnturnedPlayer player, byte id)
@@ -89,8 +163,9 @@ namespace Dummy.Commands
                 return;
             }
 
-            (dummy.player.movement.updates ?? (dummy.player.movement.updates = new List<PlayerStateUpdate>())).Add(new PlayerStateUpdate(player.Position, player.Player.look.angle, player.Player.look.rot));
-            //dummy.player.look.simulate(player.Player.look.yaw, player.Player.look.pitch, PlayerInput.RATE);
+            (dummy.player.movement.updates
+             ?? (dummy.player.movement.updates = new List<PlayerStateUpdate>())).Add(new PlayerStateUpdate(player.Position,
+                player.Player.look.angle, player.Player.look.rot));
         }
 
         private void ExecuteCommandDummy(UnturnedPlayer player, byte id, string command)

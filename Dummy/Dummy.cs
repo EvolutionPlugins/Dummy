@@ -37,6 +37,32 @@ namespace Dummy
             StartCoroutine(DontAutoKick());
 
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
+            Provider.onServerDisconnected += OnServerDisconnected;
+        }
+
+        protected override void Unload()
+        {
+            Instance = null;
+            Config = null;
+
+            _harmony.UnpatchAll(HarmonyId);
+            _harmony = null;
+
+            foreach (var dummy in Dummies)
+            {
+                Provider.kick(dummy.Key, "");
+            }
+            Dummies.Clear();
+
+            StopAllCoroutines();
+
+            DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
+            Provider.onServerDisconnected -= OnServerDisconnected;
+        }
+
+        private void OnServerDisconnected(CSteamID steamID)
+        {
+            Dummies.Remove(steamID);
         }
 
         private void DamageTool_damagePlayerRequested(ref DamagePlayerParameters parameters, ref bool shouldAllow)
@@ -59,25 +85,6 @@ namespace Dummy
 
             ChatManager.say(parameters.killer, $"Amount damage to dummy: {totalDamage}", Color.green);
             shouldAllow = false;
-        }
-
-        protected override void Unload()
-        {
-            Instance = null;
-            Config = null;
-
-            _harmony.UnpatchAll(HarmonyId);
-            _harmony = null;
-
-            foreach (var dummy in Dummies)
-            {
-                Provider.kick(dummy.Key, "");
-            }
-            Dummies.Clear();
-
-            StopAllCoroutines();
-
-            DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
         }
 
         internal static CSteamID GetAvailableID()
