@@ -6,11 +6,11 @@ Dummy is a plugin for Unturned / RocketMod 4. It spawns a dummy and shows the am
 
 - /dummy copy - Creates a dummy with unique ID and copy skin, clothes, beard, hair, face from an owner.
 
-- /dummy remove **&lt;id&gt;** - Remove dummy by ID.
+- /dummy remove &lt;id&gt; - Remove dummy by ID.
 
 - /dummy clear - Clear all dummies.
 
-- /dummy execute &lt;id&gt; <command> - Execute a command.
+- /dummy execute &lt;id&gt; &lt;command&gt; - Execute a command.
 
 - /dummy teleport &lt;id&gt; - Teleport to you a dummy.
 
