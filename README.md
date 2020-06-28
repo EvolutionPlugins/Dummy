@@ -8,6 +8,10 @@ Dummy is a plugin for Unturned / RocketMod 4. It spawns a dummy and shows the am
 
 - /dummy clear - Clear all dummies.
 
+- /dummy execute &lt;id&gt; <command> - Execute a command
+
+- /dummy teleport &lt;id&gt; - Teleport to you a dummy
+
 # Permission
 - dummy
 
