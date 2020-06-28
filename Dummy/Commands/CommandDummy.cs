@@ -97,10 +97,44 @@ namespace Dummy.Commands
                     StanceDummy(player, id, command[2]);
                     return;
 
+                case "face":
+                    if (command.Length != 3 || !byte.TryParse(command[1], out id) || !byte.TryParse(command[2], out var faceId))
+                    {
+                        UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy face <id> <faceId>", Color.yellow);
+                        return;
+                    }
+                    FaceDummy(player, id, faceId);
+                    return;
                 default:
                     UnturnedChat.Say(player, $"Wrong command usage. Use correct: {Syntax}", Color.yellow);
                     break;
             }
+        }
+
+        private void FaceDummy(UnturnedPlayer player, byte id, byte faceId)
+        {
+            if (!Dummy.Instance.Dummies.ContainsKey((CSteamID)id))
+            {
+                UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
+                return;
+            }
+            var dummy = Provider.clients.Find(k => k.playerID.steamID.m_SteamID == id);
+            if (dummy == null)
+            {
+                UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
+                return;
+            }
+
+            if (faceId > Customization.FACES_FREE + Customization.FACES_PRO)
+            {
+                UnturnedChat.Say(player, $"Can't change to {faceId} because is higher {Customization.FACES_FREE + Customization.FACES_PRO}", Color.red);
+                return;
+            }
+
+            dummy.player.clothing.channel.send("tellSwapFace", ESteamCall.NOT_OWNER, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
+            {
+                faceId
+            });
         }
 
         private void StanceDummy(UnturnedPlayer player, byte id, string stance)
