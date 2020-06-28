@@ -116,6 +116,7 @@ namespace Dummy
         private IEnumerator KickTimer(CSteamID id)
         {
             yield return new WaitForSeconds(Config.KickDummyAfterSeconds);
+            UnturnedLog.info($"Kicking a dummy {id}");
             Provider.kick(id, "");
         }
     }
