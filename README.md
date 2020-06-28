@@ -14,33 +14,11 @@ Dummy is a plugin for Unturned / RocketMod 4. It spawns a dummy and shows the am
 
 - /dummy teleport &lt;id&gt; - Teleport to you a dummy.
 
-- /dummy gesture &lt;id&gt; &lt;gesture&gt; - Send gesture to a dummy. ```
-        INVENTORY_START = 1,
-        INVENTORY_STOP = 2,
-        PICKUP = 3,
-        PUNCH_LEFT = 4,
-        PUNCH_RIGHT = 5,
-        SURRENDER_START = 6,
-        SURRENDER_STOP = 7,
-        POINT = 8,
-        WAVE = 9,
-        SALUTE = 10,
-        ARREST_START = 11,
-        ARREST_STOP = 12,
-        REST_START = 13,
-        REST_STOP = 14,
-        FACEPALM = 15 ```
+- /dummy gesture &lt;id&gt; &lt;gesture&gt; - Send gesture to a dummy. Gesture can be found [here.](https://github.com/EvolutionPlugins/Dummy#tips#gestures)
 
-- /dummy stance &lt;id&gt; &lt;stance&gt; - Send stance to a dummy. ``` CLIMB = 0,
-        SWIM = 1,
-        SPRINT = 2,
-        STAND = 3,
-        CROUCH = 4,
-        PRONE = 5,
-        DRIVING = 6,
-        SITTING = 7 ```
+- /dummy stance &lt;id&gt; &lt;stance&gt; - Send stance to a dummy. Stance can be found [here.](https://github.com/EvolutionPlugins/Dummy#tips#stances)
         
-- /dummy face &lt;id&gt; &lt;faceIndex&gt; - Send face to a dummy. FaceIndex can be found [here.](https://github.com/EvolutionPlugins/Dummy#tips)
+- /dummy face &lt;id&gt; &lt;faceIndex&gt; - Send face to a dummy. FaceIndex can be found [here.](https://github.com/EvolutionPlugins/Dummy#tips#index-of-faces)
 
 # Permission
 - dummy
@@ -54,6 +32,39 @@ Dummy is a plugin for Unturned / RocketMod 4. It spawns a dummy and shows the am
 Yes, it's will support when OpenMod is released.
 
 # Tips
+
+## Gestures
+
+|      Gesture     	| Index 	|
+|:---------------:	|:-----:	|
+| INVENTORY_START 	|   1   	|
+|  INVENTORY_STOP 	|   2   	|
+|      PICKUP     	|   3   	|
+|    PUNCH_LEFT   	|   4   	|
+|   PUNCH_RIGHT   	|   5   	|
+| SURRENDER_START 	|   6   	|
+|  SURRENDER_STOP 	|   7   	|
+|      POINT      	|   8   	|
+|       WAVE      	|   9   	|
+|      SALUTE     	|   10  	|
+|   ARREST_START  	|   11  	|
+|   ARREST_STOP   	|   12  	|
+|    REST_START   	|   13  	|
+|    REST_STOP    	|   14  	|
+|     FACEPALM    	|   15  	|
+
+## Stances
+
+|  Stance 	| Index 	|
+|:-------:	|:-----:	|
+|  CLIMB  	|   0   	|
+|   SWIM  	|   1   	|
+|  SPRINT 	|   2   	|
+|  STAND  	|   3   	|
+|  CROUCH 	|   4   	|
+|  PRONE  	|   5   	|
+| DRIVING 	|   6   	|
+| SITTING 	|   7   	|
 
 ## Index of faces
 
