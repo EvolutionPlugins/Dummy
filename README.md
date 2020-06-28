@@ -14,11 +14,11 @@ Dummy is a plugin for Unturned / RocketMod 4. It spawns a dummy and shows the am
 
 - /dummy teleport &lt;id&gt; - Teleport to you a dummy.
 
-- /dummy gesture &lt;id&gt; &lt;gesture&gt; - Send gesture to a dummy. Gesture can be found [here.](https://github.com/EvolutionPlugins/Dummy#tips#gestures)
+- /dummy gesture &lt;id&gt; &lt;gesture&gt; - Send gesture to a dummy. Gesture can be found [here.](https://github.com/EvolutionPlugins/Dummy#gestures)
 
-- /dummy stance &lt;id&gt; &lt;stance&gt; - Send stance to a dummy. Stance can be found [here.](https://github.com/EvolutionPlugins/Dummy#tips#stances)
+- /dummy stance &lt;id&gt; &lt;stance&gt; - Send stance to a dummy. Stance can be found [here.](https://github.com/EvolutionPlugins/Dummy#stances)
         
-- /dummy face &lt;id&gt; &lt;faceIndex&gt; - Send face to a dummy. FaceIndex can be found [here.](https://github.com/EvolutionPlugins/Dummy#tips#index-of-faces)
+- /dummy face &lt;id&gt; &lt;faceIndex&gt; - Send face to a dummy. FaceIndex can be found [here.](https://github.com/EvolutionPlugins/Dummy#index-of-faces)
 
 # Permission
 - dummy
