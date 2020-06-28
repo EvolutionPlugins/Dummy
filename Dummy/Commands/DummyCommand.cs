@@ -89,9 +89,8 @@ namespace Dummy.Commands
                 return;
             }
 
-            dummy.player.teleportToPlayer(player.Player);
-            // need check
-            dummy.player.look.simulate(player.Player.look.yaw, player.Player.look.pitch, PlayerInput.RATE);
+            (dummy.player.movement.updates ?? (dummy.player.movement.updates = new List<PlayerStateUpdate>())).Add(new PlayerStateUpdate(player.Position, player.Player.look.angle, player.Player.look.rot));
+            //dummy.player.look.simulate(player.Player.look.yaw, player.Player.look.pitch, PlayerInput.RATE);
         }
 
         private void ExecuteCommandDummy(UnturnedPlayer player, byte id, string command)
