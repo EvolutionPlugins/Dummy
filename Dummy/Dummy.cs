@@ -1,11 +1,11 @@
-﻿using HarmonyLib;
+﻿using Dummy.Configurations;
+using HarmonyLib;
 using Rocket.Core.Plugins;
 using SDG.Unturned;
 using Steamworks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
 using UnityEngine;
 using Logger = Rocket.Core.Logging.Logger;
 
@@ -20,7 +20,7 @@ namespace Dummy
         public static Dummy Instance;
         public DummyConfiguration Config;
 
-        public readonly Dictionary<CSteamID, Coroutine> Dummies = new Dictionary<CSteamID, Coroutine>();
+        public readonly Dictionary<CSteamID, DummyData> Dummies = new Dictionary<CSteamID, DummyData>();
 
         protected override void Load()
         {
@@ -62,18 +62,25 @@ namespace Dummy
 
         private void OnServerDisconnected(CSteamID steamID)
         {
-            Dummies.Remove(steamID);
+            if (Dummies.ContainsKey(steamID))
+            {
+                var coroutine = Dummies[steamID].Coroutine;
+                if (coroutine != null)
+                    StopCoroutine(coroutine);
+
+                Dummies.Remove(steamID);
+            }
         }
 
         private void DamageTool_damagePlayerRequested(ref DamagePlayerParameters parameters, ref bool shouldAllow)
         {
-            if(!Dummies.ContainsKey(parameters.player.channel.owner.playerID.steamID))
+            if (!Dummies.ContainsKey(parameters.player.channel.owner.playerID.steamID))
             {
                 return;
             }
             float totalTimes = parameters.times;
 
-            if(parameters.respectArmor)
+            if (parameters.respectArmor)
             {
                 totalTimes *= DamageTool.getPlayerArmor(parameters.limb, parameters.player);
             }
@@ -105,12 +112,12 @@ namespace Dummy
 
         private IEnumerator DontAutoKick()
         {
-            while(true)
+            while (true)
             {
                 foreach (var dummy in Dummies)
                 {
                     var client = Provider.clients.Find(k => k.playerID.steamID == dummy.Key);
-                    if(client == null)
+                    if (client == null)
                     {
                         continue;
                     }
@@ -123,7 +130,7 @@ namespace Dummy
         private IEnumerator KickTimer(CSteamID id)
         {
             yield return new WaitForSeconds(Config.KickDummyAfterSeconds);
-            UnturnedLog.info($"Kicking a dummy {id}");
+            CommandWindow.Log($"Kicking a dummy {id}");
             Provider.kick(id, "");
         }
     }

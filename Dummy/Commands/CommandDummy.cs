@@ -19,7 +19,7 @@ namespace Dummy.Commands
 
         public string Help => "";
 
-        public string Syntax => "/dummy <create | remove | clear | teleport | execute>";
+        public string Syntax => "/dummy <create | remove | clear | teleport | execute | gesture | stance>";
 
         public List<string> Aliases => new List<string>();
 
@@ -117,51 +117,54 @@ namespace Dummy.Commands
                 return;
             }
 
-            if (!Enum.TryParse<EPlayerStance>(stance.ToUpper(), out var estance))
+            if (!Enum.TryParse<EPlayerStance>(stance.ToUpper(), out var eStance))
             {
-                UnturnedChat.Say(player, $"Unable find a stance {stance}");
+                UnturnedChat.Say(player, $"Unable find a stance {stance}", Color.red);
                 return;
             }
 
-            dummy.player.stance.checkStance(estance, false);
+            dummy.player.stance.checkStance(eStance, false);
         }
 
         private void GestureDummy(UnturnedPlayer player, byte id, string gesture)
         {
-            if(!Dummy.Instance.Dummies.ContainsKey((CSteamID)id))
+            if (!Dummy.Instance.Dummies.ContainsKey((CSteamID)id))
             {
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
                 return;
             }
             var dummy = Provider.clients.Find(k => k.playerID.steamID.m_SteamID == id);
-            if(dummy == null)
+            if (dummy == null)
             {
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
                 return;
             }
 
-            if(!Enum.TryParse<EPlayerGesture>(gesture.ToUpper(), out var egesture))
+            if (!Enum.TryParse<EPlayerGesture>(gesture.ToUpper(), out var eGesture))
             {
-                UnturnedChat.Say(player, $"Unable find a gesture {gesture}");
+                UnturnedChat.Say(player, $"Unable find a gesture {gesture}", Color.red);
                 return;
             }
 
-            dummy.player.animator.sendGesture(egesture, false);
+            dummy.player.animator.sendGesture(eGesture, false);
         }
 
         private void TeleportDummy(UnturnedPlayer player, byte id)
         {
-            if(!Dummy.Instance.Dummies.ContainsKey((CSteamID)id))
+            if (!Dummy.Instance.Dummies.ContainsKey((CSteamID)id))
             {
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
                 return;
             }
             var dummy = Provider.clients.Find(k => k.playerID.steamID.m_SteamID == id);
-            if(dummy == null)
+            if (dummy == null)
             {
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
                 return;
             }
+
+            dummy.player.transform.position = player.Position;
+            dummy.player.transform.rotation = player.Player.transform.rotation;
 
             (dummy.player.movement.updates
              ?? (dummy.player.movement.updates = new List<PlayerStateUpdate>())).Add(new PlayerStateUpdate(player.Position,
@@ -170,7 +173,7 @@ namespace Dummy.Commands
 
         private void ExecuteCommandDummy(UnturnedPlayer player, byte id, string command)
         {
-            if(!Dummy.Instance.Dummies.ContainsKey((CSteamID)id))
+            if (!Dummy.Instance.Dummies.ContainsKey((CSteamID)id))
             {
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
                 return;
@@ -178,7 +181,7 @@ namespace Dummy.Commands
 
             var x = R.Commands.Execute(UnturnedPlayer.FromCSteamID((CSteamID)id), command);
 
-            UnturnedChat.Say(player, $"Dummy ({id}) has {(x ? "successfully" : "unsuccessfully")} executed command");
+            ChatManager.serverSendMessage($"Dummy ({id}) has {(x ? "successfully" : "<color=red>unsuccessfully</color>")} executed command", Color.green, toPlayer: player.SteamPlayer(), useRichTextFormatting: true);
         }
 
         private void ClearAllDummies(UnturnedPlayer player)
@@ -191,8 +194,8 @@ namespace Dummy.Commands
                     UnturnedChat.Say(player, $"Dummy ({_dummy.playerID.steamID}) failed to remove!", Color.red);
                     continue;
                 }
-                if (dummy.Value != null)
-                    Dummy.Instance.StopCoroutine(dummy.Value);
+                if (dummy.Value.Coroutine != null)
+                    Dummy.Instance.StopCoroutine(dummy.Value.Coroutine);
 
                 Provider.kick(_dummy.playerID.steamID, "");
             }
@@ -207,7 +210,7 @@ namespace Dummy.Commands
             {
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
             }
-            var coroutine = Dummy.Instance.Dummies[(CSteamID)id];
+            var data = Dummy.Instance.Dummies[(CSteamID)id];
 
             var dummy = Provider.clients.Find(k => k.playerID.steamID.m_SteamID == id);
             if (dummy == null)
@@ -218,8 +221,8 @@ namespace Dummy.Commands
 
             Provider.kick(dummy.playerID.steamID, "");
 
-            if (coroutine != null)
-                Dummy.Instance.StopCoroutine(coroutine);
+            if (data.Coroutine != null)
+                Dummy.Instance.StopCoroutine(data.Coroutine);
 
             Dummy.Instance.Dummies.Remove(new CSteamID(id));
             UnturnedChat.Say(player, $"Dummy ({id}) was removed", Color.green);
@@ -236,7 +239,8 @@ namespace Dummy.Commands
 
             var id = Dummy.GetAvailableID();
 
-            Dummy.Instance.Dummies.Add(id, Dummy.Instance.GetCoroutine(id));
+            Dummy.Instance.Dummies.Add(id, new DummyData
+            { Coroutine = Dummy.Instance.GetCoroutine(id), Owners = new List<CSteamID> { player.CSteamID } });
 
             if (copy)
             {
