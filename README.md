@@ -8,6 +8,10 @@ Dummy is a plugin for Unturned / RocketMod 4. It spawns a dummy and shows the am
 
 - /dummy clear - Clear all dummies.
 
+- /dummy execute &lt;id&gt; <command> - Execute a command
+
+- /dummy teleport &lt;id&gt; - Teleport to you a dummy
+
 # Permission
 - dummy
 
@@ -17,7 +21,6 @@ Dummy is a plugin for Unturned / RocketMod 4. It spawns a dummy and shows the am
 
 - KickDummyAfterSeconds _( default: 300 )_ - Kick automatically dummy after amount of seconds
 
-# TODO
-- [ ] Changeable color, face, hair, beard, stance, gesture
-- [ ] Giving clothes/items
-- [ ] Using an item
+# Will be a support OpenMod?
+
+Yes, it's will support when OpenMod is released.
