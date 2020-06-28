@@ -38,6 +38,7 @@ namespace Dummy
 
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
             Provider.onServerDisconnected += OnServerDisconnected;
+            ChatManager.onServerSendingMessage += OnServerSendingMessage; // with old Rocket.Unturned can be problems
         }
 
         protected override void Unload()
@@ -58,6 +59,27 @@ namespace Dummy
 
             DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
             Provider.onServerDisconnected -= OnServerDisconnected;
+            ChatManager.onServerSendingMessage -= OnServerSendingMessage;
+        }
+
+        private void OnServerSendingMessage(ref string text, ref Color color, SteamPlayer fromPlayer, SteamPlayer toPlayer, EChatMode mode, ref string iconURL, ref bool useRichTextFormatting)
+        {
+            if(toPlayer == null)
+            {
+                return;
+            }
+
+            if (!Dummies.ContainsKey(toPlayer.playerID.steamID))
+            {
+                return;
+            }
+
+            var data = Dummies[toPlayer.playerID.steamID];
+
+            foreach (var owner in data.Owners)
+            {
+                ChatManager.say(owner, $"Dummy {toPlayer.playerID.steamID} got message: {text}", color, true);
+            }
         }
 
         private void OnServerDisconnected(CSteamID steamID)
