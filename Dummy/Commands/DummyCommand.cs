@@ -1,4 +1,5 @@
 ﻿using Rocket.API;
+using Rocket.Core;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using SDG.Unturned;
@@ -18,7 +19,7 @@ namespace Dummy.Commands
 
         public string Help => "";
 
-        public string Syntax => "/dummy <create | remove | clear>";
+        public string Syntax => "/dummy <create | remove | clear | teleport | execute>";
 
         public List<string> Aliases => new List<string>();
 
@@ -51,10 +52,59 @@ namespace Dummy.Commands
                 case "clear":
                     ClearAllDummies(player);
                     return;
+                case "execute":
+                    if (command.Length < 3 || !byte.TryParse(command[1], out id))
+                    {
+                        UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy execute <id> <command> [args]", Color.yellow);
+                        return;
+                    }
+                    ExecuteCommandDummy(player, id, string.Join(" ", command.Skip(2)));
+                    return;
+                case "teleport":
+                case "tp":
+                    if (command.Length != 2 || !byte.TryParse(command[1], out id))
+                    {
+                        UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy tp <id>", Color.yellow);
+                        return;
+                    }
+                    TeleportDummy(player, id);
+                    return;
                 default:
                     UnturnedChat.Say(player, $"Wrong command usage. Use correct: {Syntax}", Color.yellow);
                     break;
             }
+        }
+
+        private void TeleportDummy(UnturnedPlayer player, byte id)
+        {
+            if(!Dummy.Instance.Dummies.ContainsKey((CSteamID)id))
+            {
+                UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
+                return;
+            }
+            var dummy = Provider.clients.Find(k => k.playerID.steamID.m_SteamID == id);
+            if(dummy == null)
+            {
+                UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
+                return;
+            }
+
+            dummy.player.teleportToPlayer(player.Player);
+            // need check
+            dummy.player.look.simulate(player.Player.look.yaw, player.Player.look.pitch, PlayerInput.RATE);
+        }
+
+        private void ExecuteCommandDummy(UnturnedPlayer player, byte id, string command)
+        {
+            if(!Dummy.Instance.Dummies.ContainsKey((CSteamID)id))
+            {
+                UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
+                return;
+            }
+
+            var x = R.Commands.Execute(UnturnedPlayer.FromCSteamID((CSteamID)id), command);
+
+            UnturnedChat.Say(player, $"Dummy ({id}) has {(x ? "successfully" : "unsuccessfully")} executed command");
         }
 
         private void ClearAllDummies(UnturnedPlayer player)
