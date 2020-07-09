@@ -3,12 +3,17 @@ using HarmonyLib;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OpenMod.API.Plugins;
+using OpenMod.API.Users;
 using OpenMod.Core.Helpers;
+using OpenMod.Core.Users;
 using OpenMod.Unturned.Plugins;
+using OpenMod.Unturned.Users;
 using SDG.Unturned;
+using Semver;
 using Steamworks;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
@@ -24,20 +29,24 @@ namespace EvolutionPlugins.Dummy
         private readonly Harmony m_Harmony;
         private readonly ILogger m_Logger;
         private readonly IConfiguration m_Configuration;
+        private readonly IUserProvider m_UserProvider;
 
         public readonly Dictionary<CSteamID, DummyData> Dummies;
 
-        public Dummy(IServiceProvider serviceProvider, ILogger<Dummy> logger) : base(serviceProvider)
+        public Dummy(IServiceProvider serviceProvider, ILogger<Dummy> logger, IUserManager userProvider) : base(serviceProvider)
         {
             m_Harmony = new Harmony(_HarmonyId);
             m_Logger = logger;
             m_Configuration = Configuration;
+            m_UserProvider = userProvider.UserProviders.FirstOrDefault(x => x.SupportsUserType(KnownActorTypes.Player));
             Dummies = new Dictionary<CSteamID, DummyData>();
         }
 
         protected override async UniTask OnLoadAsync()
         {
-            m_Logger.LogInformation("Hello");
+            m_Logger.LogInformation("Made with <3 by Evolution Plugins");
+            m_Logger.LogInformation("https://github.com/evolutionplugins \\ https://github.com/diffoz");
+            m_Logger.LogInformation("Discord: DiFFoZ#6745");
 
             AsyncHelper.Schedule("Don't auto kick a dummies", DontAutoKickTask);
 
@@ -48,42 +57,14 @@ namespace EvolutionPlugins.Dummy
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
         }
 
-        //protected override void Load()
-        //{
-        //    Logger.Log("Made with <3 by Evolution Plugins", ConsoleColor.Cyan);
-        //    Logger.Log("https://vk.com/evolutionplugins", ConsoleColor.Cyan);
-        //    Logger.Log("Discord: DiFFoZ#6745", ConsoleColor.Cyan);
+        protected override async UniTask OnUnloadAsync()
+        {
+            m_Harmony.UnpatchAll(_HarmonyId);
 
-        //    _harmony = new Harmony(HarmonyId);
-        //    _harmony.PatchAll();
-
-        //    StartCoroutine(DontAutoKick());
-
-        //    DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
-        //    Provider.onServerDisconnected += OnServerDisconnected;
-        //    ChatManager.onServerSendingMessage += OnServerSendingMessage; // with old Rocket.Unturned can be problems
-        //}
-
-        //protected override void Unload()
-        //{
-        //    Instance = null;
-        //    Config = null;
-
-        //    _harmony.UnpatchAll(HarmonyId);
-        //    _harmony = null;
-
-        //    foreach (var dummy in Dummies)
-        //    {
-        //        Provider.kick(dummy.Key, "");
-        //    }
-        //    Dummies.Clear();
-
-        //    StopAllCoroutines();
-
-        //    DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
-        //    Provider.onServerDisconnected -= OnServerDisconnected;
-        //    ChatManager.onServerSendingMessage -= OnServerSendingMessage;
-        //}
+            DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
+            Provider.onServerDisconnected -= OnServerDisconnected;
+            ChatManager.onServerSendingMessage -= OnServerSendingMessage;
+        }
 
         private void OnServerSendingMessage(ref string text, ref Color color, SteamPlayer fromPlayer, SteamPlayer toPlayer, EChatMode mode, ref string iconURL, ref bool useRichTextFormatting)
         {
@@ -107,10 +88,7 @@ namespace EvolutionPlugins.Dummy
 
         private void OnServerDisconnected(CSteamID steamID)
         {
-            if (Dummies.ContainsKey(steamID))
-            {
-                Dummies.Remove(steamID);
-            }
+            Dummies.Remove(steamID);
         }
 
         private void DamageTool_damagePlayerRequested(ref DamagePlayerParameters parameters, ref bool shouldAllow)
@@ -119,7 +97,8 @@ namespace EvolutionPlugins.Dummy
             {
                 return;
             }
-            float totalTimes = parameters.times;
+            shouldAllow = false;
+            var totalTimes = parameters.times;
 
             if (parameters.respectArmor)
             {
@@ -129,10 +108,11 @@ namespace EvolutionPlugins.Dummy
             {
                 totalTimes *= Provider.modeConfigData.Players.Armor_Multiplier;
             }
-            byte totalDamage = (byte)Mathf.Min(255, parameters.damage * totalTimes);
+            var totalDamage = (byte)Mathf.Min(255, parameters.damage * totalTimes);
 
-            ChatManager.say(parameters.killer, $"Amount damage to dummy: {totalDamage}", Color.green);
-            shouldAllow = false;
+            var killerId = parameters.killer;
+
+            ChatManager.say(killerId, $"Amount damage to dummy: {totalDamage}", Color.green, true);
         }
 
         internal CSteamID GetAvailableID()
