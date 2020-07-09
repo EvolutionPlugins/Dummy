@@ -1,4 +1,5 @@
-﻿using SDG.Unturned;
+﻿using EvolutionPlugins.Dummy.Providers;
+using SDG.Unturned;
 using Steamworks;
 using System;
 
@@ -6,6 +7,8 @@ namespace EvolutionPlugins.Dummy
 {
     public static class Utils
     {
+        #region SDG.Unturned methods
+#warning Need call original methods, maybe anyone hooks these methods
         public static void checkBanStatus(SteamPlayerID playerID, uint remoteIP, out bool isBanned, out string banReason, out uint banRemainingDuration)
         {
             isBanned = false;
@@ -38,23 +41,6 @@ namespace EvolutionPlugins.Dummy
             byte[] bytes = SteamPacker.getBytes(0, out int size, 26);
             Provider.send(remoteSteamID, ESteamPacket.CLIENT_PENDING, bytes, size, 0);
         }
-
-        public static void verifyNextPlayerInQueue()
-        {
-            if (Provider.pending.Count < 1)
-            {
-                return;
-            }
-            //if (Provider.clients.Count - Dummy.Instance.Dummies.Count >= Provider.maxPlayers)
-            //{
-            //    return;
-            //}
-            SteamPending steamPending = Provider.pending[0];
-            if (steamPending.hasSentVerifyPacket)
-            {
-                return;
-            }
-            steamPending.sendVerifyPacket();
-        }
+        #endregion
     }
 }

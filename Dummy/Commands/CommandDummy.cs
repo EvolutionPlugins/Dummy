@@ -1,7 +1,16 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using EvolutionPlugins.Dummy.Providers;
+using Microsoft.Extensions.Configuration;
+using OpenMod.API.Commands;
+using OpenMod.API.Users;
 using OpenMod.Core.Commands;
+using OpenMod.Core.Users;
 using OpenMod.Unturned.Users;
+using SDG.Unturned;
+using Steamworks;
 using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 using System.Threading.Tasks;
 using Color = System.Drawing.Color;
 using Command = OpenMod.Core.Commands.Command;
@@ -10,14 +19,11 @@ namespace EvolutionPlugins.Dummy.Commands
 {
     [Command("dummy")]
     [CommandDescription("---")]
-    [CommandSyntax("<create | remove | clear | teleport | execute | gesture | stance | face>")]
+    [CommandSyntax("<create|remove|clear|teleport|execute|gesture|stance|face>")]
     public class CommandDummy : Command
     {
-        private readonly Dummy m_Instance;
-
-        public CommandDummy(IServiceProvider serviceProvider, Dummy dummy) : base(serviceProvider)
+        public CommandDummy(IServiceProvider serviceProvider) : base(serviceProvider)
         {
-            m_Instance = dummy;
         }
 
         protected override Task OnExecuteAsync()
@@ -32,13 +38,14 @@ namespace EvolutionPlugins.Dummy.Commands
     [CommandParent(typeof(CommandDummy))]
     public class CommandDummyCreate : Command
     {
-        private readonly Dummy m_Instance;
         private readonly IConfiguration m_Configuration;
+        private readonly IDummyProvider m_DummyProvider;
 
-        public CommandDummyCreate(IServiceProvider serviceProvider, Dummy dummy, IConfiguration configuration) : base(serviceProvider)
+        public CommandDummyCreate(IServiceProvider serviceProvider, IConfiguration configuration,
+            IDummyProvider dummyProvider) : base(serviceProvider)
         {
-            m_Instance = dummy;
             m_Configuration = configuration;
+            m_DummyProvider = dummyProvider;
         }
 
         protected override Task OnExecuteAsync()
@@ -49,48 +56,111 @@ namespace EvolutionPlugins.Dummy.Commands
         private async Task CreateDummy(UnturnedUser user, bool copy)
         {
             var amountDummiesConfig = m_Configuration.GetSection("AmountDummiesInSameTime").Get<byte>();
-            if (amountDummiesConfig != 0 && m_Instance.Dummies.Count + 1 > amountDummiesConfig)
+            if (amountDummiesConfig != 0 && m_DummyProvider.Dummies.Count + 1 > amountDummiesConfig)
             {
                 await user.PrintMessageAsync("Dummy can't be created. Amount dummies overflow", Color.Yellow);
                 return;
             }
 
-            //var id = m_Instance.GetAvailableID();
+            var id = m_DummyProvider.GetAvailableId();
 
-            //m_Instance.Dummies.Add(id, new DummyData
-            //{ Coroutine = global::Dummy.Instance.GetCoroutine(id), Owners = new List<CSteamID> { player.CSteamID } });
+            await m_DummyProvider.AddDummyAsync(id, new DummyData() { Owners = new List<CSteamID> { user.SteamId } });
 
-            //if (copy)
-            //{
-            //    var steamPlayer = player.SteamPlayer();
+            var steamPlayer = user.SteamPlayer;
 
-            //    Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
-            //        true, steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
-            //        Color.white, steamPlayer.hand, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, Array.Empty<ulong>(),
-            //        EPlayerSkillset.NONE, "english", CSteamID.Nil));
+            Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
+                true, steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
+                UnityEngine.Color.white, steamPlayer.hand, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, Array.Empty<ulong>(),
+                EPlayerSkillset.NONE, "english", CSteamID.Nil));
 
-            //    Provider.accept(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, false,
-            //        steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
-            //        Color.white, steamPlayer.hand, steamPlayer.shirtItem, steamPlayer.pantsItem, steamPlayer.hatItem,
-            //        steamPlayer.backpackItem, steamPlayer.vestItem, steamPlayer.maskItem, steamPlayer.glassesItem,
-            //        steamPlayer.skinItems, steamPlayer.skinTags, steamPlayer.skinDynamicProps, EPlayerSkillset.NONE,
-            //        "english", CSteamID.Nil);
-            //}
-            //else
-            //{
-            //    Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
-            //    true, 0, 0, 0, Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
-            //    Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
+            Provider.accept(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, false,
+                steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
+                UnityEngine.Color.white, steamPlayer.hand, steamPlayer.shirtItem, steamPlayer.pantsItem, steamPlayer.hatItem,
+                steamPlayer.backpackItem, steamPlayer.vestItem, steamPlayer.maskItem, steamPlayer.glassesItem,
+                steamPlayer.skinItems, steamPlayer.skinTags, steamPlayer.skinDynamicProps, EPlayerSkillset.NONE,
+                "english", CSteamID.Nil);
 
-            //    Provider.accept(new SteamPlayerID(id, 1, "dummy", "dummy", "dummy", CSteamID.Nil), true, false, 0,
-            //        0, 0, Color.white, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0, 0, Array.Empty<int>(), Array.Empty<string>(),
-            //        Array.Empty<string>(), EPlayerSkillset.NONE, "english", CSteamID.Nil);
-            //}
+            if (!copy)
+            {
+                Provider.pending.Add(new SteamPending(
+                    new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, 0, 0, 0,
+                    UnityEngine.Color.white, UnityEngine.Color.white, UnityEngine.Color.white, false, 0UL, 0UL, 0UL, 0UL,
+                    0UL, 0UL, 0UL, Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
 
-            //var dummy = Provider.clients.Last();
-            //dummy.player.teleportToLocationUnsafe(player.Position, player.Rotation);
+                Provider.accept(new SteamPlayerID(id, 1, "dummy", "dummy", "dummy", CSteamID.Nil), true, false, 0, 0, 0,
+                    UnityEngine.Color.white, UnityEngine.Color.white, UnityEngine.Color.white, false, 0, 0, 0, 0, 0, 0,
+                    0, Array.Empty<int>(), Array.Empty<string>(), Array.Empty<string>(), EPlayerSkillset.NONE, "english",
+                    CSteamID.Nil);
+            }
 
-            //UnturnedChat.Say(player, $"Dummy ({id.m_SteamID}) has created");
+            var dummy = Provider.clients.Last();
+            dummy.player.teleportToLocationUnsafe(user.Player.transform.position, user.Player.transform.rotation.eulerAngles.y);
+
+            await user.PrintMessageAsync($"Dummy ({id.m_SteamID}) has created");
+        }
+    }
+
+    [Command("copy")]
+    [CommandDescription("Creates a dummy and copy your skin, hait, beard, etc...")]
+    [CommandActor(typeof(UnturnedUser))]
+    [CommandParent(typeof(CommandDummy))]
+    public class CommandDummyCopy : Command
+    {
+        public CommandDummyCopy(IServiceProvider serviceProvider) : base(serviceProvider)
+        {
+
+        }
+
+        protected override Task OnExecuteAsync()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    [Command("execute")]
+    [CommandDescription("Execute a command by Dummy")]
+    [CommandSyntax("<id> <command>")]
+    [CommandParent(typeof(CommandDummy))]
+    public class CommandDummyExecute : Command
+    {
+        private readonly IDummyProvider m_DummyProvider;
+        private readonly ICommandExecutor m_CommandExecutor;
+        private readonly IUserProvider m_UserProvider;
+
+        public CommandDummyExecute(IServiceProvider serviceProvider, IDummyProvider dummyProvider, ICommandExecutor commandExecutor, IUserProvider userProvider) : base(serviceProvider)
+        {
+            m_DummyProvider = dummyProvider;
+            m_CommandExecutor = commandExecutor;
+            m_UserProvider = userProvider;
+        }
+
+        protected override async Task OnExecuteAsync()
+        {
+            if (Context.Parameters.Count < 2)
+            {
+                throw new CommandWrongUsageException(Context);
+            }
+
+            var id = await Context.Parameters.GetAsync<CSteamID>(0);
+
+            if (!m_DummyProvider.Dummies.TryGetValue(id, out _))
+            {
+                throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
+            }
+
+            var dummy = (UnturnedUser)await m_UserProvider.FindUserAsync(KnownActorTypes.Player, id.ToString(), UserSearchMode.Id);
+            if (dummy == null)
+            {
+                throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
+            }
+
+            var commandContext = await m_CommandExecutor.ExecuteAsync(dummy, Context.Parameters.Skip(1).ToArray(), "");
+
+            await PrintAsync($"Dummy has {(commandContext.Exception == null ? "<color=green>successfully" : "<color=red>unsuccessfully")}</color> executed command");
+            if (commandContext.Exception != null)
+            {
+                await PrintAsync(commandContext.Exception.Message, Color.Red);
+            }
         }
     }
     //public void Execute(IRocketPlayer caller, string[] command)

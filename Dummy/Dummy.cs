@@ -42,9 +42,9 @@ namespace EvolutionPlugins.Dummy
 
         protected override UniTask OnLoadAsync()
         {
-            Patch_Provider_receiveServer.m_DummyProvider = m_DummyProvider;
-            Patch_Provider_send.m_DummyProvider = m_DummyProvider;
-            Patch_Provider_verifyNextPlayerInQueue.m_DummyProvider = m_DummyProvider;
+            Patch_Provider_receiveServer.onNeedProvider += GiveProvider;
+            Patch_Provider_send.OnNeedProvider += GiveProvider;
+            Patch_Provider_verifyNextPlayerInQueue.OnNeedProvider += GiveProvider;
 
             m_Logger.LogInformation("Made with <3 by Evolution Plugins");
             m_Logger.LogInformation("https://github.com/evolutionplugins \\ https://github.com/diffoz");
@@ -61,8 +61,17 @@ namespace EvolutionPlugins.Dummy
             return UniTask.CompletedTask;
         }
 
+        private IDummyProvider GiveProvider()
+        {
+            return m_DummyProvider;
+        }
+
         protected override UniTask OnUnloadAsync()
         {
+            Patch_Provider_receiveServer.onNeedProvider -= GiveProvider;
+            Patch_Provider_send.OnNeedProvider -= GiveProvider;
+            Patch_Provider_verifyNextPlayerInQueue.OnNeedProvider -= GiveProvider;
+
             m_Harmony.UnpatchAll(_HarmonyId);
 
             DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;

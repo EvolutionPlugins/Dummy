@@ -11,10 +11,11 @@ using System.Threading.Tasks;
 namespace EvolutionPlugins.Dummy.Providers
 {
     [ServiceImplementation(Lifetime = ServiceLifetime.Singleton, Priority = Priority.Lowest)]
+#pragma warning disable CA1063 // Implement IDisposable Correctly
     public class DummyProvider : IDummyProvider, IDisposable
+#pragma warning restore CA1063 // Implement IDisposable Correctly
     {
         private bool m_IsDisposing;
-
 
         private readonly Dictionary<CSteamID, DummyData> m_Dummies;
 
@@ -26,14 +27,14 @@ namespace EvolutionPlugins.Dummy.Providers
 
         public IReadOnlyDictionary<CSteamID, DummyData> Dummies => m_Dummies;
 
-        public async Task<bool> AddDummyAsync(CSteamID Id, DummyData dummyData)
+        public Task<bool> AddDummyAsync(CSteamID Id, DummyData dummyData)
         {
             if (m_Dummies.ContainsKey(Id))
             {
-                return false;
+                return Task.FromResult(false);
             }
             m_Dummies.Add(Id, dummyData);
-            return true;
+            return Task.FromResult(false);
         }
 
 #pragma warning disable CA1063 // Implement IDisposable Correctly
@@ -44,6 +45,7 @@ namespace EvolutionPlugins.Dummy.Providers
             {
                 return;
             }
+            m_IsDisposing = true;
             // maybe also kick?
             m_Dummies.Clear();
         }
@@ -59,9 +61,9 @@ namespace EvolutionPlugins.Dummy.Providers
             return result;
         }
 
-        public async Task<bool> RemoveDummyAsync(CSteamID Id)
+        public Task<bool> RemoveDummyAsync(CSteamID Id)
         {
-            return m_Dummies.Remove(Id);
+            return Task.FromResult(m_Dummies.Remove(Id));
         }
     }
 }

@@ -14,7 +14,7 @@ namespace EvolutionPlugins.Dummy.Patches
     [HarmonyPatch(typeof(Provider), "receiveServer")]
     public static class Patch_Provider_receiveServer
     {
-        public static IDummyProvider m_DummyProvider;
+        public static NeedProvider onNeedProvider;
 
         public static bool Prefix(CSteamID steamID, byte[] packet, int offset)
         {
@@ -174,12 +174,12 @@ namespace EvolutionPlugins.Dummy.Patches
                     Provider.reject(steamID, ESteamRejection.WHITELISTED);
                     return false;
                 }
-                // TODD:
-                //if (Provider.clients.Count - Dummy.Instance.Dummies.Count + 1 > Provider.maxPlayers && Provider.pending.Count + 1 > Provider.queueSize)
-                //{
-                //    Provider.reject(steamID, ESteamRejection.SERVER_FULL);
-                //    return false;
-                //}
+                var dummiesCount = onNeedProvider?.Invoke()?.Dummies.Count ?? 0;
+                if (Provider.clients.Count - dummiesCount + 1 > Provider.maxPlayers && Provider.pending.Count + 1 > Provider.queueSize)
+                {
+                    Provider.reject(steamID, ESteamRejection.SERVER_FULL);
+                    return false;
+                }
                 byte[] array4 = (byte[])objects[4];
                 if (array4.Length != 20)
                 {
