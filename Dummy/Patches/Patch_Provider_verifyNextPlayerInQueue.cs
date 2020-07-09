@@ -1,7 +1,7 @@
 ﻿using HarmonyLib;
 using SDG.Unturned;
 
-namespace Dummy.Patches
+namespace EvolutionPlugins.Dummy.Patches
 {
     [HarmonyPatch(typeof(Provider), "verifyNextPlayerInQueue")]
     public static class Patch_Provider_verifyNextPlayerInQueue
@@ -12,7 +12,7 @@ namespace Dummy.Patches
             {
                 return false;
             }
-            if (Provider.clients.Count - Dummy.Instance.Dummies.Count >= Provider.maxPlayers)
+            if (Provider.clients.Count - Dummy.Dummies.Count >= Provider.maxPlayers)
             {
                 return false;
             }

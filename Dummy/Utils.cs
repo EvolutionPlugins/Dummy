@@ -2,7 +2,7 @@
 using Steamworks;
 using System;
 
-namespace Dummy
+namespace EvolutionPlugins.Dummy
 {
     public static class Utils
     {

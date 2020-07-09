@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using EvolutionPlugins.Dummy;
+using HarmonyLib;
 using SDG.Framework.Modules;
 using SDG.Unturned;
 using Steamworks;
@@ -8,7 +9,7 @@ using System.Globalization;
 using UnityEngine;
 using Types = SDG.Unturned.Types;
 
-namespace Dummy.Patches
+namespace EvolutionPlugins.Dummy.Patches
 {
     [HarmonyPatch(typeof(Provider), "receiveServer")]
     public static class Patch_Provider_receiveServer
@@ -298,7 +299,7 @@ namespace Dummy.Patches
                     return false;
                 }
                 Utils.notifyClientPending(steamID);
-                SteamPending item = new SteamPending(steamPlayerID, (bool)objects[9], (byte)objects[13], (byte)objects[14], (byte)objects[15], (Color)objects[16], (Color)objects[17], (Color)objects[18], (bool)objects[19], (ulong)objects[20], (ulong)objects[21], (ulong)objects[22], (ulong)objects[23], (ulong)objects[24], (ulong)objects[25], (ulong)objects[26], (ulong[])objects[27], (EPlayerSkillset)((byte)objects[28]), (string)objects[30], (CSteamID)objects[31]);
+                SteamPending item = new SteamPending(steamPlayerID, (bool)objects[9], (byte)objects[13], (byte)objects[14], (byte)objects[15], (Color)objects[16], (Color)objects[17], (Color)objects[18], (bool)objects[19], (ulong)objects[20], (ulong)objects[21], (ulong)objects[22], (ulong)objects[23], (ulong)objects[24], (ulong)objects[25], (ulong)objects[26], (ulong[])objects[27], (EPlayerSkillset)(byte)objects[28], (string)objects[30], (CSteamID)objects[31]);
                 if (Provider.isWhitelisted || !flag4)
                 {
                     Provider.pending.Add(item);

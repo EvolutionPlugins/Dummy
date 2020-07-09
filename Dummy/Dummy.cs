@@ -1,70 +1,78 @@
-﻿using Dummy.Configurations;
+﻿using Cysharp.Threading.Tasks;
 using HarmonyLib;
-using Rocket.Core.Plugins;
+using Microsoft.Extensions.Configuration;
+using OpenMod.Unturned.Plugins;
 using SDG.Unturned;
 using Steamworks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Logger = Rocket.Core.Logging.Logger;
 
-namespace Dummy
+namespace EvolutionPlugins.Dummy
 {
-    public class Dummy : RocketPlugin<DummyConfiguration>
+    public class Dummy : OpenModUnturnedPlugin
     {
-        private const string HarmonyId = "evo.diffoz.dummy";
+        private const string _HarmonyId = "evo.diffoz.dummy";
 
-        private Harmony _harmony;
+        private readonly Harmony m_Harmony;
+        private readonly ILogger m_Logger;
+        private readonly IConfiguration m_Configuration;
 
-        public static Dummy Instance;
-        public DummyConfiguration Config;
+        public readonly Dictionary<CSteamID, DummyData> Dummies;
 
-        public readonly Dictionary<CSteamID, DummyData> Dummies = new Dictionary<CSteamID, DummyData>();
-
-        protected override void Load()
+        protected Dummy(IServiceProvider serviceProvider, ILogger logger) : base(serviceProvider)
         {
-            Instance = this;
-            Config = Configuration.Instance;
-
-            Logger.Log("Made with <3 by Evolution Plugins", ConsoleColor.Cyan);
-            Logger.Log("https://vk.com/evolutionplugins", ConsoleColor.Cyan);
-            Logger.Log("Discord: DiFFoZ#6745", ConsoleColor.Cyan);
-
-            _harmony = new Harmony(HarmonyId);
-            _harmony.PatchAll();
-
-            StartCoroutine(DontAutoKick());
-
-            DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
-            Provider.onServerDisconnected += OnServerDisconnected;
-            ChatManager.onServerSendingMessage += OnServerSendingMessage; // with old Rocket.Unturned can be problems
+            m_Harmony = new Harmony(_HarmonyId);
+            m_Logger = logger;
+            m_Configuration = Configuration;
         }
 
-        protected override void Unload()
+        protected override async UniTask OnLoadAsync()
         {
-            Instance = null;
-            Config = null;
-
-            _harmony.UnpatchAll(HarmonyId);
-            _harmony = null;
-
-            foreach (var dummy in Dummies)
-            {
-                Provider.kick(dummy.Key, "");
-            }
-            Dummies.Clear();
-
-            StopAllCoroutines();
-
-            DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
-            Provider.onServerDisconnected -= OnServerDisconnected;
-            ChatManager.onServerSendingMessage -= OnServerSendingMessage;
+            m_Logger.Log("Hello");
         }
+
+        //protected override void Load()
+        //{
+        //    Logger.Log("Made with <3 by Evolution Plugins", ConsoleColor.Cyan);
+        //    Logger.Log("https://vk.com/evolutionplugins", ConsoleColor.Cyan);
+        //    Logger.Log("Discord: DiFFoZ#6745", ConsoleColor.Cyan);
+
+        //    _harmony = new Harmony(HarmonyId);
+        //    _harmony.PatchAll();
+
+        //    StartCoroutine(DontAutoKick());
+
+        //    DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
+        //    Provider.onServerDisconnected += OnServerDisconnected;
+        //    ChatManager.onServerSendingMessage += OnServerSendingMessage; // with old Rocket.Unturned can be problems
+        //}
+
+        //protected override void Unload()
+        //{
+        //    Instance = null;
+        //    Config = null;
+
+        //    _harmony.UnpatchAll(HarmonyId);
+        //    _harmony = null;
+
+        //    foreach (var dummy in Dummies)
+        //    {
+        //        Provider.kick(dummy.Key, "");
+        //    }
+        //    Dummies.Clear();
+
+        //    StopAllCoroutines();
+
+        //    DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
+        //    Provider.onServerDisconnected -= OnServerDisconnected;
+        //    ChatManager.onServerSendingMessage -= OnServerSendingMessage;
+        //}
 
         private void OnServerSendingMessage(ref string text, ref Color color, SteamPlayer fromPlayer, SteamPlayer toPlayer, EChatMode mode, ref string iconURL, ref bool useRichTextFormatting)
         {
-            if(toPlayer == null)
+            if (toPlayer == null)
             {
                 return;
             }

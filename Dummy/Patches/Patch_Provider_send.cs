@@ -3,7 +3,7 @@ using SDG.Unturned;
 using Steamworks;
 using System.Linq;
 
-namespace Dummy.Patches
+namespace EvolutionPlugins.Dummy.Patches
 {
     [HarmonyPatch(typeof(Provider), "send")]
     public static class Patch_Provider_send

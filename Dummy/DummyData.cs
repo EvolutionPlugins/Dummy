@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Dummy
+namespace EvolutionPlugins.Dummy
 {
     public struct DummyData
     {
