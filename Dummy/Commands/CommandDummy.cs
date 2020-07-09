@@ -1,17 +1,10 @@
 ﻿using Microsoft.Extensions.Configuration;
-using OpenMod.API.Commands;
-using OpenMod.API.Users;
 using OpenMod.Core.Commands;
 using OpenMod.Unturned.Users;
-using SDG.Unturned;
-using Steamworks;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using UnityEngine;
-using Command = OpenMod.Core.Commands.Command;
 using Color = System.Drawing.Color;
+using Command = OpenMod.Core.Commands.Command;
 
 namespace EvolutionPlugins.Dummy.Commands
 {
@@ -22,7 +15,7 @@ namespace EvolutionPlugins.Dummy.Commands
     {
         private readonly Dummy m_Instance;
 
-        protected CommandDummy(IServiceProvider serviceProvider, Dummy dummy) : base(serviceProvider)
+        public CommandDummy(IServiceProvider serviceProvider, Dummy dummy) : base(serviceProvider)
         {
             m_Instance = dummy;
         }
@@ -33,16 +26,16 @@ namespace EvolutionPlugins.Dummy.Commands
         }
     }
 
-    [Command("dummy")]
+    [Command("create")]
     [CommandDescription("Creates a dummy")]
-    [CommandParent(typeof(CommandDummy))]
     [CommandActor(typeof(UnturnedUser))]
+    [CommandParent(typeof(CommandDummy))]
     public class CommandDummyCreate : Command
     {
         private readonly Dummy m_Instance;
         private readonly IConfiguration m_Configuration;
 
-        protected CommandDummyCreate(IServiceProvider serviceProvider, Dummy dummy, IConfiguration configuration) : base(serviceProvider)
+        public CommandDummyCreate(IServiceProvider serviceProvider, Dummy dummy, IConfiguration configuration) : base(serviceProvider)
         {
             m_Instance = dummy;
             m_Configuration = configuration;
@@ -338,5 +331,5 @@ namespace EvolutionPlugins.Dummy.Commands
             UnturnedChat.Say(player, $"Dummy ({id}) was removed", Color.green);
         }*/
 
-        
+
 }

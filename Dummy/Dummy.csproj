@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>EvolutionPlugins.Dummy</RootNamespace>
-    <AssemblyName>EvolutionPlugins.Dummy</AssemblyName>
+    <AssemblyName>Dummy</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -541,7 +541,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="config.yaml" />
+    <EmbeddedResource Include="config.yaml" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

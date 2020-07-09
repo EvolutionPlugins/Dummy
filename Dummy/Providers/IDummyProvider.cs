@@ -1,18 +1,19 @@
-﻿using Steamworks;
-using System;
+﻿using OpenMod.API.Ioc;
+using Steamworks;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace EvolutionPlugins.Dummy.Providers
 {
+    [Service]
     public interface IDummyProvider
     {
         IReadOnlyDictionary<CSteamID, DummyData> Dummies { get; }
 
-        Task<bool> AddDummy(CSteamID Id, DummyData dummyData);
+        Task<bool> AddDummyAsync(CSteamID Id, DummyData dummyData);
 
-        Task<bool> RemoveDummy(CSteamID Id);
+        Task<bool> RemoveDummyAsync(CSteamID Id);
+
+        CSteamID GetAvailableId();
     }
 }

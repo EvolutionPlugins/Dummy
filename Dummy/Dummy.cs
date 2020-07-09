@@ -1,4 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
+using EvolutionPlugins.Dummy.Patches;
+using EvolutionPlugins.Dummy.Providers;
 using HarmonyLib;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -7,9 +9,7 @@ using OpenMod.API.Users;
 using OpenMod.Core.Helpers;
 using OpenMod.Core.Users;
 using OpenMod.Unturned.Plugins;
-using OpenMod.Unturned.Users;
 using SDG.Unturned;
-using Semver;
 using Steamworks;
 using System;
 using System.Collections.Generic;
@@ -30,20 +30,26 @@ namespace EvolutionPlugins.Dummy
         private readonly ILogger m_Logger;
         private readonly IConfiguration m_Configuration;
         private readonly IUserProvider m_UserProvider;
+        private readonly IDummyProvider m_DummyProvider;
 
-        public readonly Dictionary<CSteamID, DummyData> Dummies;
+        public readonly Dictionary<CSteamID, DummyData> Dummies = new Dictionary<CSteamID, DummyData>();
 
-        public Dummy(IServiceProvider serviceProvider, ILogger<Dummy> logger, IUserManager userProvider) : base(serviceProvider)
+        public Dummy(IServiceProvider serviceProvider, ILogger<Dummy> logger, IUserManager userManager, IDummyProvider dummyProvider) : base(serviceProvider)
         {
             m_Harmony = new Harmony(_HarmonyId);
             m_Logger = logger;
             m_Configuration = Configuration;
-            m_UserProvider = userProvider.UserProviders.FirstOrDefault(x => x.SupportsUserType(KnownActorTypes.Player));
+            m_UserProvider = userManager.UserProviders.FirstOrDefault(x => x.SupportsUserType(KnownActorTypes.Player));
+            m_DummyProvider = dummyProvider;
             Dummies = new Dictionary<CSteamID, DummyData>();
         }
 
-        protected override async UniTask OnLoadAsync()
+        protected override UniTask OnLoadAsync()
         {
+            Patch_Provider_receiveServer.m_DummyProvider = m_DummyProvider;
+            Patch_Provider_send.m_DummyProvider = m_DummyProvider;
+            Patch_Provider_verifyNextPlayerInQueue.m_DummyProvider = m_DummyProvider;
+
             m_Logger.LogInformation("Made with <3 by Evolution Plugins");
             m_Logger.LogInformation("https://github.com/evolutionplugins \\ https://github.com/diffoz");
             m_Logger.LogInformation("Discord: DiFFoZ#6745");
@@ -55,15 +61,19 @@ namespace EvolutionPlugins.Dummy
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
             Provider.onServerDisconnected += OnServerDisconnected;
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
+
+            return UniTask.CompletedTask;
         }
 
-        protected override async UniTask OnUnloadAsync()
+        protected override UniTask OnUnloadAsync()
         {
             m_Harmony.UnpatchAll(_HarmonyId);
 
             DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
             Provider.onServerDisconnected -= OnServerDisconnected;
             ChatManager.onServerSendingMessage -= OnServerSendingMessage;
+
+            return UniTask.CompletedTask;
         }
 
         private void OnServerSendingMessage(ref string text, ref Color color, SteamPlayer fromPlayer, SteamPlayer toPlayer, EChatMode mode, ref string iconURL, ref bool useRichTextFormatting)
