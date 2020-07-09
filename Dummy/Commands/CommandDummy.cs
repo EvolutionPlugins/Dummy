@@ -19,7 +19,7 @@ namespace Dummy.Commands
 
         public string Help => "";
 
-        public string Syntax => "/dummy <create | remove | clear | teleport | execute | gesture | stance>";
+        public string Syntax => "/dummy <create | remove | clear | teleport | execute | gesture | stance | face>";
 
         public List<string> Aliases => new List<string>();
 
@@ -124,7 +124,7 @@ namespace Dummy.Commands
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
                 return;
             }
-
+            
             if (faceId > Customization.FACES_FREE + Customization.FACES_PRO)
             {
                 UnturnedChat.Say(player, $"Can't change to {faceId} because is higher {Customization.FACES_FREE + Customization.FACES_PRO}", Color.red);
