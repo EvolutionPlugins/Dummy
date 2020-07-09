@@ -45,10 +45,10 @@ namespace EvolutionPlugins.Dummy
             {
                 return;
             }
-            if (Provider.clients.Count - Dummy.Instance.Dummies.Count >= Provider.maxPlayers)
-            {
-                return;
-            }
+            //if (Provider.clients.Count - Dummy.Instance.Dummies.Count >= Provider.maxPlayers)
+            //{
+            //    return;
+            //}
             SteamPending steamPending = Provider.pending[0];
             if (steamPending.hasSentVerifyPacket)
             {

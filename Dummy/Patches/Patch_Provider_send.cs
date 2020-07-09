@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using EvolutionPlugins.Dummy.Providers;
+using HarmonyLib;
 using SDG.Unturned;
 using Steamworks;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace EvolutionPlugins.Dummy.Patches
         // Prevent spam about "Failed send packet to ..."
         public static bool Prefix(CSteamID steamID)
         {
-            return !Dummy.Instance.Dummies.Any(k => k.Key == steamID);
+            return 
         }
     }
 }

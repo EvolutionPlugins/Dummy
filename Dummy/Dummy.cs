@@ -1,13 +1,19 @@
 ﻿using Cysharp.Threading.Tasks;
 using HarmonyLib;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using OpenMod.API.Plugins;
+using OpenMod.Core.Helpers;
 using OpenMod.Unturned.Plugins;
 using SDG.Unturned;
 using Steamworks;
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
+
+[assembly: PluginMetadata("EvolutionPlugins.Dummy", Author = "DiFFoZ", DisplayName = "Dummy")]
 
 namespace EvolutionPlugins.Dummy
 {
@@ -21,16 +27,25 @@ namespace EvolutionPlugins.Dummy
 
         public readonly Dictionary<CSteamID, DummyData> Dummies;
 
-        protected Dummy(IServiceProvider serviceProvider, ILogger logger) : base(serviceProvider)
+        public Dummy(IServiceProvider serviceProvider, ILogger<Dummy> logger) : base(serviceProvider)
         {
             m_Harmony = new Harmony(_HarmonyId);
             m_Logger = logger;
             m_Configuration = Configuration;
+            Dummies = new Dictionary<CSteamID, DummyData>();
         }
 
         protected override async UniTask OnLoadAsync()
         {
-            m_Logger.Log("Hello");
+            m_Logger.LogInformation("Hello");
+
+            AsyncHelper.Schedule("Don't auto kick a dummies", DontAutoKickTask);
+
+            m_Harmony.PatchAll();
+
+            DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
+            Provider.onServerDisconnected += OnServerDisconnected;
+            ChatManager.onServerSendingMessage += OnServerSendingMessage;
         }
 
         //protected override void Load()
@@ -94,10 +109,6 @@ namespace EvolutionPlugins.Dummy
         {
             if (Dummies.ContainsKey(steamID))
             {
-                var coroutine = Dummies[steamID].Coroutine;
-                if (coroutine != null)
-                    StopCoroutine(coroutine);
-
                 Dummies.Remove(steamID);
             }
         }
@@ -124,25 +135,20 @@ namespace EvolutionPlugins.Dummy
             shouldAllow = false;
         }
 
-        internal static CSteamID GetAvailableID()
+        internal CSteamID GetAvailableID()
         {
             var result = new CSteamID(1);
 
-            while (Instance.Dummies.ContainsKey(result))
+            while (Dummies.ContainsKey(result))
             {
                 result.m_SteamID++;
             }
             return result;
         }
 
-        public Coroutine GetCoroutine(CSteamID id)
+        private async Task DontAutoKickTask()
         {
-            return Config.KickDummyAfterSeconds != 0 ? StartCoroutine(KickTimer(id)) : null;
-        }
-
-        private IEnumerator DontAutoKick()
-        {
-            while (true)
+            while (IsComponentAlive)
             {
                 foreach (var dummy in Dummies)
                 {
@@ -153,15 +159,8 @@ namespace EvolutionPlugins.Dummy
                     }
                     client.timeLastPacketWasReceivedFromClient = Time.realtimeSinceStartup;
                 }
-                yield return new WaitForSeconds(5);
+                await Task.Delay(5000);
             }
-        }
-
-        private IEnumerator KickTimer(CSteamID id)
-        {
-            yield return new WaitForSeconds(Config.KickDummyAfterSeconds);
-            CommandWindow.Log($"Kicking a dummy {id}");
-            Provider.kick(id, "");
         }
     }
 }

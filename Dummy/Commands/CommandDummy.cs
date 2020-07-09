@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using Command = OpenMod.Core.Commands.Command;
+using Color = System.Drawing.Color;
 
 namespace EvolutionPlugins.Dummy.Commands
 {
@@ -57,46 +58,46 @@ namespace EvolutionPlugins.Dummy.Commands
             var amountDummiesConfig = m_Configuration.GetSection("AmountDummiesInSameTime").Get<byte>();
             if (amountDummiesConfig != 0 && m_Instance.Dummies.Count + 1 > amountDummiesConfig)
             {
-                await user.Say(player, "Dummy can't be created. Amount dummies overflow", Color.red);
+                await user.PrintMessageAsync("Dummy can't be created. Amount dummies overflow", Color.Yellow);
                 return;
             }
 
-            var id = global::Dummy.GetAvailableID();
+            //var id = m_Instance.GetAvailableID();
 
-            global::Dummy.Instance.Dummies.Add(id, new DummyData
-            { Coroutine = global::Dummy.Instance.GetCoroutine(id), Owners = new List<CSteamID> { player.CSteamID } });
+            //m_Instance.Dummies.Add(id, new DummyData
+            //{ Coroutine = global::Dummy.Instance.GetCoroutine(id), Owners = new List<CSteamID> { player.CSteamID } });
 
-            if (copy)
-            {
-                var steamPlayer = player.SteamPlayer();
+            //if (copy)
+            //{
+            //    var steamPlayer = player.SteamPlayer();
 
-                Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
-                    true, steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
-                    Color.white, steamPlayer.hand, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, Array.Empty<ulong>(),
-                    EPlayerSkillset.NONE, "english", CSteamID.Nil));
+            //    Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
+            //        true, steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
+            //        Color.white, steamPlayer.hand, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, Array.Empty<ulong>(),
+            //        EPlayerSkillset.NONE, "english", CSteamID.Nil));
 
-                Provider.accept(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, false,
-                    steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
-                    Color.white, steamPlayer.hand, steamPlayer.shirtItem, steamPlayer.pantsItem, steamPlayer.hatItem,
-                    steamPlayer.backpackItem, steamPlayer.vestItem, steamPlayer.maskItem, steamPlayer.glassesItem,
-                    steamPlayer.skinItems, steamPlayer.skinTags, steamPlayer.skinDynamicProps, EPlayerSkillset.NONE,
-                    "english", CSteamID.Nil);
-            }
-            else
-            {
-                Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
-                true, 0, 0, 0, Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
-                Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
+            //    Provider.accept(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, false,
+            //        steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
+            //        Color.white, steamPlayer.hand, steamPlayer.shirtItem, steamPlayer.pantsItem, steamPlayer.hatItem,
+            //        steamPlayer.backpackItem, steamPlayer.vestItem, steamPlayer.maskItem, steamPlayer.glassesItem,
+            //        steamPlayer.skinItems, steamPlayer.skinTags, steamPlayer.skinDynamicProps, EPlayerSkillset.NONE,
+            //        "english", CSteamID.Nil);
+            //}
+            //else
+            //{
+            //    Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
+            //    true, 0, 0, 0, Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
+            //    Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
 
-                Provider.accept(new SteamPlayerID(id, 1, "dummy", "dummy", "dummy", CSteamID.Nil), true, false, 0,
-                    0, 0, Color.white, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0, 0, Array.Empty<int>(), Array.Empty<string>(),
-                    Array.Empty<string>(), EPlayerSkillset.NONE, "english", CSteamID.Nil);
-            }
+            //    Provider.accept(new SteamPlayerID(id, 1, "dummy", "dummy", "dummy", CSteamID.Nil), true, false, 0,
+            //        0, 0, Color.white, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0, 0, Array.Empty<int>(), Array.Empty<string>(),
+            //        Array.Empty<string>(), EPlayerSkillset.NONE, "english", CSteamID.Nil);
+            //}
 
-            var dummy = Provider.clients.Last();
-            dummy.player.teleportToLocationUnsafe(player.Position, player.Rotation);
+            //var dummy = Provider.clients.Last();
+            //dummy.player.teleportToLocationUnsafe(player.Position, player.Rotation);
 
-            UnturnedChat.Say(player, $"Dummy ({id.m_SteamID}) has created");
+            //UnturnedChat.Say(player, $"Dummy ({id.m_SteamID}) has created");
         }
     }
     //public void Execute(IRocketPlayer caller, string[] command)
@@ -185,7 +186,8 @@ namespace EvolutionPlugins.Dummy.Commands
     //    }
     //}
 
-    private void FaceDummy(UnturnedPlayer player, byte id, byte faceId)
+    // TODO:
+    /*private void FaceDummy(UnturnedPlayer player, byte id, byte faceId)
         {
             if (!global::Dummy.Instance.Dummies.ContainsKey((CSteamID)id))
             {
@@ -334,7 +336,7 @@ namespace EvolutionPlugins.Dummy.Commands
 
             global::Dummy.Instance.Dummies.Remove(new CSteamID(id));
             UnturnedChat.Say(player, $"Dummy ({id}) was removed", Color.green);
-        }
+        }*/
 
         
 }

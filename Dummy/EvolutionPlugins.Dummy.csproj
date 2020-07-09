@@ -280,6 +280,7 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
     </Reference>
@@ -533,13 +534,18 @@
     <Compile Include="Patches\Patch_Provider_receiveServer.cs" />
     <Compile Include="Patches\Patch_Provider_send.cs" />
     <Compile Include="Patches\Patch_Provider_verifyNextPlayerInQueue.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Providers\DummyProvider.cs" />
+    <Compile Include="Providers\IDummyProvider.cs" />
+    <Compile Include="ServiceConfigurator.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="config.yaml" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
