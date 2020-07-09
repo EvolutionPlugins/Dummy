@@ -12,7 +12,6 @@ using OpenMod.Unturned.Plugins;
 using SDG.Unturned;
 using Steamworks;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -32,8 +31,6 @@ namespace EvolutionPlugins.Dummy
         private readonly IUserProvider m_UserProvider;
         private readonly IDummyProvider m_DummyProvider;
 
-        public readonly Dictionary<CSteamID, DummyData> Dummies = new Dictionary<CSteamID, DummyData>();
-
         public Dummy(IServiceProvider serviceProvider, ILogger<Dummy> logger, IUserManager userManager, IDummyProvider dummyProvider) : base(serviceProvider)
         {
             m_Harmony = new Harmony(_HarmonyId);
@@ -41,7 +38,6 @@ namespace EvolutionPlugins.Dummy
             m_Configuration = Configuration;
             m_UserProvider = userManager.UserProviders.FirstOrDefault(x => x.SupportsUserType(KnownActorTypes.Player));
             m_DummyProvider = dummyProvider;
-            Dummies = new Dictionary<CSteamID, DummyData>();
         }
 
         protected override UniTask OnLoadAsync()
@@ -83,12 +79,12 @@ namespace EvolutionPlugins.Dummy
                 return;
             }
 
-            if (!Dummies.ContainsKey(toPlayer.playerID.steamID))
+            if (!m_DummyProvider.Dummies.ContainsKey(toPlayer.playerID.steamID))
             {
                 return;
             }
 
-            var data = Dummies[toPlayer.playerID.steamID];
+            var data = m_DummyProvider.Dummies[toPlayer.playerID.steamID];
 
             foreach (var owner in data.Owners)
             {
@@ -98,12 +94,12 @@ namespace EvolutionPlugins.Dummy
 
         private void OnServerDisconnected(CSteamID steamID)
         {
-            Dummies.Remove(steamID);
+            AsyncHelper.RunSync(() => m_DummyProvider.RemoveDummyAsync(steamID));
         }
 
         private void DamageTool_damagePlayerRequested(ref DamagePlayerParameters parameters, ref bool shouldAllow)
         {
-            if (!Dummies.ContainsKey(parameters.player.channel.owner.playerID.steamID))
+            if (!m_DummyProvider.Dummies.ContainsKey(parameters.player.channel.owner.playerID.steamID))
             {
                 return;
             }
@@ -125,22 +121,11 @@ namespace EvolutionPlugins.Dummy
             ChatManager.say(killerId, $"Amount damage to dummy: {totalDamage}", Color.green, true);
         }
 
-        internal CSteamID GetAvailableID()
-        {
-            var result = new CSteamID(1);
-
-            while (Dummies.ContainsKey(result))
-            {
-                result.m_SteamID++;
-            }
-            return result;
-        }
-
         private async Task DontAutoKickTask()
         {
             while (IsComponentAlive)
             {
-                foreach (var dummy in Dummies)
+                foreach (var dummy in m_DummyProvider.Dummies)
                 {
                     var client = Provider.clients.Find(k => k.playerID.steamID == dummy.Key);
                     if (client == null)
