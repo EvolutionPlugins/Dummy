@@ -41,6 +41,25 @@ namespace EvolutionPlugins.Dummy
             byte[] bytes = SteamPacker.getBytes(0, out int size, 26);
             Provider.send(remoteSteamID, ESteamPacket.CLIENT_PENDING, bytes, size, 0);
         }
+
+        public static void verifyNextPlayerInQueue(int dummiesCount)
+        {
+            if (Provider.pending.Count < 1)
+            {
+                return;
+            }
+            if (Provider.clients.Count - dummiesCount >= Provider.maxPlayers)
+            {
+                return;
+            }
+            SteamPending steamPending = Provider.pending[0];
+            if (steamPending.hasSentVerifyPacket)
+            {
+                return;
+            }
+            steamPending.sendVerifyPacket();
+            return;
+        }
         #endregion
     }
 }

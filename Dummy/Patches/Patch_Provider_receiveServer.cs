@@ -1,5 +1,4 @@
-﻿using EvolutionPlugins.Dummy.Providers;
-using HarmonyLib;
+﻿using HarmonyLib;
 using SDG.Framework.Modules;
 using SDG.Unturned;
 using Steamworks;
@@ -308,14 +307,14 @@ namespace EvolutionPlugins.Dummy.Patches
                     Provider.pending.Add(item);
                     if (Provider.pending.Count == 1)
                     {
-                        Utils.verifyNextPlayerInQueue();
+                        Utils.verifyNextPlayerInQueue(dummiesCount);
                     }
                     return false;
                 }
                 if (Provider.pending.Count == 0)
                 {
                     Provider.pending.Add(item);
-                    Utils.verifyNextPlayerInQueue();
+                    Utils.verifyNextPlayerInQueue(dummiesCount);
                     return false;
                 }
                 Provider.pending.Insert(1, item);
