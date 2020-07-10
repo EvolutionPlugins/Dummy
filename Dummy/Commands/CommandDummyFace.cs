@@ -35,16 +35,18 @@ namespace EvolutionPlugins.Dummy.Commands
             }
 
             var id = (CSteamID)await Context.Parameters.GetAsync<ulong>(0);
-
             if (!m_DummyProvider.Dummies.TryGetValue(id, out _))
             {
                 throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
             }
 
             var dummy = (UnturnedUser)await m_UserManager.FindUserAsync(KnownActorTypes.Player, id.ToString(), UserSearchMode.Id);
+            if(dummy == null)
+            {
+                throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
+            }
 
             var faceId = await Context.Parameters.GetAsync<byte>(1);
-
             if (faceId > Customization.FACES_FREE + Customization.FACES_PRO)
             {
                 throw new UserFriendlyException($"Can't change to {faceId} because is higher {Customization.FACES_FREE + Customization.FACES_PRO}");
