@@ -1,4 +1,5 @@
 ﻿using EvolutionPlugins.Dummy.API;
+using EvolutionPlugins.Dummy.Models;
 using Microsoft.Extensions.DependencyInjection;
 using OpenMod.API.Ioc;
 using OpenMod.API.Prioritization;

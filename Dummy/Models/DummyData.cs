@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace EvolutionPlugins.Dummy
+namespace EvolutionPlugins.Dummy.Models
 {
     public struct DummyData
     {
         public List<CSteamID> Owners;
-        public Coroutine Coroutine;
 
         public override bool Equals(object obj)
         {

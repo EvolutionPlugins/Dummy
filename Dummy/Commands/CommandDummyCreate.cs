@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using EvolutionPlugins.Dummy.API;
+using EvolutionPlugins.Dummy.Models;
 using Microsoft.Extensions.Configuration;
 using OpenMod.API.Users;
 using OpenMod.Core.Commands;

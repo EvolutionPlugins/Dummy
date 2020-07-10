@@ -537,7 +537,7 @@
     <Compile Include="Commands\CommandDummyGesture.cs" />
     <Compile Include="Commands\CommandDummyRemove.cs" />
     <Compile Include="Commands\CommandDummyTphere.cs" />
-    <Compile Include="DummyData.cs" />
+    <Compile Include="Models\DummyData.cs" />
     <Compile Include="Dummy.cs" />
     <Compile Include="Patches\Patch_Provider_receiveServer.cs" />
     <Compile Include="Patches\Patch_Provider_send.cs" />
