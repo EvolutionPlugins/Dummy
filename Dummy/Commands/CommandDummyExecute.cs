@@ -17,20 +17,138 @@ using Command = OpenMod.Core.Commands.Command;
 
 namespace EvolutionPlugins.Dummy.Commands
 {
-    [Command("dummy")]
-    [CommandDescription("---")]
-    [CommandSyntax("<create|remove|clear|teleport|execute|gesture|stance|face>")]
-    public class CommandDummy : Command
+
+    [Command("execute")]
+    [CommandDescription("Execute a command by Dummy")]
+    [CommandSyntax("<id> <command>")]
+    [CommandParent(typeof(CommandDummy))]
+    public class CommandDummyExecute : Command
     {
-        public CommandDummy(IServiceProvider serviceProvider) : base(serviceProvider)
+        private readonly IDummyProvider m_DummyProvider;
+        private readonly ICommandExecutor m_CommandExecutor;
+        private readonly IUserProvider m_UserProvider;
+
+        public CommandDummyExecute(IServiceProvider serviceProvider, IDummyProvider dummyProvider, ICommandExecutor commandExecutor, IUserProvider userProvider) : base(serviceProvider)
         {
+            m_DummyProvider = dummyProvider;
+            m_CommandExecutor = commandExecutor;
+            m_UserProvider = userProvider;
         }
 
-        protected override Task OnExecuteAsync()
+        protected override async Task OnExecuteAsync()
         {
-            throw new CommandWrongUsageException(Context);
+            if (Context.Parameters.Count < 2)
+            {
+                throw new CommandWrongUsageException(Context);
+            }
+
+            var id = await Context.Parameters.GetAsync<CSteamID>(0);
+
+            if (!m_DummyProvider.Dummies.TryGetValue(id, out _))
+            {
+                throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
+            }
+
+            var dummy = (UnturnedUser)await m_UserProvider.FindUserAsync(KnownActorTypes.Player, id.ToString(), UserSearchMode.Id);
+            if (dummy == null)
+            {
+                throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
+            }
+
+            var commandContext = await m_CommandExecutor.ExecuteAsync(dummy, Context.Parameters.Skip(1).ToArray(), "");
+
+            await PrintAsync($"Dummy has {(commandContext.Exception == null ? "<color=green>successfully" : "<color=red>unsuccessfully")}</color> executed command");
+            if (commandContext.Exception != null)
+            {
+                await PrintAsync(commandContext.Exception.Message, Color.Red);
+            }
         }
     }
+    //public void Execute(IRocketPlayer caller, string[] command)
+    //{
+    //    var player = (UnturnedPlayer)caller;
+
+    //    if (command.Length == 0)
+    //    {
+    //        UnturnedChat.Say(player, $"Wrong command usage. Use correct: {Syntax}", Color.yellow);
+    //        return;
+    //    }
+
+    //    switch (command[0].ToLower())
+    //    {
+    //        case "create":
+    //            CreateDummy(player, false);
+    //            return;
+
+    //        case "copy":
+    //            CreateDummy(player, true);
+    //            return;
+
+    //        case "remove":
+    //        case "kick":
+    //            if (command.Length != 2 || !byte.TryParse(command[1], out var id))
+    //            {
+    //                UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy remove <id>", Color.yellow);
+    //                return;
+    //            }
+
+    //            RemoveDummy(player, id);
+    //            return;
+
+    //        case "clear":
+    //            ClearAllDummies(player);
+    //            return;
+
+    //        case "execute":
+    //            if (command.Length < 3 || !byte.TryParse(command[1], out id))
+    //            {
+    //                UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy execute <id> <command> [args]", Color.yellow);
+    //                return;
+    //            }
+    //            ExecuteCommandDummy(player, id, string.Join(" ", command.Skip(2)));
+    //            return;
+
+    //        case "teleport":
+    //        case "tp":
+    //            if (command.Length != 2 || !byte.TryParse(command[1], out id))
+    //            {
+    //                UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy tp <id>", Color.yellow);
+    //                return;
+    //            }
+    //            TeleportDummy(player, id);
+    //            return;
+
+    //        case "gesture":
+    //            if (command.Length != 3 || !byte.TryParse(command[1], out id))
+    //            {
+    //                UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy gesture <id> <gesture>", Color.yellow);
+    //                return;
+    //            }
+    //            GestureDummy(player, id, command[2]);
+    //            return;
+
+    //        case "stance":
+    //            if (command.Length != 3 || !byte.TryParse(command[1], out id))
+    //            {
+    //                UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy stance <id> <stance>", Color.yellow);
+    //                return;
+    //            }
+    //            StanceDummy(player, id, command[2]);
+    //            return;
+
+    //        case "face":
+    //            if (command.Length != 3 || !byte.TryParse(command[1], out id) || !byte.TryParse(command[2], out var faceId))
+    //            {
+    //                UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy face <id> <faceId>", Color.yellow);
+    //                return;
+    //            }
+    //            FaceDummy(player, id, faceId);
+    //            return;
+    //        default:
+    //            UnturnedChat.Say(player, $"Wrong command usage. Use correct: {Syntax}", Color.yellow);
+    //            break;
+    //    }
+    //}
 
     // TODO:
     /*private void FaceDummy(UnturnedPlayer player, byte id, byte faceId)

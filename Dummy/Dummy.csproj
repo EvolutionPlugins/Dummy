@@ -529,6 +529,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\CommandDummy.cs" />
+    <Compile Include="Commands\CommandDummyClear.cs" />
+    <Compile Include="Commands\CommandDummyCopy.cs" />
+    <Compile Include="Commands\CommandDummyCreate.cs" />
+    <Compile Include="Commands\CommandDummyExecute.cs" />
+    <Compile Include="Commands\CommandDummyFace.cs" />
+    <Compile Include="Commands\CommandDummyGesture.cs" />
+    <Compile Include="Commands\CommandDummyRemove.cs" />
+    <Compile Include="Commands\CommandDummyTphere.cs" />
     <Compile Include="DummyData.cs" />
     <Compile Include="Dummy.cs" />
     <Compile Include="Patches\Patch_Provider_receiveServer.cs" />

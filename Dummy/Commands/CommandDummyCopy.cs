@@ -17,21 +17,23 @@ using Command = OpenMod.Core.Commands.Command;
 
 namespace EvolutionPlugins.Dummy.Commands
 {
-    [Command("dummy")]
-    [CommandDescription("---")]
-    [CommandSyntax("<create|remove|clear|teleport|execute|gesture|stance|face>")]
-    public class CommandDummy : Command
+
+    [Command("copy")]
+    [CommandDescription("Creates a dummy and copy your skin, hait, beard, etc...")]
+    [CommandActor(typeof(UnturnedUser))]
+    [CommandParent(typeof(CommandDummy))]
+    public class CommandDummyCopy : Command
     {
-        public CommandDummy(IServiceProvider serviceProvider) : base(serviceProvider)
+        public CommandDummyCopy(IServiceProvider serviceProvider) : base(serviceProvider)
         {
+
         }
 
         protected override Task OnExecuteAsync()
         {
-            throw new CommandWrongUsageException(Context);
+            throw new NotImplementedException();
         }
     }
-
     // TODO:
     /*private void FaceDummy(UnturnedPlayer player, byte id, byte faceId)
         {
