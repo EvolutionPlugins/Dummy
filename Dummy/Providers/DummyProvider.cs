@@ -2,9 +2,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using OpenMod.API.Ioc;
 using OpenMod.API.Prioritization;
+using SDG.Unturned;
 using Steamworks;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace EvolutionPlugins.Dummy.Providers
@@ -66,7 +68,13 @@ namespace EvolutionPlugins.Dummy.Providers
                 return;
             }
             m_IsDisposing = true;
-            // maybe also kick?
+
+            var keys = m_Dummies.Keys.ToList();
+            foreach (var cSteamID in keys)
+            {
+                Provider.kick(cSteamID, "");
+            }
+
             m_Dummies.Clear();
         }
     }
