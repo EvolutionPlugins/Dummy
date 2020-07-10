@@ -22,7 +22,7 @@ namespace Dummy
 
         public readonly Dictionary<CSteamID, DummyData> Dummies = new Dictionary<CSteamID, DummyData>();
 
-        protected override void Load()
+        protected override void Load() 
         {
             Instance = this;
             Config = Configuration.Instance;
