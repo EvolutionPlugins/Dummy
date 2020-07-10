@@ -3,7 +3,7 @@ using Steamworks;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace EvolutionPlugins.Dummy.Providers
+namespace EvolutionPlugins.Dummy.API
 {
     [Service]
     public interface IDummyProvider

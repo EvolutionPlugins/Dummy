@@ -543,7 +543,7 @@
     <Compile Include="Patches\Patch_Provider_send.cs" />
     <Compile Include="Patches\Patch_Provider_verifyNextPlayerInQueue.cs" />
     <Compile Include="Providers\DummyProvider.cs" />
-    <Compile Include="Providers\IDummyProvider.cs" />
+    <Compile Include="API\IDummyProvider.cs" />
     <Compile Include="ServiceConfigurator.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>

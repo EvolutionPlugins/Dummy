@@ -1,4 +1,4 @@
-﻿using EvolutionPlugins.Dummy.Providers;
+﻿using EvolutionPlugins.Dummy.API;
 using Microsoft.Extensions.Configuration;
 using OpenMod.API.Commands;
 using OpenMod.API.Users;

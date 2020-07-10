@@ -1,6 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
+using EvolutionPlugins.Dummy.API;
 using EvolutionPlugins.Dummy.Patches;
-using EvolutionPlugins.Dummy.Providers;
 using HarmonyLib;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
