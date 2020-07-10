@@ -42,7 +42,7 @@ namespace EvolutionPlugins.Dummy.Commands
                 throw new CommandWrongUsageException(Context);
             }
 
-            var id = await Context.Parameters.GetAsync<CSteamID>(0);
+            var id = (CSteamID)await Context.Parameters.GetAsync<ulong>(0);
 
             if (!m_DummyProvider.Dummies.TryGetValue(id, out _))
             {
