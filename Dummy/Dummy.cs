@@ -97,7 +97,12 @@ namespace EvolutionPlugins.Dummy
 
             foreach (var owner in data.Owners)
             {
-                ChatManager.say(owner, $"Dummy {toPlayer.playerID.steamID} got message: {text}", color, true);
+                var steamPlayerOwner = PlayerTool.getSteamPlayer(owner);
+                if(steamPlayerOwner == null)
+                {
+                    continue;
+                }
+                ChatManager.serverSendMessage($"Dummy {toPlayer.playerID.steamID} got message: {text}", color, toPlayer: steamPlayerOwner, iconURL: iconURL, useRichTextFormatting: true);
             }
         }
 
