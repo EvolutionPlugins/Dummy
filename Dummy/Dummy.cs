@@ -68,11 +68,11 @@ namespace EvolutionPlugins.Dummy
 
         protected override UniTask OnUnloadAsync()
         {
+            m_Harmony.UnpatchAll(_HarmonyId);
+
             Patch_Provider_receiveServer.onNeedProvider -= GiveProvider;
             Patch_Provider_send.OnNeedProvider -= GiveProvider;
             Patch_Provider_verifyNextPlayerInQueue.OnNeedProvider -= GiveProvider;
-
-            m_Harmony.UnpatchAll(_HarmonyId);
 
             DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
             Provider.onServerDisconnected -= OnServerDisconnected;
