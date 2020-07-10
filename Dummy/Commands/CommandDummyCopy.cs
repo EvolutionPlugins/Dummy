@@ -1,7 +1,10 @@
 ﻿using Cysharp.Threading.Tasks;
 using EvolutionPlugins.Dummy.API;
 using Microsoft.Extensions.Configuration;
+using OpenMod.API.Persistence;
+using OpenMod.API.Users;
 using OpenMod.Core.Commands;
+using OpenMod.Core.Users;
 using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
@@ -22,12 +25,16 @@ namespace EvolutionPlugins.Dummy.Commands
     {
         private readonly IConfiguration m_Configuration;
         private readonly IDummyProvider m_DummyProvider;
+        private readonly IUserDataSeeder m_UserDataSeeder;
+        private readonly IUserDataStore m_UserDataStore;
 
         public CommandDummyCopy(IServiceProvider serviceProvider, IConfiguration configuration,
-            IDummyProvider dummyProvider) : base(serviceProvider)
+            IDummyProvider dummyProvider, IUserDataSeeder userDataSeeder, IUserDataStore userDataStore) : base(serviceProvider)
         {
             m_Configuration = configuration;
             m_DummyProvider = dummyProvider;
+            m_UserDataSeeder = userDataSeeder;
+            m_UserDataStore = userDataStore;
         }
 
         protected override async Task OnExecuteAsync()
@@ -64,6 +71,9 @@ namespace EvolutionPlugins.Dummy.Commands
             dummy.player.teleportToLocationUnsafe(user.Player.transform.position, user.Player.transform.rotation.eulerAngles.y);
 
             await UniTask.SwitchToTaskPool();
+
+            var dummyUser = new UnturnedUser(m_UserDataStore, dummy.player);
+            await m_UserDataSeeder.SeedUserDataAsync(dummyUser.Id, dummyUser.Type, dummyUser.DisplayName); // https://github.com/openmod/openmod/pull/109
 
             await user.PrintMessageAsync($"Dummy ({id.m_SteamID}) has created");
         }

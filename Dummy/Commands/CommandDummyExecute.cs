@@ -27,12 +27,14 @@ namespace EvolutionPlugins.Dummy.Commands
         private readonly IDummyProvider m_DummyProvider;
         private readonly ICommandExecutor m_CommandExecutor;
         private readonly IUserProvider m_UserProvider;
+        private readonly IUserDataStore m_UserDataStore;
 
-        public CommandDummyExecute(IServiceProvider serviceProvider, IDummyProvider dummyProvider, ICommandExecutor commandExecutor, IUserProvider userProvider) : base(serviceProvider)
+        public CommandDummyExecute(IServiceProvider serviceProvider, IDummyProvider dummyProvider, ICommandExecutor commandExecutor, IUserManager userManager, IUserDataStore userDataStore) : base(serviceProvider)
         {
             m_DummyProvider = dummyProvider;
             m_CommandExecutor = commandExecutor;
-            m_UserProvider = userProvider;
+            m_UserProvider = userManager.UserProviders.FirstOrDefault(x => x.SupportsUserType(KnownActorTypes.Player));
+            m_UserDataStore = userDataStore;
         }
 
         protected override async Task OnExecuteAsync()
@@ -55,7 +57,7 @@ namespace EvolutionPlugins.Dummy.Commands
                 throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
             }
 
-            var commandContext = await m_CommandExecutor.ExecuteAsync(((UnturnedUserProvider)m_UserProvider).GetUser(dummy), Context.Parameters.Skip(1).ToArray(), "");
+            var commandContext = await m_CommandExecutor.ExecuteAsync(new UnturnedUser(m_UserDataStore, dummy), Context.Parameters.Skip(1).ToArray(), "");
 
             await PrintAsync($"Dummy has {(commandContext.Exception == null ? "<color=green>successfully" : "<color=red>unsuccessfully")}</color> executed command");
             if (commandContext.Exception != null)
