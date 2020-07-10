@@ -1,15 +1,11 @@
 ﻿using EvolutionPlugins.Dummy.API;
-using Microsoft.Extensions.Configuration;
 using OpenMod.API.Commands;
 using OpenMod.API.Users;
 using OpenMod.Core.Commands;
-using OpenMod.Core.Users;
 using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using Color = System.Drawing.Color;
@@ -26,14 +22,13 @@ namespace EvolutionPlugins.Dummy.Commands
     {
         private readonly IDummyProvider m_DummyProvider;
         private readonly ICommandExecutor m_CommandExecutor;
-        private readonly IUserProvider m_UserProvider;
         private readonly IUserDataStore m_UserDataStore;
 
-        public CommandDummyExecute(IServiceProvider serviceProvider, IDummyProvider dummyProvider, ICommandExecutor commandExecutor, IUserManager userManager, IUserDataStore userDataStore) : base(serviceProvider)
+        public CommandDummyExecute(IServiceProvider serviceProvider, IDummyProvider dummyProvider,
+            ICommandExecutor commandExecutor, IUserDataStore userDataStore) : base(serviceProvider)
         {
             m_DummyProvider = dummyProvider;
             m_CommandExecutor = commandExecutor;
-            m_UserProvider = userManager.UserProviders.FirstOrDefault(x => x.SupportsUserType(KnownActorTypes.Player));
             m_UserDataStore = userDataStore;
         }
 

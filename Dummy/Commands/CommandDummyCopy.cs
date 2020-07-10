@@ -1,10 +1,8 @@
 ﻿using Cysharp.Threading.Tasks;
 using EvolutionPlugins.Dummy.API;
 using Microsoft.Extensions.Configuration;
-using OpenMod.API.Persistence;
 using OpenMod.API.Users;
 using OpenMod.Core.Commands;
-using OpenMod.Core.Users;
 using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;

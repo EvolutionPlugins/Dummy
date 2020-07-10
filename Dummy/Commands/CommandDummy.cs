@@ -1,18 +1,6 @@
-﻿using EvolutionPlugins.Dummy.Providers;
-using Microsoft.Extensions.Configuration;
-using OpenMod.API.Commands;
-using OpenMod.API.Users;
-using OpenMod.Core.Commands;
-using OpenMod.Core.Users;
-using OpenMod.Unturned.Users;
-using SDG.Unturned;
-using Steamworks;
+﻿using OpenMod.Core.Commands;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
 using System.Threading.Tasks;
-using Color = System.Drawing.Color;
 using Command = OpenMod.Core.Commands.Command;
 
 namespace EvolutionPlugins.Dummy.Commands

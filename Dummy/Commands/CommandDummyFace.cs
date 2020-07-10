@@ -1,9 +1,6 @@
 ﻿using EvolutionPlugins.Dummy.API;
 using OpenMod.API.Commands;
-using OpenMod.API.Users;
 using OpenMod.Core.Commands;
-using OpenMod.Core.Users;
-using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
 using System;
@@ -19,12 +16,10 @@ namespace EvolutionPlugins.Dummy.Commands
     public class CommandDummyFace : Command
     {
         private readonly IDummyProvider m_DummyProvider;
-        private readonly IUserManager m_UserManager;
 
-        public CommandDummyFace(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IUserManager userManager) : base(serviceProvider)
+        public CommandDummyFace(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider)
         {
             m_DummyProvider = dummyProvider;
-            m_UserManager = userManager;
         }
 
         protected override async Task OnExecuteAsync()

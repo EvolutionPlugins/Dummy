@@ -21,7 +21,7 @@ namespace EvolutionPlugins.Dummy.Patches
 
             if (steamPacket == ESteamPacket.CONNECT)
             {
-                for (int l = 0; l < Provider.pending.Count; l++)
+                for (var l = 0; l < Provider.pending.Count; l++)
                 {
                     if (Provider.pending[l].playerID.steamID == steamID)
                     {
@@ -29,7 +29,7 @@ namespace EvolutionPlugins.Dummy.Patches
                         return false;
                     }
                 }
-                for (int m = 0; m < Provider.clients.Count; m++)
+                for (var m = 0; m < Provider.clients.Count; m++)
                 {
                     if (Provider.clients[m].playerID.steamID == steamID)
                     {
@@ -37,55 +37,55 @@ namespace EvolutionPlugins.Dummy.Patches
                         return false;
                     }
                 }
-                object[] objects = SteamPacker.getObjects(steamID, offset, 0, packet, new Type[]
+                var objects = SteamPacker.getObjects(steamID, offset, 0, packet, new Type[]
                 {
-                Types.BYTE_TYPE,
-                Types.BYTE_TYPE,
-                Types.STRING_TYPE,
-                Types.STRING_TYPE,
-                Types.BYTE_ARRAY_TYPE,
-                Types.BYTE_ARRAY_TYPE,
-                Types.BYTE_ARRAY_TYPE,
-                Types.BYTE_TYPE,
-                Types.UINT32_TYPE,
-                Types.BOOLEAN_TYPE,
-                Types.SINGLE_TYPE,
-                Types.STRING_TYPE,
-                Types.STEAM_ID_TYPE,
-                Types.BYTE_TYPE,
-                Types.BYTE_TYPE,
-                Types.BYTE_TYPE,
-                Types.COLOR_TYPE,
-                Types.COLOR_TYPE,
-                Types.COLOR_TYPE,
-                Types.BOOLEAN_TYPE,
-                Types.UINT64_TYPE,
-                Types.UINT64_TYPE,
-                Types.UINT64_TYPE,
-                Types.UINT64_TYPE,
-                Types.UINT64_TYPE,
-                Types.UINT64_TYPE,
-                Types.UINT64_TYPE,
-                Types.UINT64_ARRAY_TYPE,
-                Types.BYTE_TYPE,
-                Types.STRING_TYPE,
-                Types.STRING_TYPE,
-                Types.STEAM_ID_TYPE,
-                Types.UINT32_TYPE,
-                Types.BYTE_ARRAY_TYPE
+                    Types.BYTE_TYPE,
+                    Types.BYTE_TYPE,
+                    Types.STRING_TYPE,
+                    Types.STRING_TYPE,
+                    Types.BYTE_ARRAY_TYPE,
+                    Types.BYTE_ARRAY_TYPE,
+                    Types.BYTE_ARRAY_TYPE,
+                    Types.BYTE_TYPE,
+                    Types.UINT32_TYPE,
+                    Types.BOOLEAN_TYPE,
+                    Types.SINGLE_TYPE,
+                    Types.STRING_TYPE,
+                    Types.STEAM_ID_TYPE,
+                    Types.BYTE_TYPE,
+                    Types.BYTE_TYPE,
+                    Types.BYTE_TYPE,
+                    Types.COLOR_TYPE,
+                    Types.COLOR_TYPE,
+                    Types.COLOR_TYPE,
+                    Types.BOOLEAN_TYPE,
+                    Types.UINT64_TYPE,
+                    Types.UINT64_TYPE,
+                    Types.UINT64_TYPE,
+                    Types.UINT64_TYPE,
+                    Types.UINT64_TYPE,
+                    Types.UINT64_TYPE,
+                    Types.UINT64_TYPE,
+                    Types.UINT64_ARRAY_TYPE,
+                    Types.BYTE_TYPE,
+                    Types.STRING_TYPE,
+                    Types.STRING_TYPE,
+                    Types.STEAM_ID_TYPE,
+                    Types.UINT32_TYPE,
+                    Types.BYTE_ARRAY_TYPE
                 });
-                byte[] array3 = (byte[])objects[33];
+                var array3 = (byte[])objects[33];
                 if (array3.Length != 20)
                 {
                     Provider.reject(steamID, ESteamRejection.WRONG_HASH_ASSEMBLY);
                     return false;
                 }
-                byte newCharacterID = (byte)objects[1];
+                var newCharacterID = (byte)objects[1];
                 if (!Provider.modeConfigData.Players.Allow_Per_Character_Saves)
                 {
                     newCharacterID = 0;
                 }
-                SteamPlayerID steamPlayerID = new SteamPlayerID(steamID, newCharacterID, (string)objects[2], (string)objects[3], (string)objects[11], (CSteamID)objects[12], array3);
+                var steamPlayerID = new SteamPlayerID(steamID, newCharacterID, (string)objects[2], (string)objects[3], (string)objects[11], (CSteamID)objects[12], array3);
                 if ((uint)objects[8] != Provider.APP_VERSION_PACKED)
                 {
                     Provider.reject(steamID, ESteamRejection.WRONG_VERSION, Provider.APP_VERSION);
@@ -163,11 +163,11 @@ namespace EvolutionPlugins.Dummy.Patches
                 Utils.checkBanStatus(steamPlayerID, remoteIP, out bool flag3, out string object_, out uint num5);
                 if (flag3)
                 {
-                    byte[] bytes3 = SteamPacker.getBytes(0, out int size4, 9, object_, num5);
+                    var bytes3 = SteamPacker.getBytes(0, out int size4, 9, object_, num5);
                     Provider.send(steamID, ESteamPacket.BANNED, bytes3, size4, 0);
                     return false;
                 }
-                bool flag4 = SteamWhitelist.checkWhitelisted(steamID);
+                var flag4 = SteamWhitelist.checkWhitelisted(steamID);
                 if (Provider.isWhitelisted && !flag4)
                 {
                     Provider.reject(steamID, ESteamRejection.WHITELISTED);
@@ -179,25 +179,25 @@ namespace EvolutionPlugins.Dummy.Patches
                     Provider.reject(steamID, ESteamRejection.SERVER_FULL);
                     return false;
                 }
-                byte[] array4 = (byte[])objects[4];
+                var array4 = (byte[])objects[4];
                 if (array4.Length != 20)
                 {
                     Provider.reject(steamID, ESteamRejection.WRONG_PASSWORD);
                     return false;
                 }
-                byte[] array5 = (byte[])objects[5];
+                var array5 = (byte[])objects[5];
                 if (array5.Length != 20)
                 {
                     Provider.reject(steamID, ESteamRejection.WRONG_HASH_LEVEL);
                     return false;
                 }
-                byte[] array6 = (byte[])objects[6];
+                var array6 = (byte[])objects[6];
                 if (array6.Length != 20)
                 {
                     Provider.reject(steamID, ESteamRejection.WRONG_HASH_ASSEMBLY);
                     return false;
                 }
-                string text = (string)objects[29];
+                var text = (string)objects[29];
                 ModuleDependency[] array7;
                 if (string.IsNullOrEmpty(text))
                 {
@@ -205,14 +205,14 @@ namespace EvolutionPlugins.Dummy.Patches
                 }
                 else
                 {
-                    string[] array8 = text.Split(new char[]
+                    var array8 = text.Split(new char[]
                     {
                     ';'
                     });
                     array7 = new ModuleDependency[array8.Length];
-                    for (int n = 0; n < array7.Length; n++)
+                    for (var n = 0; n < array7.Length; n++)
                     {
-                        string[] array9 = array8[n].Split(new char[]
+                        var array9 = array8[n].Split(new char[]
                         {
                         ','
                         });
@@ -228,13 +228,13 @@ namespace EvolutionPlugins.Dummy.Patches
                 }
                 var moduleList = new List<Module>();
                 ModuleHook.getRequiredModules(moduleList);
-                bool flag5 = true;
-                for (int num6 = 0; num6 < array7.Length; num6++)
+                var flag5 = true;
+                for (var num6 = 0; num6 < array7.Length; num6++)
                 {
-                    bool flag6 = false;
+                    var flag6 = false;
                     if (array7[num6] != null)
                     {
-                        for (int num7 = 0; num7 < moduleList.Count; num7++)
+                        for (var num7 = 0; num7 < moduleList.Count; num7++)
                         {
                             if (moduleList[num7]?.config != null && moduleList[num7].config.Name == array7[num6].Name && moduleList[num7].config.Version_Internal >= array7[num6].Version_Internal)
                             {
@@ -254,13 +254,13 @@ namespace EvolutionPlugins.Dummy.Patches
                     Provider.reject(steamID, ESteamRejection.CLIENT_MODULE_DESYNC);
                     return false;
                 }
-                bool flag7 = true;
-                for (int num8 = 0; num8 < moduleList.Count; num8++)
+                var flag7 = true;
+                for (var num8 = 0; num8 < moduleList.Count; num8++)
                 {
-                    bool flag8 = false;
+                    var flag8 = false;
                     if (moduleList[num8]?.config != null)
                     {
-                        for (int num9 = 0; num9 < array7.Length; num9++)
+                        for (var num9 = 0; num9 < array7.Length; num9++)
                         {
                             if (array7[num9] != null && array7[num9].Name == moduleList[num8].config.Name && array7[num9].Version_Internal >= moduleList[num8].config.Version_Internal)
                             {
@@ -307,14 +307,14 @@ namespace EvolutionPlugins.Dummy.Patches
                     Provider.pending.Add(item);
                     if (Provider.pending.Count == 1)
                     {
-                        Utils.verifyNextPlayerInQueue(dummiesCount);
+                        Utils.verifyNextPlayerInQueue();
                     }
                     return false;
                 }
                 if (Provider.pending.Count == 0)
                 {
                     Provider.pending.Add(item);
-                    Utils.verifyNextPlayerInQueue(dummiesCount);
+                    Utils.verifyNextPlayerInQueue();
                     return false;
                 }
                 Provider.pending.Insert(1, item);

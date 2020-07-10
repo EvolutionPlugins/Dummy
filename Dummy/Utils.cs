@@ -2,63 +2,38 @@
 using SDG.Unturned;
 using Steamworks;
 using System;
+using System.Reflection;
 
 namespace EvolutionPlugins.Dummy
 {
     public static class Utils
     {
         #region SDG.Unturned methods
-#warning Need call original methods, maybe anyone hooks these methods
         public static void checkBanStatus(SteamPlayerID playerID, uint remoteIP, out bool isBanned, out string banReason, out uint banRemainingDuration)
         {
             isBanned = false;
             banReason = string.Empty;
             banRemainingDuration = 0U;
-            if (SteamBlacklist.checkBanned(playerID.steamID, remoteIP, out SteamBlacklistID steamBlacklistID))
-            {
-                isBanned = true;
-                banReason = steamBlacklistID.reason;
-                banRemainingDuration = steamBlacklistID.getTime();
-            }
 
-            try
-            {
-                Provider.onCheckBanStatusWithHWID?.Invoke(playerID, remoteIP, ref isBanned, ref banReason, ref banRemainingDuration);
+            var dynMethod = typeof(Provider).GetMethod("checkBanStatus", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+            var parameters = new object[] { playerID, remoteIP, isBanned, banReason, banRemainingDuration };
+            dynMethod.Invoke(typeof(Provider), parameters);
 
-#pragma warning disable CS0612 // Type or member is obsolete
-                Provider.onCheckBanStatus?.Invoke(playerID.steamID, remoteIP, ref isBanned, ref banReason, ref banRemainingDuration);
-#pragma warning restore CS0612 // Type or member is obsolete
-            }
-            catch (Exception e)
-            {
-                UnturnedLog.warn("Plugin raised an exception from onCheckBanStatus:");
-                UnturnedLog.exception(e);
-            }
+            isBanned = (bool)parameters[2];
+            banReason = (string)parameters[3];
+            banRemainingDuration = (uint)parameters[4];
         }
 
         public static void notifyClientPending(CSteamID remoteSteamID)
         {
-            byte[] bytes = SteamPacker.getBytes(0, out int size, 26);
-            Provider.send(remoteSteamID, ESteamPacket.CLIENT_PENDING, bytes, size, 0);
+            var dynMethod = typeof(Provider).GetMethod("notifyClientPending", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+            dynMethod.Invoke(typeof(Provider), new object[] { remoteSteamID });
         }
 
-        public static void verifyNextPlayerInQueue(int dummiesCount)
+        public static void verifyNextPlayerInQueue()
         {
-            if (Provider.pending.Count < 1)
-            {
-                return;
-            }
-            if (Provider.clients.Count - dummiesCount >= Provider.maxPlayers)
-            {
-                return;
-            }
-            SteamPending steamPending = Provider.pending[0];
-            if (steamPending.hasSentVerifyPacket)
-            {
-                return;
-            }
-            steamPending.sendVerifyPacket();
-            return;
+            var dynMethod = typeof(Provider).GetMethod("verifyNextPlayerInQueue", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+            dynMethod.Invoke(typeof(Provider), Array.Empty<object>());
         }
         #endregion
     }
