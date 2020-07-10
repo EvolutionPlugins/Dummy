@@ -49,13 +49,13 @@ namespace EvolutionPlugins.Dummy.Commands
                 throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
             }
 
-            var dummy = (UnturnedUser)await m_UserProvider.FindUserAsync(KnownActorTypes.Player, id.ToString(), UserSearchMode.Id);
+            var dummy = PlayerTool.getPlayer(id); // https://github.com/openmod/openmod/pull/109
             if (dummy == null)
             {
                 throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
             }
 
-            var commandContext = await m_CommandExecutor.ExecuteAsync(dummy, Context.Parameters.Skip(1).ToArray(), "");
+            var commandContext = await m_CommandExecutor.ExecuteAsync(((UnturnedUserProvider)m_UserProvider).GetUser(dummy), Context.Parameters.Skip(1).ToArray(), "");
 
             await PrintAsync($"Dummy has {(commandContext.Exception == null ? "<color=green>successfully" : "<color=red>unsuccessfully")}</color> executed command");
             if (commandContext.Exception != null)

@@ -40,8 +40,8 @@ namespace EvolutionPlugins.Dummy.Commands
                 throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
             }
 
-            var dummy = (UnturnedUser)await m_UserManager.FindUserAsync(KnownActorTypes.Player, id.ToString(), UserSearchMode.Id);
-            if(dummy == null)
+            var dummy = PlayerTool.getPlayer(id); // https://github.com/openmod/openmod/pull/109
+            if (dummy == null)
             {
                 throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
             }
@@ -52,7 +52,7 @@ namespace EvolutionPlugins.Dummy.Commands
                 throw new UserFriendlyException($"Can't change to {faceId} because is higher {Customization.FACES_FREE + Customization.FACES_PRO}");
             }
 
-            dummy.Player.clothing.channel.send("tellSwapFace", ESteamCall.NOT_OWNER, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
+            dummy.clothing.channel.send("tellSwapFace", ESteamCall.NOT_OWNER, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
             {
                 faceId
             });

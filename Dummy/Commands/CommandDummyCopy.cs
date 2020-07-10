@@ -52,6 +52,7 @@ namespace EvolutionPlugins.Dummy.Commands
                 EPlayerSkillset.NONE, "english", CSteamID.Nil));
 
             await UniTask.SwitchToMainThread();
+
             Provider.accept(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, false,
                 steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
                 UnityEngine.Color.white, steamPlayer.hand, steamPlayer.shirtItem, steamPlayer.pantsItem, steamPlayer.hatItem,
@@ -61,6 +62,7 @@ namespace EvolutionPlugins.Dummy.Commands
 
             var dummy = Provider.clients.Last();
             dummy.player.teleportToLocationUnsafe(user.Player.transform.position, user.Player.transform.rotation.eulerAngles.y);
+
             await UniTask.SwitchToTaskPool();
 
             await user.PrintMessageAsync($"Dummy ({id.m_SteamID}) has created");
