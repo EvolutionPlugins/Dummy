@@ -1,9 +1,10 @@
-﻿using OpenMod.Core.Commands;
+﻿using Cysharp.Threading.Tasks;
+using EvolutionPlugins.Dummy.API;
+using OpenMod.Core.Commands;
+using SDG.Unturned;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using Command = OpenMod.Core.Commands.Command;
 
 namespace EvolutionPlugins.Dummy.Commands
 {
@@ -12,13 +13,22 @@ namespace EvolutionPlugins.Dummy.Commands
     [CommandParent(typeof(CommandDummy))]
     public class CommandDummyClear : Command
     {
-        public CommandDummyClear(IServiceProvider serviceProvider) : base(serviceProvider)
+        private readonly IDummyProvider m_DummyProvider;
+
+        public CommandDummyClear(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider)
         {
+            m_DummyProvider = dummyProvider;
         }
 
-        protected override Task OnExecuteAsync()
+        protected override async Task OnExecuteAsync()
         {
-            throw new NotImplementedException();
+            await UniTask.SwitchToMainThread();
+
+            foreach (var cSteamID in m_DummyProvider.Dummies.Keys)
+            {
+                Provider.kick(cSteamID, "");
+            }
+            await m_DummyProvider.ClearAllDummies();
         }
     }
 }

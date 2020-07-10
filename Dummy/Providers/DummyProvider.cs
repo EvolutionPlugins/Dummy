@@ -5,8 +5,6 @@ using OpenMod.API.Prioritization;
 using Steamworks;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace EvolutionPlugins.Dummy.Providers
@@ -17,16 +15,15 @@ namespace EvolutionPlugins.Dummy.Providers
 #pragma warning restore CA1063 // Implement IDisposable Correctly
     {
         private bool m_IsDisposing;
-
         private readonly Dictionary<CSteamID, DummyData> m_Dummies;
+
+        public IReadOnlyDictionary<CSteamID, DummyData> Dummies => m_Dummies;
 
         public DummyProvider()
         {
             m_Dummies = new Dictionary<CSteamID, DummyData>();
             m_IsDisposing = false;
         }
-
-        public IReadOnlyDictionary<CSteamID, DummyData> Dummies => m_Dummies;
 
         public Task<bool> AddDummyAsync(CSteamID Id, DummyData dummyData)
         {
@@ -36,19 +33,6 @@ namespace EvolutionPlugins.Dummy.Providers
             }
             m_Dummies.Add(Id, dummyData);
             return Task.FromResult(false);
-        }
-
-#pragma warning disable CA1063 // Implement IDisposable Correctly
-        public void Dispose()
-#pragma warning restore CA1063 // Implement IDisposable Correctly
-        {
-            if(m_IsDisposing)
-            {
-                return;
-            }
-            m_IsDisposing = true;
-            // maybe also kick?
-            m_Dummies.Clear();
         }
 
         public CSteamID GetAvailableId()
@@ -65,6 +49,25 @@ namespace EvolutionPlugins.Dummy.Providers
         public Task<bool> RemoveDummyAsync(CSteamID Id)
         {
             return Task.FromResult(m_Dummies.Remove(Id));
+        }
+
+        public Task ClearAllDummies()
+        {
+            m_Dummies.Clear();
+            return Task.CompletedTask;
+        }
+
+#pragma warning disable CA1063 // Implement IDisposable Correctly
+        public void Dispose()
+#pragma warning restore CA1063 // Implement IDisposable Correctly
+        {
+            if (m_IsDisposing)
+            {
+                return;
+            }
+            m_IsDisposing = true;
+            // maybe also kick?
+            m_Dummies.Clear();
         }
     }
 }

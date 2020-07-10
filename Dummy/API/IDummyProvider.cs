@@ -14,6 +14,8 @@ namespace EvolutionPlugins.Dummy.API
 
         Task<bool> RemoveDummyAsync(CSteamID Id);
 
+        Task ClearAllDummies();
+
         CSteamID GetAvailableId();
     }
 }

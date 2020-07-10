@@ -14,7 +14,6 @@ using Command = OpenMod.Core.Commands.Command;
 
 namespace EvolutionPlugins.Dummy.Commands
 {
-
     [Command("copy")]
     [CommandDescription("Creates a dummy and copy your skin, hait, beard, etc...")]
     [CommandActor(typeof(UnturnedUser))]
