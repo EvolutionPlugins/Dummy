@@ -60,7 +60,7 @@ namespace EvolutionPlugins.Dummy.Commands
             var commandContext = await m_CommandExecutor.ExecuteAsync(new UnturnedUser(m_UserDataStore, dummy), Context.Parameters.Skip(1).ToArray(), "");
 
             await PrintAsync($"Dummy has {(commandContext.Exception == null ? "<color=green>successfully" : "<color=red>unsuccessfully")}</color> executed command");
-            if (commandContext.Exception != null)
+            if (commandContext.Exception != null && !(commandContext.Exception is UserFriendlyException))
             {
                 await PrintAsync(commandContext.Exception.Message, Color.Red);
             }
