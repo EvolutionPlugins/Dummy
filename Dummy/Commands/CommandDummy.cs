@@ -172,5 +172,4 @@ namespace EvolutionPlugins.Dummy.Commands
             UnturnedChat.Say(player, $"Dummy ({id}) was removed", Color.green);
         }*/
 
-
 }

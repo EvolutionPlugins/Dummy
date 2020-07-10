@@ -536,6 +536,7 @@
     <Compile Include="Commands\CommandDummyFace.cs" />
     <Compile Include="Commands\CommandDummyGesture.cs" />
     <Compile Include="Commands\CommandDummyRemove.cs" />
+    <Compile Include="Commands\CommandDummyStance.cs" />
     <Compile Include="Commands\CommandDummyTphere.cs" />
     <Compile Include="Models\DummyData.cs" />
     <Compile Include="Dummy.cs" />

@@ -3,7 +3,9 @@ using EvolutionPlugins.Dummy.Models;
 using Microsoft.Extensions.DependencyInjection;
 using OpenMod.API.Ioc;
 using OpenMod.API.Prioritization;
+using OpenMod.API.Users;
 using OpenMod.Core.Helpers;
+using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
 using System;
@@ -17,6 +19,7 @@ namespace EvolutionPlugins.Dummy.Providers
     public class DummyProvider : IDummyProvider, IAsyncDisposable
     {
         private bool m_IsDisposing;
+
         private readonly Dictionary<CSteamID, DummyData> m_Dummies;
 
         public IReadOnlyDictionary<CSteamID, DummyData> Dummies => m_Dummies;
@@ -31,6 +34,7 @@ namespace EvolutionPlugins.Dummy.Providers
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
         }
 
+        #region Events
         protected virtual void OnServerSendingMessage(ref string text, ref Color color, SteamPlayer fromPlayer,
             SteamPlayer toPlayer, EChatMode mode, ref string iconURL, ref bool useRichTextFormatting)
         {
@@ -86,6 +90,7 @@ namespace EvolutionPlugins.Dummy.Providers
 
             ChatManager.say(killerId, $"Amount damage to dummy: {totalDamage}", Color.green, true);
         }
+        #endregion
 
         public Task<bool> AddDummyAsync(CSteamID Id, DummyData dummyData)
         {
@@ -102,13 +107,30 @@ namespace EvolutionPlugins.Dummy.Providers
             return Task.FromResult(m_Dummies.Remove(Id));
         }
 
-        public Task ClearAllDummies()
+        public Task ClearAllDummiesAsync()
         {
             m_Dummies.Clear();
             return Task.CompletedTask;
         }
 
-        public CSteamID GetAvailableId()
+        public async Task KickTimerTask(ulong id, uint timer)
+        {
+            if (timer == 0)
+            {
+                return;
+            }
+
+            await Task.Delay((int)(timer * 1000));
+
+            var user = (UnturnedUser)await FindDummyAsync(id);
+            if (user == null)
+            {
+                return;
+            }
+            await user.Session.DisconnectAsync();
+        }
+
+        public Task<CSteamID> GetAvailableIdAsync()
         {
             var result = new CSteamID(1);
 
@@ -116,7 +138,24 @@ namespace EvolutionPlugins.Dummy.Providers
             {
                 result.m_SteamID++;
             }
-            return result;
+            return Task.FromResult(result);
+        }
+
+        public async Task<IUser> FindDummyAsync(ulong Id)
+        {
+            var dummy = (IUser)null;
+
+            if(await GetDummyDataAsync(Id, out var dummyData))
+            {
+                dummy = dummyData.UnturnedUser;
+            }
+
+            return dummy;
+        }
+
+        public Task<bool> GetDummyDataAsync(ulong Id, out DummyData dummyData)
+        {
+            return Task.FromResult(m_Dummies.TryGetValue((CSteamID)Id, out dummyData));
         }
 
         public ValueTask DisposeAsync()
@@ -136,7 +175,7 @@ namespace EvolutionPlugins.Dummy.Providers
                 Provider.kick(cSteamID, "");
             }
 
-            return new ValueTask(ClearAllDummies());
+            return new ValueTask(ClearAllDummiesAsync());
         }
     }
 }

@@ -1,16 +1,23 @@
-﻿using Steamworks;
+﻿using OpenMod.Unturned.Users;
+using Steamworks;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace EvolutionPlugins.Dummy.Models
 {
     public struct DummyData
     {
-        public List<CSteamID> Owners;
+        public DummyData(List<CSteamID> owners, UnturnedUser unturnedUser)
+        {
+            Owners = owners;
+            UnturnedUser = unturnedUser;
+        }
+
+        public List<CSteamID> Owners { get; }
+        public UnturnedUser UnturnedUser { get; }
 
         public override bool Equals(object obj)
         {
-            return obj is DummyData data && data.Owners == Owners && data.Coroutine == Coroutine;
+            return obj is DummyData data && data.Owners == Owners && UnturnedUser == data.UnturnedUser;
         }
 
         public override int GetHashCode()

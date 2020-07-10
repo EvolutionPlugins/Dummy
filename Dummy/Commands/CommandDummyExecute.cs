@@ -22,14 +22,12 @@ namespace EvolutionPlugins.Dummy.Commands
     {
         private readonly IDummyProvider m_DummyProvider;
         private readonly ICommandExecutor m_CommandExecutor;
-        private readonly IUserDataStore m_UserDataStore;
 
         public CommandDummyExecute(IServiceProvider serviceProvider, IDummyProvider dummyProvider,
-            ICommandExecutor commandExecutor, IUserDataStore userDataStore) : base(serviceProvider)
+            ICommandExecutor commandExecutor) : base(serviceProvider)
         {
             m_DummyProvider = dummyProvider;
             m_CommandExecutor = commandExecutor;
-            m_UserDataStore = userDataStore;
         }
 
         protected override async Task OnExecuteAsync()
@@ -41,18 +39,13 @@ namespace EvolutionPlugins.Dummy.Commands
 
             var id = (CSteamID)await Context.Parameters.GetAsync<ulong>(0);
 
-            if (!m_DummyProvider.Dummies.TryGetValue(id, out _))
-            {
-                throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
-            }
-
-            var dummy = PlayerTool.getPlayer(id); // https://github.com/openmod/openmod/pull/109
+            var dummy = await m_DummyProvider.FindDummyAsync(id.m_SteamID);
             if (dummy == null)
             {
                 throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
             }
 
-            var commandContext = await m_CommandExecutor.ExecuteAsync(new UnturnedUser(m_UserDataStore, dummy), Context.Parameters.Skip(1).ToArray(), "");
+            var commandContext = await m_CommandExecutor.ExecuteAsync(dummy, Context.Parameters.Skip(1).ToArray(), "");
 
             await PrintAsync($"Dummy has {(commandContext.Exception == null ? "<color=green>successfully" : "<color=red>unsuccessfully")}</color> executed command");
             if (commandContext.Exception != null && !(commandContext.Exception is UserFriendlyException))
@@ -298,6 +291,5 @@ namespace EvolutionPlugins.Dummy.Commands
             global::Dummy.Instance.Dummies.Remove(new CSteamID(id));
             UnturnedChat.Say(player, $"Dummy ({id}) was removed", Color.green);
         }*/
-
 
 }

@@ -4,6 +4,7 @@ using EvolutionPlugins.Dummy.Models;
 using Microsoft.Extensions.Configuration;
 using OpenMod.API.Users;
 using OpenMod.Core.Commands;
+using OpenMod.Core.Helpers;
 using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
@@ -47,9 +48,7 @@ namespace EvolutionPlugins.Dummy.Commands
                 return;
             }
 
-            var id = m_DummyProvider.GetAvailableId();
-
-            await m_DummyProvider.AddDummyAsync(id, new DummyData() { Owners = new List<CSteamID> { user.SteamId } });
+            var id = await m_DummyProvider.GetAvailableIdAsync();
 
             await UniTask.SwitchToMainThread();
 
@@ -69,7 +68,15 @@ namespace EvolutionPlugins.Dummy.Commands
             await UniTask.SwitchToTaskPool();
 
             var dummyUser = new UnturnedUser(m_UserDataStore, dummy.player);
+
             await m_UserDataSeeder.SeedUserDataAsync(dummyUser.Id, dummyUser.Type, dummyUser.DisplayName); // https://github.com/openmod/openmod/pull/109
+            await m_DummyProvider.AddDummyAsync(id, new DummyData(new List<CSteamID> { user.SteamId }, dummyUser));
+
+            var kickTimer = m_Configuration.GetSection("KickDummyAfterSeconds").Get<uint>();
+            if (kickTimer != 0)
+            {
+                AsyncHelper.Schedule("Kick a dummy timer", () => m_DummyProvider.KickTimerTask(dummyUser.SteamId.m_SteamID, kickTimer));
+            }
 
             await user.PrintMessageAsync($"Dummy ({id.m_SteamID}) has created");
         }
