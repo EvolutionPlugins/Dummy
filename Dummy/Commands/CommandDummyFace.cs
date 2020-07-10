@@ -1,6 +1,7 @@
 ﻿using EvolutionPlugins.Dummy.API;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
+using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
 using System;
@@ -35,7 +36,7 @@ namespace EvolutionPlugins.Dummy.Commands
                 throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
             }
 
-            var dummy = PlayerTool.getPlayer(id); // https://github.com/openmod/openmod/pull/109
+            var dummy = (UnturnedUser)await m_DummyProvider.FindDummyAsync(id.m_SteamID);
             if (dummy == null)
             {
                 throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
@@ -47,7 +48,7 @@ namespace EvolutionPlugins.Dummy.Commands
                 throw new UserFriendlyException($"Can't change to {faceId} because is higher {Customization.FACES_FREE + Customization.FACES_PRO}");
             }
 
-            dummy.clothing.channel.send("tellSwapFace", ESteamCall.NOT_OWNER, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
+            dummy.Player.clothing.channel.send("tellSwapFace", ESteamCall.NOT_OWNER, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
             {
                 faceId
             });
