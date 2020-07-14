@@ -283,18 +283,17 @@ namespace Dummy
             return Config.KickDummyAfterSeconds != 0 ? StartCoroutine(KickTimer(id)) : null;
         }
 
-        private IEnumerator DontAutoKick()
+        private void DontAutoKick()
         {
             foreach (var dummy in Dummies)
             {
-                var client = Provider.clients.Find(k => k.playerID.steamID == dummy.Key);
+                var client = dummy.Value.player;
                 if (client == null)
                 {
                     continue;
                 }
-                client.timeLastPacketWasReceivedFromClient = Time.realtimeSinceStartup;
+                client.channel.owner.timeLastPacketWasReceivedFromClient = Time.realtimeSinceStartup;
             }
-            yield return null;
         }
 
         private IEnumerator KickTimer(CSteamID id)

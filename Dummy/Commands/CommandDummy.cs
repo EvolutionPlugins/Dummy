@@ -314,6 +314,7 @@ namespace Dummy.Commands
 
             var data = Instance.Dummies[dummy.playerID.steamID];
             data.player = dummy.player;
+            Instance.Dummies[dummy.playerID.steamID] = data;
 
             UnturnedChat.Say(player, $"Dummy ({id.m_SteamID}) has created");
         }
