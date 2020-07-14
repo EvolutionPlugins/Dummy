@@ -1,5 +1,9 @@
-﻿using Steamworks;
+﻿using SDG.Unturned;
+
+using Steamworks;
+
 using System.Collections.Generic;
+
 using UnityEngine;
 
 namespace Dummy
@@ -8,6 +12,54 @@ namespace Dummy
     {
         public List<CSteamID> Owners;
         public Coroutine Coroutine;
+
+        public Player player;
+
+        public byte analog;
+        public uint count;
+        public float tick;
+        public uint buffer;
+        public uint simulation;
+        public int sequence;
+        public int recov;
+        public uint consumed;
+        public uint clock;
+        public ushort[] flags;
+        public float yaw;
+        public float pitch;
+
+        public List<PlayerInputPacket> playerInputPackets;
+
+        public DummyData(List<CSteamID> owners, Coroutine coroutine)
+        {
+            Owners = owners;
+            Coroutine = coroutine;
+
+            analog = 0;
+            count = 0;
+            tick = 0;
+            buffer = 0;
+            simulation = 0;
+            sequence = 0;
+            recov = 0;
+            consumed = 0;
+            clock = 0;
+            yaw = 0;
+            pitch = 0;
+
+            playerInputPackets = new List<PlayerInputPacket>();
+
+            player = null;
+
+            flags = new ushort[(9 + ControlsSettings.NUM_PLUGIN_KEYS)];
+            byte b = 0;
+            while (b < (9 + ControlsSettings.NUM_PLUGIN_KEYS))
+            {
+                flags[b] = (ushort)(1 << b);
+                b += 1;
+            }
+        }
+
 
         public override bool Equals(object obj)
         {

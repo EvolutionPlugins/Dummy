@@ -2,11 +2,15 @@
 using Rocket.Core;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
+
 using SDG.Unturned;
+
 using Steamworks;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using UnityEngine;
 
 namespace Dummy.Commands
@@ -24,6 +28,8 @@ namespace Dummy.Commands
         public List<string> Aliases => new List<string>();
 
         public List<string> Permissions => new List<string> { "dummy" };
+
+        private Dummy Instance => Dummy.Instance;
 
         public void Execute(IRocketPlayer caller, string[] command)
         {
@@ -124,7 +130,7 @@ namespace Dummy.Commands
                 UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
                 return;
             }
-            
+
             if (faceId > Customization.FACES_FREE + Customization.FACES_PRO)
             {
                 UnturnedChat.Say(player, $"Can't change to {faceId} because is higher {Customization.FACES_FREE + Customization.FACES_PRO}", Color.red);
@@ -305,6 +311,9 @@ namespace Dummy.Commands
 
             var dummy = Provider.clients.Last();
             dummy.player.teleportToLocationUnsafe(player.Position, player.Rotation);
+
+            var data = Instance.Dummies[dummy.playerID.steamID];
+            data.player = dummy.player;
 
             UnturnedChat.Say(player, $"Dummy ({id.m_SteamID}) has created");
         }
