@@ -34,7 +34,7 @@ namespace Dummy
             _harmony = new Harmony(HarmonyId);
             _harmony.PatchAll();
 
-            StartCoroutine(DontAutoKick());
+            InvokeRepeating("DontAutoKick", 5f, 5f);
 
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
             Provider.onServerDisconnected += OnServerDisconnected;
@@ -56,6 +56,7 @@ namespace Dummy
             Dummies.Clear();
 
             StopAllCoroutines();
+            CancelInvoke("DontAutoKick");
 
             DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
             Provider.onServerDisconnected -= OnServerDisconnected;
@@ -134,19 +135,16 @@ namespace Dummy
 
         private IEnumerator DontAutoKick()
         {
-            while (true)
+            foreach (var dummy in Dummies)
             {
-                foreach (var dummy in Dummies)
+                var client = Provider.clients.Find(k => k.playerID.steamID == dummy.Key);
+                if (client == null)
                 {
-                    var client = Provider.clients.Find(k => k.playerID.steamID == dummy.Key);
-                    if (client == null)
-                    {
-                        continue;
-                    }
-                    client.timeLastPacketWasReceivedFromClient = Time.realtimeSinceStartup;
+                    continue;
                 }
-                yield return new WaitForSeconds(5);
+                client.timeLastPacketWasReceivedFromClient = Time.realtimeSinceStartup;
             }
+            yield return null;
         }
 
         private IEnumerator KickTimer(CSteamID id)
