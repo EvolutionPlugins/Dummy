@@ -279,8 +279,7 @@ namespace Dummy.Commands
 
             var id = Dummy.GetAvailableID();
 
-            Dummy.Instance.Dummies.Add(id, new DummyData
-            { Coroutine = Dummy.Instance.GetCoroutine(id), Owners = new List<CSteamID> { player.CSteamID } });
+            Dummy.Instance.Dummies.Add(id, new DummyData(new List<CSteamID>() { player.CSteamID }, Dummy.Instance.GetCoroutine(id)));
 
             if (copy)
             {

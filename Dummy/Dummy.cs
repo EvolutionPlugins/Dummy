@@ -133,7 +133,7 @@ namespace Dummy
                 var data = item.Value;
                 if (data.player == null)
                 {
-                    return;
+                    continue;
                 }
 
                 if (data.count % PlayerInput.SAMPLES == 0)

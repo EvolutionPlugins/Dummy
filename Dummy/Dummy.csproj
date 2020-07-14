@@ -72,6 +72,7 @@
     <Compile Include="DummyData.cs" />
     <Compile Include="Dummy.cs" />
     <Compile Include="Configurations\DummyConfiguration.cs" />
+    <Compile Include="Patches\Patch_PlayerInput_askInput.cs" />
     <Compile Include="Patches\Patch_Provider_receiveServer.cs" />
     <Compile Include="Patches\Patch_Provider_send.cs" />
     <Compile Include="Patches\Patch_Provider_verifyNextPlayerInQueue.cs" />
