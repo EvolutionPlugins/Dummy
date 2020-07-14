@@ -1,6 +1,11 @@
 # Dummy
 Dummy is a plugin for Unturned / RocketMod 4. It spawns a dummy and shows the amount of damage when damaged.
 
+## Requires libraries
+
+- [Harmony](https://github.com/pardeike/Harmony)
+
+
 # Commands
 - /dummy create - Creates a dummy with unique ID.
 
@@ -28,8 +33,8 @@ Dummy is a plugin for Unturned / RocketMod 4. It spawns a dummy and shows the am
 
 - KickDummyAfterSeconds _( default: 300 )_ - Kick automatically dummy after amount of seconds.
 
-# Will be a support OpenMod?
-Yes, it's will support when OpenMod is released.
+# Support OpenMod?
+Yes! https://github.com/EvolutionPlugins/Dummy/tree/openmod
 
 # Tips
 
