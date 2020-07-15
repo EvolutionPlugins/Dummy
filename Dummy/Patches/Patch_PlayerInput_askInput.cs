@@ -19,7 +19,13 @@ namespace Dummy.Patches
         public static void Prefix(CSteamID steamID)
         {
             if (Dummy.Instance.Dummies.ContainsKey(steamID))
-                Console.WriteLine("Get packets from dummy");
+                Console.WriteLine($"[{DateTime.Now}] Get packets from dummy");
+        }
+
+        public static void Postfix(CSteamID steamID, Queue<PlayerInputPacket> ___serversidePackets)
+        {
+            if (Dummy.Instance.Dummies.ContainsKey(steamID))
+                Console.WriteLine(___serversidePackets.Count);
         }
     }
 #endif

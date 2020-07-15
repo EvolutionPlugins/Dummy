@@ -37,11 +37,11 @@ namespace Dummy
 
             analog = 0;
             count = 0;
-            tick = 0;
+            tick = Time.realtimeSinceStartup;
             buffer = 0;
             simulation = 0;
-            sequence = 0;
-            recov = 0;
+            sequence = -1;
+            recov = -1;
             consumed = 0;
             clock = 0;
             yaw = 0;

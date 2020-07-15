@@ -11,6 +11,7 @@ using Steamworks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 using UnityEngine;
 
@@ -46,10 +47,26 @@ namespace Dummy
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
             Provider.onServerDisconnected += OnServerDisconnected;
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
+            SteamChannel.onTriggerSend += OnTriggerSend;
 #if DEBUG
             EffectManager.onEffectButtonClicked += onEffectButtonClicked;
             EffectManager.onEffectTextCommitted += onEffectTextCommitted;
 #endif
+        }
+
+        private void OnTriggerSend(SteamPlayer player, string name, ESteamCall mode, ESteamPacket type, object[] arguments)
+        {
+            if (name == "askAck" && Dummies.TryGetValue(player.playerID.steamID, out var data))
+            {
+                var ack = (int)arguments[0];
+                for (var i = data.playerInputPackets.Count - 1; i >= 0; i--)
+                {
+                    if (data.playerInputPackets[i].sequence <= ack)
+                    {
+                        data.playerInputPackets.RemoveAt(i);
+                    }
+                }
+            }
         }
 
         protected override void Unload()
@@ -72,6 +89,7 @@ namespace Dummy
             DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
             Provider.onServerDisconnected -= OnServerDisconnected;
             ChatManager.onServerSendingMessage -= OnServerSendingMessage;
+            SteamChannel.onTriggerSend -= OnTriggerSend;
 #if DEBUG
             EffectManager.onEffectButtonClicked -= onEffectButtonClicked;
             EffectManager.onEffectTextCommitted -= onEffectTextCommitted;
@@ -82,7 +100,7 @@ namespace Dummy
 #if DEBUG
         private void onEffectTextCommitted(Player player, string ifName, string text)
         {
-            if(Dummies.ContainsKey(player.channel.owner.playerID.steamID))
+            if (Dummies.ContainsKey(player.channel.owner.playerID.steamID))
                 Console.WriteLine($"{player.channel.owner.playerID.characterName} inputted if ({ifName}) text: {text}");
         }
 
@@ -92,7 +110,7 @@ namespace Dummy
                 Console.WriteLine($"{player.channel.owner.playerID.characterName} click button {buttonName}");
         }
 #endif
-#endregion
+        #endregion
 
         #region Events
         private void OnServerSendingMessage(ref string text, ref Color color, SteamPlayer fromPlayer, SteamPlayer toPlayer, EChatMode mode, ref string iconURL, ref bool useRichTextFormatting)
@@ -152,10 +170,15 @@ namespace Dummy
 
         private void FixedUpdate()
         {
-            foreach (var item in Dummies)
+            foreach (var item in Dummies.Keys.ToList())
             {
-                var data = item.Value;
+                var data = Dummies[item];
                 if (data.player == null)
+                {
+                    continue;
+                }
+
+                if (data.simulation > (Time.realtimeSinceStartup - data.tick) / PlayerInput.RATE)
                 {
                     continue;
                 }
@@ -198,97 +221,97 @@ namespace Dummy
                     playerInputPacket.recov = data.recov;
 
                     data.buffer += PlayerInput.SAMPLES;
-                    data.simulation += 1;
-
-                    if (data.consumed < data.buffer)
+                    data.simulation++;
+                }
+                if (data.consumed < data.buffer)
+                {
+                    data.consumed++;
+                    data.clock++;
+                }
+                if (data.consumed == data.buffer && data.playerInputPackets.Count > 0)
+                {
+                    ushort num2 = 0;
+                    byte b = 0;
+                    while (b < data.player.input.keys.Length)
                     {
-                        data.consumed += 1;
-                        data.clock += 1;
+                        if (data.player.input.keys[b])
+                        {
+                            num2 |= data.flags[b];
+                        }
+                        b += 1;
                     }
 
-                    if (data.consumed == data.buffer && data.playerInputPackets.Count > 0)
+                    var playerInputPacket2 = data.playerInputPackets[data.playerInputPackets.Count - 1];
+                    playerInputPacket2.keys = num2;
+                    if (playerInputPacket2 is DrivingPlayerInputPacket)
                     {
-                        ushort num2 = 0;
-                        byte b = 0;
-                        while (b < data.player.input.keys.Length)
+                        var drivingPlayerInputPacket = playerInputPacket2 as DrivingPlayerInputPacket;
+                        var vehicle = data.player.movement.getVehicle();
+
+                        if (vehicle != null)
                         {
-                            if (data.player.input.keys[b])
+                            var transform = vehicle.transform;
+                            if (vehicle.asset.engine == EEngine.TRAIN)
                             {
-                                num2 |= data.flags[b];
-                            }
-                            b += 1;
-                        }
-
-                        var playerInputPacket2 = data.playerInputPackets[data.playerInputPackets.Count - 1];
-                        playerInputPacket2.keys = num2;
-                        if (playerInputPacket2 is DrivingPlayerInputPacket)
-                        {
-                            var drivingPlayerInputPacket = playerInputPacket2 as DrivingPlayerInputPacket;
-                            var vehicle = data.player.movement.getVehicle();
-
-                            if (vehicle != null)
-                            {
-                                var transform = vehicle.transform;
-                                if (vehicle.asset.engine == EEngine.TRAIN)
-                                {
-                                    drivingPlayerInputPacket.position = new Vector3(vehicle.roadPosition, 0f, 0f);
-                                }
-                                else
-                                {
-                                    drivingPlayerInputPacket.position = transform.position;
-                                }
-                                drivingPlayerInputPacket.angle_x = MeasurementTool.angleToByte2(transform.rotation.eulerAngles.x);
-                                drivingPlayerInputPacket.angle_y = MeasurementTool.angleToByte2(transform.rotation.eulerAngles.y);
-                                drivingPlayerInputPacket.angle_z = MeasurementTool.angleToByte2(transform.rotation.eulerAngles.z);
-                                drivingPlayerInputPacket.speed = (byte)(Mathf.Clamp(vehicle.speed, -100f, 100f) + 128f);
-                                drivingPlayerInputPacket.physicsSpeed = (byte)(Mathf.Clamp(vehicle.physicsSpeed, -100f, 100f) + 128f);
-                                drivingPlayerInputPacket.turn = (byte)(vehicle.turn + 1);
-                            }
-                        }
-                        else
-                        {
-                            var walkingPlayerInputPacket = playerInputPacket2 as WalkingPlayerInputPacket;
-
-                            walkingPlayerInputPacket.analog = data.analog;
-                            walkingPlayerInputPacket.position = data.player.transform.localPosition;
-                            walkingPlayerInputPacket.yaw = data.yaw;
-                            walkingPlayerInputPacket.pitch = data.pitch;
-                        }
-
-                        data.player.input.channel.openWrite();
-                        if (data.playerInputPackets.Count > 24)
-                        {
-                            UnturnedLog.warn("Discarding old unacknowledged input packets ({0}/{1})", new object[]
-                            {
-                                data.playerInputPackets.Count,
-                                24
-                            });
-
-                            while (data.playerInputPackets.Count > 24)
-                            {
-                                data.playerInputPackets.RemoveAt(0);
-                            }
-                        }
-                        data.player.input.channel.write((byte)data.playerInputPackets.Count);
-
-                        foreach (var playerInputPacket3 in data.playerInputPackets)
-                        {
-                            if (playerInputPacket3 is DrivingPlayerInputPacket)
-                            {
-                                data.player.input.channel.write(1);
+                                drivingPlayerInputPacket.position = new Vector3(vehicle.roadPosition, 0f, 0f);
                             }
                             else
                             {
-                                data.player.input.channel.write(0);
+                                drivingPlayerInputPacket.position = transform.position;
                             }
-                            playerInputPacket3.write(data.player.input.channel);
+                            drivingPlayerInputPacket.angle_x = MeasurementTool.angleToByte2(transform.rotation.eulerAngles.x);
+                            drivingPlayerInputPacket.angle_y = MeasurementTool.angleToByte2(transform.rotation.eulerAngles.y);
+                            drivingPlayerInputPacket.angle_z = MeasurementTool.angleToByte2(transform.rotation.eulerAngles.z);
+                            drivingPlayerInputPacket.speed = (byte)(Mathf.Clamp(vehicle.speed, -100f, 100f) + 128f);
+                            drivingPlayerInputPacket.physicsSpeed = (byte)(Mathf.Clamp(vehicle.physicsSpeed, -100f, 100f) + 128f);
+                            drivingPlayerInputPacket.turn = (byte)(vehicle.turn + 1);
                         }
-
-                        // server is not sending packets, it's trying receive
-                        data.player.input.channel.closeWrite("askInput", ESteamCall.SERVER, ESteamPacket.UPDATE_UNRELIABLE_CHUNK_INSTANT);
                     }
-                    data.count += 1U;
+                    else
+                    {
+                        var walkingPlayerInputPacket = playerInputPacket2 as WalkingPlayerInputPacket;
+
+                        walkingPlayerInputPacket.analog = data.analog;
+                        walkingPlayerInputPacket.position = data.player.transform.localPosition;
+                        walkingPlayerInputPacket.yaw = data.yaw;
+                        walkingPlayerInputPacket.pitch = data.pitch;
+                    }
+
+                    data.player.input.channel.openWrite();
+                    if (data.playerInputPackets.Count > 24)
+                    {
+                        UnturnedLog.warn("Discarding old unacknowledged input packets ({0}/{1})", new object[]
+                        {
+                            data.playerInputPackets.Count,
+                            24
+                        });
+
+                        while (data.playerInputPackets.Count > 24)
+                        {
+                            data.playerInputPackets.RemoveAt(0);
+                        }
+                    }
+                    data.player.input.channel.write((byte)data.playerInputPackets.Count);
+
+                    foreach (var playerInputPacket3 in data.playerInputPackets)
+                    {
+                        if (playerInputPacket3 is DrivingPlayerInputPacket)
+                        {
+                            data.player.input.channel.write(1);
+                        }
+                        else
+                        {
+                            data.player.input.channel.write(0);
+                        }
+                        playerInputPacket3.write(data.player.input.channel);
+                    }
+                    var call = data.player.input.channel.getCall("askInput");
+                    data.player.input.channel.getPacket(ESteamPacket.UPDATE_UNRELIABLE_CHUNK_INSTANT, call, out var size, out var packet);
+                    data.player.input.channel.receive(item, packet, 0, size);
                 }
+                data.count += 1U;
+
+                Dummies[item] = data;
             }
         }
 
@@ -319,6 +342,11 @@ namespace Dummy
                 }
                 client.channel.owner.timeLastPacketWasReceivedFromClient = Time.realtimeSinceStartup;
             }
+        }
+
+        private void SimulationDummies()
+        {
+
         }
 
         private IEnumerator KickTimer(CSteamID id)
