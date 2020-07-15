@@ -123,7 +123,7 @@ namespace Dummy.Commands
 
                 case "inputfield":
                 case "if":
-                    if (command.Length > 3 || !byte.TryParse(command[1], out id))
+                    if (command.Length < 3 || !byte.TryParse(command[1], out id))
                     {
                         UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy if <id> <inputFieldName> <inputtedText>", Color.yellow);
                         return;
@@ -151,6 +151,7 @@ namespace Dummy.Commands
             }
 
             EffectManager.instance.tellEffectTextCommitted(dummy.playerID.steamID, inputFieldName, inputtedText);
+            UnturnedChat.Say(player, $"Dummy ({id}) inputted a text", Color.green);
         }
 
         private void ButtonDummy(UnturnedPlayer player, byte id, string buttonName)
@@ -168,6 +169,7 @@ namespace Dummy.Commands
             }
 
             EffectManager.instance.tellEffectClicked(dummy.playerID.steamID, buttonName);
+            UnturnedChat.Say(player, $"Dummy ({id}) clicked to button", Color.green);
         }
 
         private void FaceDummy(UnturnedPlayer player, byte id, byte faceId)
