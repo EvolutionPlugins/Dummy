@@ -82,12 +82,14 @@ namespace Dummy
 #if DEBUG
         private void onEffectTextCommitted(Player player, string ifName, string text)
         {
-            Console.WriteLine($"{player.channel.owner.playerID.characterName} inputted if ({ifName}) text: {text}");
+            if(Dummies.ContainsKey(player.channel.owner.playerID.steamID))
+                Console.WriteLine($"{player.channel.owner.playerID.characterName} inputted if ({ifName}) text: {text}");
         }
 
         private void onEffectButtonClicked(Player player, string buttonName)
         {
-            Console.WriteLine($"{player.channel.owner.playerID.characterName} click button {buttonName}");
+            if (Dummies.ContainsKey(player.channel.owner.playerID.steamID))
+                Console.WriteLine($"{player.channel.owner.playerID.characterName} click button {buttonName}");
         }
 #endif
 #endregion
