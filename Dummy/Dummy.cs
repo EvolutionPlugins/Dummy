@@ -260,6 +260,7 @@ namespace Dummy
                             playerInputPacket3.write(data.player.input.channel);
                         }
 
+                        // server is not sending packets, it's trying receive
                         data.player.input.channel.closeWrite("askInput", ESteamCall.SERVER, ESteamPacket.UPDATE_UNRELIABLE_CHUNK_INSTANT);
                     }
                     data.count += 1U;

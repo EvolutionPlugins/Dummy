@@ -111,10 +111,63 @@ namespace Dummy.Commands
                     }
                     FaceDummy(player, id, faceId);
                     return;
+
+                case "button":
+                    if (command.Length != 3 || !byte.TryParse(command[1], out id))
+                    {
+                        UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy button <id> <buttonName>", Color.yellow);
+                        return;
+                    }
+                    ButtonDummy(player, id, command[2]);
+                    return;
+
+                case "inputfield":
+                case "if":
+                    if (command.Length > 3 || !byte.TryParse(command[1], out id))
+                    {
+                        UnturnedChat.Say(player, "Wrong command usage. Use correct: /dummy if <id> <inputFieldName> <inputtedText>", Color.yellow);
+                        return;
+                    }
+                    InputFieldDummy(player, id, command[2], string.Join(" ", command.Skip(3)));
+                    return;
                 default:
                     UnturnedChat.Say(player, $"Wrong command usage. Use correct: {Syntax}", Color.yellow);
                     break;
             }
+        }
+
+        private void InputFieldDummy(UnturnedPlayer player, byte id, string inputFieldName, string inputtedText)
+        {
+            if (!Dummy.Instance.Dummies.ContainsKey((CSteamID)id))
+            {
+                UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
+                return;
+            }
+            var dummy = Provider.clients.Find(k => k.playerID.steamID.m_SteamID == id);
+            if (dummy == null)
+            {
+                UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
+                return;
+            }
+
+            EffectManager.instance.tellEffectTextCommitted(dummy.playerID.steamID, inputFieldName, inputtedText);
+        }
+
+        private void ButtonDummy(UnturnedPlayer player, byte id, string buttonName)
+        {
+            if (!Dummy.Instance.Dummies.ContainsKey((CSteamID)id))
+            {
+                UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
+                return;
+            }
+            var dummy = Provider.clients.Find(k => k.playerID.steamID.m_SteamID == id);
+            if (dummy == null)
+            {
+                UnturnedChat.Say(player, $"Dummy ({id}) not found", Color.red);
+                return;
+            }
+
+            EffectManager.instance.tellEffectClicked(dummy.playerID.steamID, buttonName);
         }
 
         private void FaceDummy(UnturnedPlayer player, byte id, byte faceId)
