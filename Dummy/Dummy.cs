@@ -46,6 +46,10 @@ namespace Dummy
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
             Provider.onServerDisconnected += OnServerDisconnected;
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
+#if DEBUG
+            EffectManager.onEffectButtonClicked += onEffectButtonClicked;
+            EffectManager.onEffectTextCommitted += onEffectTextCommitted;
+#endif
         }
 
         protected override void Unload()
@@ -68,7 +72,25 @@ namespace Dummy
             DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
             Provider.onServerDisconnected -= OnServerDisconnected;
             ChatManager.onServerSendingMessage -= OnServerSendingMessage;
+#if DEBUG
+            EffectManager.onEffectButtonClicked -= onEffectButtonClicked;
+            EffectManager.onEffectTextCommitted -= onEffectTextCommitted;
+#endif
         }
+
+        #region DEBUG
+#if DEBUG
+        private void onEffectTextCommitted(Player player, string ifName, string text)
+        {
+            Console.WriteLine($"{player.channel.owner.playerID.characterName} inputted if ({ifName}) text: {text}");
+        }
+
+        private void onEffectButtonClicked(Player player, string buttonName)
+        {
+            Console.WriteLine($"{player.channel.owner.playerID.characterName} click button {buttonName}");
+        }
+#endif
+#endregion
 
         #region Events
         private void OnServerSendingMessage(ref string text, ref Color color, SteamPlayer fromPlayer, SteamPlayer toPlayer, EChatMode mode, ref string iconURL, ref bool useRichTextFormatting)
