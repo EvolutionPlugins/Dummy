@@ -13,7 +13,7 @@ using Steamworks;
 
 namespace EvolutionPlugins.Dummy
 {
-    public class PlayerDummy : IUser, IDisposable
+    public class PlayerDummy : IDisposable
     {
         public PlayerDummyData Data { get; }
         
@@ -21,21 +21,13 @@ namespace EvolutionPlugins.Dummy
 
         private Thread _actionThreadControl;
 
-        public PlayerDummy(PlayerDummyData data, int index)
+        public PlayerDummy(PlayerDummyData data)
         {
             Data = data;
-            Session = data.UnturnedUser.Session;
-            DisplayName = "Dummy " + index;
-            Id = data.UnturnedUser.Id;
             Actions = new PlayerDummyActionThread(this);
             _actionThreadControl = new Thread(Actions.Start);
             _actionThreadControl.Start();
         }
-
-        public string Id { get; } 
-        
-        public string Type { get; } = "Player";
-        public string DisplayName { get; }
         
         public override bool Equals(object obj)
         {
@@ -52,26 +44,7 @@ namespace EvolutionPlugins.Dummy
             Actions.Enabled = false;
             _actionThreadControl.Abort();
         }
-
-        public async Task PrintMessageAsync(string message)
-        {
-            throw new NotSupportedException();
-        }
-
-        public async Task PrintMessageAsync(string message, Color color)
-        {
-            throw new NotSupportedException();
-        }
-
-        public async Task SavePersistentDataAsync<T>(string key, T data)
-        {
-            throw new NotSupportedException();
-        }
-
-        public async Task<T> GetPersistentDataAsync<T>(string key)
-        {
-            throw new NotSupportedException();
-        }
+        
 
         public IUserSession Session { get; }
     }

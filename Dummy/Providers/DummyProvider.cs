@@ -100,7 +100,7 @@ namespace EvolutionPlugins.Dummy.Providers
             {
                 return Task.FromResult(false);
             }
-            m_Dummies.Add(Id, new PlayerDummy(playerDummyData, Dummies.Count));
+            m_Dummies.Add(Id, new PlayerDummy(playerDummyData));
             return Task.FromResult(true);
         }
 
@@ -145,7 +145,7 @@ namespace EvolutionPlugins.Dummy.Providers
 
         public async Task<PlayerDummy> FindDummyAsync(ulong id)
         {
-            return Dummies.Values.FirstOrDefault(p => p.Id == id.ToString());
+            return Dummies.Values.FirstOrDefault(p => p.Data.UnturnedUser.Id == id.ToString());
         }
 
         public Task<bool> GetDummyDataAsync(ulong Id, out PlayerDummyData playerDummyData)
