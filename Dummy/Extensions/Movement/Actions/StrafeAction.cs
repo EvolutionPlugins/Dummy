@@ -5,7 +5,7 @@ namespace EvolutionPlugins.Dummy.Extensions.Movement
     public class StrafeAction : IMovementAction
     {
 
-        public StrafeDirection Dir;
+        public StrafeDirection Dir { get; }
         
         public StrafeAction(StrafeDirection dir)
         {

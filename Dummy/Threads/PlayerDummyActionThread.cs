@@ -20,10 +20,12 @@ namespace EvolutionPlugins.Dummy.Threads
             _dummy = dummy;
         }
         
+        public bool Enabled { get; set; }
+        
         
         public void Start()
         {
-            while (true)
+            while (Enabled)
             {
                 foreach (IAction action in _actions)
                 {

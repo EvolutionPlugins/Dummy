@@ -13,7 +13,7 @@ using Steamworks;
 
 namespace EvolutionPlugins.Dummy
 {
-    public class PlayerDummy : IUser
+    public class PlayerDummy : IUser, IDisposable
     {
         public PlayerDummyData Data { get; }
         
@@ -22,7 +22,7 @@ namespace EvolutionPlugins.Dummy
         public PlayerDummy(PlayerDummyData data, int index)
         {
             Data = data;
-            Session = new UnturnedUserSession(data.UnturnedUser);
+            Session = data.UnturnedUser.Session;
             DisplayName = "Dummy " + index;
             Id = data.UnturnedUser.Id;
             Actions = new PlayerDummyActionThread(this);
@@ -43,7 +43,12 @@ namespace EvolutionPlugins.Dummy
         {
             return 1599248077 + EqualityComparer<List<CSteamID>>.Default.GetHashCode(Data.Owners);
         }
-        
+
+        public void Dispose()
+        {
+            Actions.Enabled = false;
+        }
+
         public async Task PrintMessageAsync(string message)
         {
             throw new NotSupportedException();
