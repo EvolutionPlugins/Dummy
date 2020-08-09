@@ -19,6 +19,8 @@ namespace EvolutionPlugins.Dummy
         
         public PlayerDummyActionThread Actions { get; }
 
+        private Thread _actionThreadControl;
+
         public PlayerDummy(PlayerDummyData data, int index)
         {
             Data = data;
@@ -26,7 +28,8 @@ namespace EvolutionPlugins.Dummy
             DisplayName = "Dummy " + index;
             Id = data.UnturnedUser.Id;
             Actions = new PlayerDummyActionThread(this);
-            new Thread(Actions.Start).Start();
+            _actionThreadControl = new Thread(Actions.Start);
+            _actionThreadControl.Start();
         }
 
         public string Id { get; } 
@@ -47,6 +50,7 @@ namespace EvolutionPlugins.Dummy
         public void Dispose()
         {
             Actions.Enabled = false;
+            _actionThreadControl.Abort();
         }
 
         public async Task PrintMessageAsync(string message)
