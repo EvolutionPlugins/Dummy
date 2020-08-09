@@ -4,9 +4,9 @@ using System.Collections.Generic;
 
 namespace EvolutionPlugins.Dummy.Models
 {
-    public struct DummyData
+    public class PlayerDummyData
     {
-        public DummyData(List<CSteamID> owners, UnturnedUser unturnedUser)
+        public PlayerDummyData(List<CSteamID> owners, UnturnedUser unturnedUser)
         {
             Owners = owners;
             UnturnedUser = unturnedUser;
@@ -17,7 +17,7 @@ namespace EvolutionPlugins.Dummy.Models
 
         public override bool Equals(object obj)
         {
-            return obj is DummyData data && data.Owners == Owners && UnturnedUser == data.UnturnedUser;
+            return obj is PlayerDummyData data && data.Owners == Owners && UnturnedUser == data.UnturnedUser;
         }
 
         public override int GetHashCode()
@@ -25,12 +25,12 @@ namespace EvolutionPlugins.Dummy.Models
             return 1599248077 + EqualityComparer<List<CSteamID>>.Default.GetHashCode(Owners);
         }
 
-        public static bool operator ==(DummyData left, DummyData right)
+        public static bool operator ==(PlayerDummyData left, PlayerDummyData right)
         {
             return left.Equals(right);
         }
 
-        public static bool operator !=(DummyData left, DummyData right)
+        public static bool operator !=(PlayerDummyData left, PlayerDummyData right)
         {
             return !(left == right);
         }

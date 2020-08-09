@@ -73,7 +73,7 @@ namespace EvolutionPlugins.Dummy.Commands
             var dummyUser = new UnturnedUser(m_UserDataStore, dummy.player);
 
             await m_UserDataSeeder.SeedUserDataAsync(dummyUser.Id, dummyUser.Type, dummyUser.DisplayName); // https://github.com/openmod/openmod/pull/109
-            await m_DummyProvider.AddDummyAsync(id, new DummyData(new List<CSteamID> { user.SteamId }, dummyUser));
+            await m_DummyProvider.AddDummyAsync(id, new PlayerDummyData(new List<CSteamID> { user.SteamId }, dummyUser));
 
             var kickTimer = m_Configuration.GetSection("KickDummyAfterSeconds").Get<uint>();
             if(kickTimer != 0)

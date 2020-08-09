@@ -31,7 +31,7 @@ namespace EvolutionPlugins.Dummy.Commands
             }
             var id = (CSteamID)await Context.Parameters.GetAsync<ulong>(0);
 
-            var dummy = (UnturnedUser)await m_DummyProvider.FindDummyAsync(id.m_SteamID);
+            var dummy = await m_DummyProvider.FindDummyAsync(id.m_SteamID);
             if (dummy == null)
             {
                 throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
@@ -43,7 +43,7 @@ namespace EvolutionPlugins.Dummy.Commands
                 throw new UserFriendlyException($"Unable find a gesture {gesture}");
             }
 
-            dummy.Player.animator.sendGesture(eGesture, false);
+            dummy.Data.UnturnedUser.Player.animator.sendGesture(eGesture, false);
         }
     }
 }
