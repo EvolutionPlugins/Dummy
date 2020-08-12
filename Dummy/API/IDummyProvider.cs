@@ -10,9 +10,9 @@ namespace EvolutionPlugins.Dummy.API
     [Service]
     public interface IDummyProvider
     {
-        IReadOnlyDictionary<CSteamID, DummyData> Dummies { get; }
+        IReadOnlyDictionary<CSteamID, PlayerDummy> Dummies { get; }
 
-        Task<bool> AddDummyAsync(CSteamID id, DummyData dummyData);
+        Task<bool> AddDummyAsync(CSteamID id, PlayerDummyData playerDummyData);
 
         Task<bool> RemoveDummyAsync(CSteamID id);
 
@@ -20,9 +20,11 @@ namespace EvolutionPlugins.Dummy.API
 
         Task KickTimerTask(ulong id, uint timerSeconds);
 
-        Task<IUser> FindDummyAsync(ulong id);
+        Task<PlayerDummy> FindDummyAsync(ulong id);
+        
+        
 
-        Task<bool> GetDummyDataAsync(ulong id, out DummyData dummyData);
+        Task<bool> GetDummyDataAsync(ulong id, out PlayerDummyData playerDummyData);
 
         Task<CSteamID> GetAvailableIdAsync();
     }

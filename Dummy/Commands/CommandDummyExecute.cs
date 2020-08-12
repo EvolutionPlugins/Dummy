@@ -45,7 +45,7 @@ namespace EvolutionPlugins.Dummy.Commands
                 throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
             }
 
-            var commandContext = await m_CommandExecutor.ExecuteAsync(dummy, Context.Parameters.Skip(1).ToArray(), "");
+            var commandContext = await m_CommandExecutor.ExecuteAsync(dummy.Data.UnturnedUser, Context.Parameters.Skip(1).ToArray(), "");
 
             await PrintAsync($"Dummy has {(commandContext.Exception == null ? "<color=green>successfully" : "<color=red>unsuccessfully")}</color> executed command");
             if (commandContext.Exception != null && !(commandContext.Exception is UserFriendlyException))

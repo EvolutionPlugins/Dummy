@@ -10,8 +10,10 @@ using SDG.Unturned;
 using Steamworks;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
+using Color = UnityEngine.Color;
 
 namespace EvolutionPlugins.Dummy.Providers
 {
@@ -20,13 +22,13 @@ namespace EvolutionPlugins.Dummy.Providers
     {
         private bool m_IsDisposing;
 
-        private readonly Dictionary<CSteamID, DummyData> m_Dummies;
+        private readonly Dictionary<CSteamID, PlayerDummy> m_Dummies;
 
-        public IReadOnlyDictionary<CSteamID, DummyData> Dummies => m_Dummies;
+        public IReadOnlyDictionary<CSteamID, PlayerDummy> Dummies => m_Dummies;
 
         public DummyProvider()
         {
-            m_Dummies = new Dictionary<CSteamID, DummyData>();
+            m_Dummies = new Dictionary<CSteamID, PlayerDummy>();
             m_IsDisposing = false;
 
             Provider.onServerDisconnected += OnServerDisconnected;
@@ -50,7 +52,7 @@ namespace EvolutionPlugins.Dummy.Providers
 
             var data = Dummies[toPlayer.playerID.steamID];
 
-            foreach (var owner in data.Owners)
+            foreach (var owner in data.Data.Owners)
             {
                 var steamPlayerOwner = PlayerTool.getSteamPlayer(owner);
                 if (steamPlayerOwner == null)
@@ -92,13 +94,13 @@ namespace EvolutionPlugins.Dummy.Providers
         }
         #endregion
 
-        public Task<bool> AddDummyAsync(CSteamID Id, DummyData dummyData)
+        public Task<bool> AddDummyAsync(CSteamID Id, PlayerDummyData playerDummyData)
         {
             if (m_Dummies.ContainsKey(Id))
             {
                 return Task.FromResult(false);
             }
-            m_Dummies.Add(Id, dummyData);
+            m_Dummies.Add(Id, new PlayerDummy(playerDummyData));
             return Task.FromResult(true);
         }
 
@@ -122,7 +124,7 @@ namespace EvolutionPlugins.Dummy.Providers
 
             await Task.Delay((int)(timer * 1000));
 
-            var user = (UnturnedUser)await FindDummyAsync(id);
+            var user = await FindDummyAsync(id);
             if (user == null)
             {
                 return;
@@ -141,21 +143,17 @@ namespace EvolutionPlugins.Dummy.Providers
             return Task.FromResult(result);
         }
 
-        public async Task<IUser> FindDummyAsync(ulong Id)
+        public async Task<PlayerDummy> FindDummyAsync(ulong id)
         {
-            var dummy = (IUser)null;
-
-            if(await GetDummyDataAsync(Id, out var dummyData))
-            {
-                dummy = dummyData.UnturnedUser;
-            }
-
-            return dummy;
+            return Dummies.Values.FirstOrDefault(p => p.Data.UnturnedUser.Id == id.ToString());
         }
 
-        public Task<bool> GetDummyDataAsync(ulong Id, out DummyData dummyData)
+        public Task<bool> GetDummyDataAsync(ulong Id, out PlayerDummyData playerDummyData)
         {
-            return Task.FromResult(m_Dummies.TryGetValue((CSteamID)Id, out dummyData));
+            playerDummyData = null;
+            Task<bool> result = Task.FromResult(m_Dummies.TryGetValue((CSteamID)Id, out PlayerDummy dummy));
+            if (dummy != null) playerDummyData = dummy.Data;
+            return result;
         }
 
         public ValueTask DisposeAsync()
