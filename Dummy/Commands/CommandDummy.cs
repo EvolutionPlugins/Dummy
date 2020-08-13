@@ -1,6 +1,11 @@
 ﻿using OpenMod.Core.Commands;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using EvolutionPlugins.Dummy.Extensions.Movement;
+using EvolutionPlugins.Dummy.Models;
+using OpenMod.Unturned.Users;
+using Steamworks;
 using Command = OpenMod.Core.Commands.Command;
 
 namespace EvolutionPlugins.Dummy.Commands
@@ -12,6 +17,7 @@ namespace EvolutionPlugins.Dummy.Commands
     {
         public CommandDummy(IServiceProvider serviceProvider) : base(serviceProvider)
         {
+            
         }
 
         protected override Task OnExecuteAsync()

@@ -18,6 +18,7 @@ namespace EvolutionPlugins.Dummy.Threads
             Actions = new Queue<IAction>();
             ContinuousActions = new List<IAction>();
             _dummy = dummy;
+            Enabled = true;
         }
         
         public bool Enabled { get; set; }

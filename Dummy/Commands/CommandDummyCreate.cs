@@ -77,6 +77,7 @@ namespace EvolutionPlugins.Dummy.Commands
             {
                 AsyncHelper.Schedule("Kick a dummy timer", () => m_DummyProvider.KickTimerTask(dummyUser.SteamId.m_SteamID, kickTimer));
             }
+            
 
             await user.PrintMessageAsync($"Dummy ({id.m_SteamID}) has created");
         }
