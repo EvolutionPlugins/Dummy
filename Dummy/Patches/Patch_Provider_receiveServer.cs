@@ -197,7 +197,7 @@ namespace EvolutionPlugins.Dummy.Patches
                 if (Provider.configData.Server.Validate_EconInfo_Hash && !Hash.verifyHash(hash_, TempSteamworksEconomy.econInfoHash))
                 {
                     Provider.reject(steamID, ESteamRejection.WRONG_HASH_ECON);
-                    return;
+                    return false;
                 }
                 var text = (string)objects[29];
                 ModuleDependency[] array7;

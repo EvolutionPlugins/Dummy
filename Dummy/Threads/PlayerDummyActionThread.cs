@@ -7,7 +7,7 @@ namespace EvolutionPlugins.Dummy.Threads
     public class PlayerDummyActionThread
     {
         public Queue<IAction> Actions { get; private set; }
-        private Queue<IAction> _actions => (Queue<IAction>)Actions.Concat(ContinuousActions);
+        private Queue<IAction> m_Actions => (Queue<IAction>)Actions.Concat(ContinuousActions);
         public List<IAction> ContinuousActions { get; }
 
         private readonly PlayerDummy _dummy;
@@ -25,7 +25,7 @@ namespace EvolutionPlugins.Dummy.Threads
         {
             while (Enabled)
             {
-                foreach (IAction action in _actions)
+                foreach (IAction action in m_Actions)
                 {
                     action.Do(_dummy);
                     //Lol
