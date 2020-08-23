@@ -1,2 +1,4 @@
-﻿AmountDummiesInSameTime: 1
-KickDummyAfterSeconds: 300
+﻿options:
+  amountDummies: 1
+  kickDummyAfterSeconds: 600 # 0 - to disable timer kick
+  isAdmin: false

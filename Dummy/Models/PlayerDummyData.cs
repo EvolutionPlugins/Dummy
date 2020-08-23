@@ -6,14 +6,14 @@ namespace EvolutionPlugins.Dummy.Models
 {
     public class PlayerDummyData
     {
-        public PlayerDummyData(List<CSteamID> owners, UnturnedUser unturnedUser)
+        public PlayerDummyData(HashSet<CSteamID> owners, UnturnedUser unturnedUser)
         {
             Owners = owners;
             UnturnedUser = unturnedUser;
         }
 
-        public List<CSteamID> Owners { get; }
-        public UnturnedUser UnturnedUser { get; }
+        public HashSet<CSteamID> Owners { get; }
+        public UnturnedUser UnturnedUser { get; internal set; }
 
         public override bool Equals(object obj)
         {
@@ -22,7 +22,7 @@ namespace EvolutionPlugins.Dummy.Models
 
         public override int GetHashCode()
         {
-            return 1599248077 + EqualityComparer<List<CSteamID>>.Default.GetHashCode(Owners);
+            return 1599248077 + EqualityComparer<HashSet<CSteamID>>.Default.GetHashCode(Owners);
         }
 
         public static bool operator ==(PlayerDummyData left, PlayerDummyData right)

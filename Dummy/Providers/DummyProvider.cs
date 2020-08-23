@@ -1,9 +1,16 @@
-﻿using EvolutionPlugins.Dummy.API;
+﻿using Cysharp.Threading.Tasks;
+using Dummy.Extensions;
+using EvolutionPlugins.Dummy.API;
 using EvolutionPlugins.Dummy.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OpenMod.API.Ioc;
+using OpenMod.API.Plugins;
 using OpenMod.API.Prioritization;
+using OpenMod.API.Users;
 using OpenMod.Core.Helpers;
+using OpenMod.Core.Users;
+using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
 using System;
@@ -16,18 +23,24 @@ using Color = UnityEngine.Color;
 namespace EvolutionPlugins.Dummy.Providers
 {
     [ServiceImplementation(Lifetime = ServiceLifetime.Singleton, Priority = Priority.Lowest)]
-    public class DummyProvider : IDummyProvider, IAsyncDisposable
+    public class DummyProvider : IDummyProvider, IDisposable
     {
         private bool m_IsDisposing;
+
+        private readonly IConfiguration m_Configuration;
+        private readonly IUserProvider m_UserProvider;
+        private readonly IUserDataStore m_UserDataStore;
 
         private readonly Dictionary<CSteamID, PlayerDummy> m_Dummies;
 
         public IReadOnlyDictionary<CSteamID, PlayerDummy> Dummies => m_Dummies;
 
-        public DummyProvider()
+        public DummyProvider(IPluginAccessor<Dummy> pluginAccessor, IUserProvider userProvider, IUserDataStore userDataStore)
         {
             m_Dummies = new Dictionary<CSteamID, PlayerDummy>();
-            m_IsDisposing = false;
+            m_Configuration = pluginAccessor.Instance.Configuration;
+            m_UserProvider = userProvider;
+            m_UserDataStore = userDataStore;
 
             Provider.onServerDisconnected += OnServerDisconnected;
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
@@ -92,25 +105,60 @@ namespace EvolutionPlugins.Dummy.Providers
         }
         #endregion
 
-        public Task<bool> AddDummyAsync(CSteamID Id, PlayerDummyData playerDummyData)
+        public async Task<PlayerDummy> AddDummyAsync(CSteamID id, HashSet<CSteamID> owners)
         {
-            if (m_Dummies.ContainsKey(Id))
+            if (m_Dummies.ContainsKey(id))
             {
-                return Task.FromResult(false);
+                throw new DummyContainsException(id.m_SteamID);
             }
-            m_Dummies.Add(Id, new PlayerDummy(playerDummyData));
-            return Task.FromResult(true);
+
+            var amountDummiesConfig = m_Configuration.GetSection("options:amountDummies").Get<byte>();
+            if (amountDummiesConfig != 0 && Dummies.Count + 1 > amountDummiesConfig)
+            {
+                throw new DummyOverflowsException((byte)Dummies.Count, amountDummiesConfig);
+            }
+
+            await UniTask.SwitchToMainThread();
+
+            Provider.pending.Add(new SteamPending(
+                    new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, 0, 0, 0,
+                    Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL,
+                    0UL, 0UL, 0UL, Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
+
+            Provider.accept(new SteamPlayerID(id, 1, "dummy", "dummy", "dummy", CSteamID.Nil), true, false, 0, 0, 0,
+                Color.white, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0,
+                0, Array.Empty<int>(), Array.Empty<string>(), Array.Empty<string>(), EPlayerSkillset.NONE, "english",
+                CSteamID.Nil);
+
+            await UniTask.SwitchToTaskPool();
+
+            var user = (UnturnedUser)await m_UserProvider.FindUserAsync(KnownActorTypes.Player, id.ToString(), UserSearchMode.FindById);
+            var playerDummyData = new PlayerDummyData(owners, user);
+            var playerDummy = new PlayerDummy(playerDummyData);
+            AddDummy(playerDummy);
+
+            return playerDummy;
+        }
+
+        public Task<PlayerDummy> AddCopiedDummyAsync(CSteamID id, HashSet<CSteamID> owners, UnturnedUser userCopy)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void AddDummy(PlayerDummy playerDummy)
+        {
+            var kickTimer = m_Configuration.GetSection("KickDummyAfterSeconds").Get<uint>();
+            if (kickTimer != 0)
+            {
+                AsyncHelper.Schedule("Kick a dummy timer", () => KickTimerTask(playerDummy.Data.UnturnedUser.SteamId.m_SteamID, kickTimer));
+            }
+
+            m_Dummies.Add(playerDummy.Data.UnturnedUser.SteamId, playerDummy);
         }
 
         public Task<bool> RemoveDummyAsync(CSteamID Id)
         {
             return Task.FromResult(m_Dummies.Remove(Id));
-        }
-
-        public Task ClearAllDummiesAsync()
-        {
-            m_Dummies.Clear();
-            return Task.CompletedTask;
         }
 
         public async Task KickTimerTask(ulong id, uint timer)
@@ -149,16 +197,26 @@ namespace EvolutionPlugins.Dummy.Providers
         public Task<bool> GetDummyDataAsync(ulong Id, out PlayerDummyData playerDummyData)
         {
             playerDummyData = null;
-            Task<bool> result = Task.FromResult(m_Dummies.TryGetValue((CSteamID)Id, out PlayerDummy dummy));
-            if (dummy != null) playerDummyData = dummy.Data;
+            var result = Task.FromResult(m_Dummies.TryGetValue((CSteamID)Id, out PlayerDummy dummy));
+            if (dummy != null)
+            {
+                playerDummyData = dummy.Data;
+            }
+
             return result;
         }
 
-        public ValueTask DisposeAsync()
+        public async Task MoveDummy(ulong id, Vector3 position, float rotation)
+        {
+            var dummy = await FindDummyAsync(id);
+            dummy?.Data.UnturnedUser.TeleportToLocationAsync(position, rotation);
+        }
+
+        public void Dispose()
         {
             if (m_IsDisposing)
             {
-                return new ValueTask(Task.CompletedTask);
+                return;
             }
             m_IsDisposing = true;
 
@@ -170,8 +228,6 @@ namespace EvolutionPlugins.Dummy.Providers
             {
                 Provider.kick(cSteamID, "");
             }
-
-            return new ValueTask(ClearAllDummiesAsync());
         }
     }
 }

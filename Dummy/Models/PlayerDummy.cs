@@ -35,7 +35,7 @@ namespace EvolutionPlugins.Dummy
 
         public override int GetHashCode()
         {
-            return 1599248077 + EqualityComparer<List<CSteamID>>.Default.GetHashCode(Data.Owners);
+            return 1599248077 + EqualityComparer<HashSet<CSteamID>>.Default.GetHashCode(Data.Owners);
         }
 
         public void Dispose()

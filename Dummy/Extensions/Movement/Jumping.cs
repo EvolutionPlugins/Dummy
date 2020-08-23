@@ -9,8 +9,7 @@ namespace EvolutionPlugins.Dummy.Extensions.Movement
 
         public static void JumpingConstantOff(this PlayerDummy dummy)
         {
-            dummy.Actions.ContinuousActions.Remove(dummy.Actions.ContinuousActions
-                .Find(c => c is JumpAction));
+            dummy.Actions.ContinuousActions.RemoveAll(c => c is JumpAction);
         }
 
         public static void Jump(this PlayerDummy dummy)

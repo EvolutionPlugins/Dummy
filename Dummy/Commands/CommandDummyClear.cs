@@ -28,7 +28,6 @@ namespace EvolutionPlugins.Dummy.Commands
             {
                 Provider.kick(cSteamID, "");
             }
-            await m_DummyProvider.ClearAllDummiesAsync();
         }
     }
 }

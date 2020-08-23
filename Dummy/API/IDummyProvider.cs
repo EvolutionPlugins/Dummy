@@ -1,8 +1,11 @@
 ﻿using EvolutionPlugins.Dummy.Models;
 using OpenMod.API.Ioc;
+using OpenMod.Unturned.Users;
 using Steamworks;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using UnityEngine;
+using EvolutionPlugins.Dummy.Providers;
 
 namespace EvolutionPlugins.Dummy.API
 {
@@ -11,11 +14,24 @@ namespace EvolutionPlugins.Dummy.API
     {
         IReadOnlyDictionary<CSteamID, PlayerDummy> Dummies { get; }
 
-        Task<bool> AddDummyAsync(CSteamID id, PlayerDummyData playerDummyData);
+        /// <summary>
+        /// Spawn a dummy
+        /// </summary>
+        /// <param name="id">Use GetAvailableIdAsync to get available ID</param>
+        /// <param name="owners">Owners get all notification about a dummy</param>
+        /// <exception cref="DummyContainsException">Dummy with id already created. Use GetAvailableIdAsync to get available ID</exception>
+        /// <exception cref="DummyOverflowsException">Dummies limit reached</exception>
+        Task<PlayerDummy> AddDummyAsync(CSteamID id, HashSet<CSteamID> owners);
+        /// <summary>
+        /// Spawn a dummy and copy all of the user
+        /// </summary>
+        /// <param name="id">Use GetAvailableIdAsync to get available ID</param>
+        /// <param name="owners">Owners get all notification about a dummy</param>
+        /// <exception cref="DummyContainsException">Dummy with id already created. Use GetAvailableIdAsync to get available ID</exception>
+        /// <exception cref="DummyOverflowsException">Dummies limit reached</exception>
+        Task<PlayerDummy> AddCopiedDummyAsync(CSteamID id, HashSet<CSteamID> owners, UnturnedUser userCopy);
 
         Task<bool> RemoveDummyAsync(CSteamID id);
-
-        Task ClearAllDummiesAsync();
 
         Task KickTimerTask(ulong id, uint timerSeconds);
 
@@ -24,5 +40,7 @@ namespace EvolutionPlugins.Dummy.API
         Task<bool> GetDummyDataAsync(ulong id, out PlayerDummyData playerDummyData);
 
         Task<CSteamID> GetAvailableIdAsync();
+
+        Task MoveDummy(ulong id, Vector3 position, float rotation);
     }
 }
