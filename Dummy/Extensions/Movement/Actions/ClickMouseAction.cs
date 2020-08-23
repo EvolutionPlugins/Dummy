@@ -15,7 +15,7 @@ namespace Dummy.Extensions.Movement.Actions
         public void Do(PlayerDummy dummy)
         {
             var player = dummy.Data.UnturnedUser.Player;
-            if (State == ClickMouseState.LeftClick)
+            if (State == ClickMouseState.Left)
                 player.equipment.simulate(1, false, true, false);
             else
                 player.equipment.simulate(1, true, false, false);

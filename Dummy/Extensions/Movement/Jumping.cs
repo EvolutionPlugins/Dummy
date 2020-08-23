@@ -1,4 +1,3 @@
-using Cysharp.Threading.Tasks;
 using System.Threading.Tasks;
 
 namespace EvolutionPlugins.Dummy.Extensions.Movement

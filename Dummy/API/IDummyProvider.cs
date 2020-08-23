@@ -35,8 +35,6 @@ namespace EvolutionPlugins.Dummy.API
 
         Task ClearDummies();
 
-        Task KickTimerTask(ulong id, uint timerSeconds);
-
         Task<PlayerDummy> GetPlayerDummy(ulong id);
 
         Task<bool> GetDummyDataAsync(ulong id, out PlayerDummyData playerDummyData);

@@ -64,6 +64,23 @@ namespace EvolutionPlugins.Dummy.Providers
             }
         }
 
+        private async Task KickTimerTask(ulong id, uint timer)
+        {
+            if (timer == 0)
+            {
+                return;
+            }
+
+            await Task.Delay((int)(timer * 1000));
+
+            var user = await GetPlayerDummy(id);
+            if (user == null)
+            {
+                return;
+            }
+            await user.Session.DisconnectAsync();
+        }
+
         #region Events
         protected virtual void OnServerSendingMessage(ref string text, ref Color color, SteamPlayer fromPlayer,
             SteamPlayer toPlayer, EChatMode mode, ref string iconURL, ref bool useRichTextFormatting)
@@ -191,23 +208,6 @@ namespace EvolutionPlugins.Dummy.Providers
             {
                 await RemoveDummyAsync(steamID);
             }
-        }
-
-        public async Task KickTimerTask(ulong id, uint timer)
-        {
-            if (timer == 0)
-            {
-                return;
-            }
-
-            await Task.Delay((int)(timer * 1000));
-
-            var user = await GetPlayerDummy(id);
-            if (user == null)
-            {
-                return;
-            }
-            await user.Session.DisconnectAsync();
         }
 
         public Task<CSteamID> GetAvailableIdAsync()
