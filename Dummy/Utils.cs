@@ -15,6 +15,7 @@ namespace EvolutionPlugins.Dummy
             banReason = string.Empty;
             banRemainingDuration = 0U;
 
+            // call original method if someone patch is with harmony
             var dynMethod = typeof(Provider).GetMethod("checkBanStatus", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
             var parameters = new object[] { playerID, remoteIP, isBanned, banReason, banRemainingDuration };
             dynMethod.Invoke(typeof(Provider), parameters);

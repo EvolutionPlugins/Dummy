@@ -3,9 +3,7 @@ using EvolutionPlugins.Dummy.Models;
 using Microsoft.Extensions.DependencyInjection;
 using OpenMod.API.Ioc;
 using OpenMod.API.Prioritization;
-using OpenMod.API.Users;
 using OpenMod.Core.Helpers;
-using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
 using System;
@@ -143,9 +141,9 @@ namespace EvolutionPlugins.Dummy.Providers
             return Task.FromResult(result);
         }
 
-        public async Task<PlayerDummy> FindDummyAsync(ulong id)
+        public Task<PlayerDummy> FindDummyAsync(ulong id)
         {
-            return Dummies.Values.FirstOrDefault(p => p.Data.UnturnedUser.Id == id.ToString());
+            return Task.FromResult(Dummies.Values.FirstOrDefault(p => p.Data.UnturnedUser.Id == id.ToString()));
         }
 
         public Task<bool> GetDummyDataAsync(ulong Id, out PlayerDummyData playerDummyData)

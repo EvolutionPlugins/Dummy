@@ -1,6 +1,5 @@
 ﻿using EvolutionPlugins.Dummy.Models;
 using OpenMod.API.Ioc;
-using OpenMod.API.Users;
 using Steamworks;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -21,8 +20,6 @@ namespace EvolutionPlugins.Dummy.API
         Task KickTimerTask(ulong id, uint timerSeconds);
 
         Task<PlayerDummy> FindDummyAsync(ulong id);
-        
-        
 
         Task<bool> GetDummyDataAsync(ulong id, out PlayerDummyData playerDummyData);
 

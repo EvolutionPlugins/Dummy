@@ -1,25 +1,24 @@
 // ReSharper disable CheckNamespace
 
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Threading;
-using System.Threading.Tasks;
 using EvolutionPlugins.Dummy.Models;
 using EvolutionPlugins.Dummy.Threads;
 using OpenMod.API.Users;
-using OpenMod.Unturned.Users;
 using Steamworks;
+using System;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace EvolutionPlugins.Dummy
 {
+#pragma warning disable CA1063 // Implement IDisposable Correctly
     public class PlayerDummy : IDisposable
+#pragma warning restore CA1063 // Implement IDisposable Correctly
     {
         public PlayerDummyData Data { get; }
-        
+        public IUserSession Session { get; }
         public PlayerDummyActionThread Actions { get; }
 
-        private Thread _actionThreadControl;
+        private readonly Thread _actionThreadControl;
 
         public PlayerDummy(PlayerDummyData data)
         {
@@ -28,7 +27,7 @@ namespace EvolutionPlugins.Dummy
             _actionThreadControl = new Thread(Actions.Start);
             _actionThreadControl.Start();
         }
-        
+
         public override bool Equals(object obj)
         {
             return obj is PlayerDummy data && data.Data == Data;
@@ -44,8 +43,5 @@ namespace EvolutionPlugins.Dummy
             Actions.Enabled = false;
             _actionThreadControl.Abort();
         }
-        
-
-        public IUserSession Session { get; }
     }
 }

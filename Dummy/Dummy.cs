@@ -18,8 +18,6 @@ namespace EvolutionPlugins.Dummy
 {
     public class Dummy : OpenModUnturnedPlugin
     {
-        private const string _HarmonyId = "evolutionplugins.diffoz.dummy";
-
         private readonly ILogger m_Logger;
         private readonly IDummyProvider m_DummyProvider;
 
