@@ -20,13 +20,11 @@ namespace EvolutionPlugins.Dummy
     {
         private const string _HarmonyId = "evolutionplugins.diffoz.dummy";
 
-        private readonly Harmony m_Harmony;
         private readonly ILogger m_Logger;
         private readonly IDummyProvider m_DummyProvider;
 
         public Dummy(IServiceProvider serviceProvider, ILogger<Dummy> logger, IDummyProvider dummyProvider) : base(serviceProvider)
         {
-            m_Harmony = new Harmony(_HarmonyId);
             m_Logger = logger;
             m_DummyProvider = dummyProvider;
         }
@@ -43,15 +41,11 @@ namespace EvolutionPlugins.Dummy
 
             AsyncHelper.Schedule("Don't auto kick a dummies", DontAutoKickTask);
 
-            m_Harmony.PatchAll();
-
             return UniTask.CompletedTask;
         }
 
         protected override UniTask OnUnloadAsync()
         {
-            m_Harmony.UnpatchAll(_HarmonyId);
-
             Patch_Provider_receiveServer.onNeedProvider -= GiveProvider;
             Patch_Provider_send.OnNeedProvider -= GiveProvider;
             Patch_Provider_verifyNextPlayerInQueue.OnNeedProvider -= GiveProvider;
