@@ -1,7 +1,6 @@
 ﻿using EvolutionPlugins.Dummy.API;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
-using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
 using System;
@@ -36,7 +35,7 @@ namespace EvolutionPlugins.Dummy.Commands
                 throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
             }
 
-            var dummy = await m_DummyProvider.FindDummyAsync(id.m_SteamID);
+            var dummy = await m_DummyProvider.GetPlayerDummy(id.m_SteamID);
             if (dummy == null)
             {
                 throw new UserFriendlyException($"Dummy \"{id}\" has not found!");

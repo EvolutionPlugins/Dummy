@@ -1,8 +1,7 @@
-﻿using OpenMod.Core.Commands;
+﻿using EvolutionPlugins.Dummy.API;
+using OpenMod.Core.Commands;
+using Steamworks;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace EvolutionPlugins.Dummy.Commands
@@ -15,13 +14,24 @@ namespace EvolutionPlugins.Dummy.Commands
     [CommandSyntax("<id>")]
     public class CommandDummyRemove : Command
     {
-        public CommandDummyRemove(IServiceProvider serviceProvider) : base(serviceProvider)
+        private readonly IDummyProvider m_DummyProvider;
+
+        public CommandDummyRemove(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider)
         {
+            m_DummyProvider = dummyProvider;
         }
 
-        protected override Task OnExecuteAsync()
+        protected override async Task OnExecuteAsync()
         {
-            throw new NotImplementedException();
+            if (Context.Parameters.Count == 0)
+            {
+                throw new CommandWrongUsageException(Context);
+            }
+            var id = (CSteamID)await Context.Parameters.GetAsync<ulong>(0);
+
+            var deleted = await m_DummyProvider.RemoveDummyAsync(id);
+
+            await PrintAsync($"Dummy {(deleted ? "is" : "not")} kicked");
         }
     }
 }

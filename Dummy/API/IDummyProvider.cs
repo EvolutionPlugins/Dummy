@@ -33,9 +33,11 @@ namespace EvolutionPlugins.Dummy.API
 
         Task<bool> RemoveDummyAsync(CSteamID id);
 
+        Task ClearDummies();
+
         Task KickTimerTask(ulong id, uint timerSeconds);
 
-        Task<PlayerDummy> FindDummyAsync(ulong id);
+        Task<PlayerDummy> GetPlayerDummy(ulong id);
 
         Task<bool> GetDummyDataAsync(ulong id, out PlayerDummyData playerDummyData);
 

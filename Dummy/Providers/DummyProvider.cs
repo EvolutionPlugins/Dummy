@@ -23,28 +23,45 @@ using Color = UnityEngine.Color;
 namespace EvolutionPlugins.Dummy.Providers
 {
     [ServiceImplementation(Lifetime = ServiceLifetime.Singleton, Priority = Priority.Lowest)]
-    public class DummyProvider : IDummyProvider, IDisposable
+    public class DummyProvider : IDummyProvider, IAsyncDisposable
     {
         private bool m_IsDisposing;
 
         private readonly IConfiguration m_Configuration;
         private readonly IUserProvider m_UserProvider;
-        private readonly IUserDataStore m_UserDataStore;
 
         private readonly Dictionary<CSteamID, PlayerDummy> m_Dummies;
 
         public IReadOnlyDictionary<CSteamID, PlayerDummy> Dummies => m_Dummies;
 
-        public DummyProvider(IPluginAccessor<Dummy> pluginAccessor, IUserProvider userProvider, IUserDataStore userDataStore)
+        public DummyProvider(IPluginAccessor<Dummy> pluginAccessor, IUserProvider userProvider)
         {
             m_Dummies = new Dictionary<CSteamID, PlayerDummy>();
             m_Configuration = pluginAccessor.Instance.Configuration;
             m_UserProvider = userProvider;
-            m_UserDataStore = userDataStore;
 
             Provider.onServerDisconnected += OnServerDisconnected;
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
+
+            AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
+        }
+
+        private async Task DontAutoKickTask()
+        {
+            while (!m_IsDisposing)
+            {
+                foreach (var dummy in Dummies)
+                {
+                    var client = Provider.clients.Find(k => k.playerID.steamID == dummy.Key);
+                    if (client == null)
+                    {
+                        continue;
+                    }
+                    client.timeLastPacketWasReceivedFromClient = Time.realtimeSinceStartup;
+                }
+                await Task.Delay(5000);
+            }
         }
 
         #region Events
@@ -77,7 +94,7 @@ namespace EvolutionPlugins.Dummy.Providers
 
         protected virtual void OnServerDisconnected(CSteamID steamID)
         {
-            AsyncHelper.RunSync(() => RemoveDummyAsync(steamID));
+            m_Dummies.Remove(steamID);
         }
 
         protected virtual void DamageTool_damagePlayerRequested(ref DamagePlayerParameters parameters, ref bool shouldAllow)
@@ -156,9 +173,24 @@ namespace EvolutionPlugins.Dummy.Providers
             m_Dummies.Add(playerDummy.Data.UnturnedUser.SteamId, playerDummy);
         }
 
-        public Task<bool> RemoveDummyAsync(CSteamID Id)
+        public Task<bool> RemoveDummyAsync(CSteamID id)
         {
-            return Task.FromResult(m_Dummies.Remove(Id));
+            if (m_Dummies.ContainsKey(id))
+            {
+                Provider.kick(id, "");
+                m_Dummies.Remove(id);
+                return Task.FromResult(true);
+            }
+
+            return Task.FromResult(false);
+        }
+
+        public async Task ClearDummies()
+        {
+            foreach (var steamID in m_Dummies.Keys)
+            {
+                await RemoveDummyAsync(steamID);
+            }
         }
 
         public async Task KickTimerTask(ulong id, uint timer)
@@ -170,7 +202,7 @@ namespace EvolutionPlugins.Dummy.Providers
 
             await Task.Delay((int)(timer * 1000));
 
-            var user = await FindDummyAsync(id);
+            var user = await GetPlayerDummy(id);
             if (user == null)
             {
                 return;
@@ -189,7 +221,7 @@ namespace EvolutionPlugins.Dummy.Providers
             return Task.FromResult(result);
         }
 
-        public Task<PlayerDummy> FindDummyAsync(ulong id)
+        public Task<PlayerDummy> GetPlayerDummy(ulong id)
         {
             return Task.FromResult(Dummies.Values.FirstOrDefault(p => p.Data.UnturnedUser.Id == id.ToString()));
         }
@@ -208,15 +240,15 @@ namespace EvolutionPlugins.Dummy.Providers
 
         public async Task MoveDummy(ulong id, Vector3 position, float rotation)
         {
-            var dummy = await FindDummyAsync(id);
+            var dummy = await GetPlayerDummy(id);
             dummy?.Data.UnturnedUser.TeleportToLocationAsync(position, rotation);
         }
 
-        public void Dispose()
+        public ValueTask DisposeAsync()
         {
             if (m_IsDisposing)
             {
-                return;
+                return new ValueTask(Task.CompletedTask);
             }
             m_IsDisposing = true;
 
@@ -224,10 +256,7 @@ namespace EvolutionPlugins.Dummy.Providers
             ChatManager.onServerSendingMessage -= OnServerSendingMessage;
             DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
 
-            foreach (var cSteamID in m_Dummies.Keys)
-            {
-                Provider.kick(cSteamID, "");
-            }
+            return new ValueTask(ClearDummies());
         }
     }
 }
