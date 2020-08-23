@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using SDG.Framework.Modules;
+using SDG.Provider;
 using SDG.Unturned;
 using Steamworks;
 using System;
@@ -39,42 +40,44 @@ namespace EvolutionPlugins.Dummy.Patches
                 }
                 var objects = SteamPacker.getObjects(steamID, offset, 0, packet, new Type[]
                 {
-                    Types.BYTE_TYPE,
-                    Types.BYTE_TYPE,
-                    Types.STRING_TYPE,
-                    Types.STRING_TYPE,
-                    Types.BYTE_ARRAY_TYPE,
-                    Types.BYTE_ARRAY_TYPE,
-                    Types.BYTE_ARRAY_TYPE,
-                    Types.BYTE_TYPE,
-                    Types.UINT32_TYPE,
-                    Types.BOOLEAN_TYPE,
-                    Types.SINGLE_TYPE,
-                    Types.STRING_TYPE,
-                    Types.STEAM_ID_TYPE,
-                    Types.BYTE_TYPE,
-                    Types.BYTE_TYPE,
-                    Types.BYTE_TYPE,
-                    Types.COLOR_TYPE,
-                    Types.COLOR_TYPE,
-                    Types.COLOR_TYPE,
-                    Types.BOOLEAN_TYPE,
-                    Types.UINT64_TYPE,
-                    Types.UINT64_TYPE,
-                    Types.UINT64_TYPE,
-                    Types.UINT64_TYPE,
-                    Types.UINT64_TYPE,
-                    Types.UINT64_TYPE,
-                    Types.UINT64_TYPE,
-                    Types.UINT64_ARRAY_TYPE,
-                    Types.BYTE_TYPE,
-                    Types.STRING_TYPE,
-                    Types.STRING_TYPE,
-                    Types.STEAM_ID_TYPE,
-                    Types.UINT32_TYPE,
-                    Types.BYTE_ARRAY_TYPE
+                        Types.BYTE_TYPE,
+                        Types.BYTE_TYPE,
+                        Types.STRING_TYPE,
+                        Types.STRING_TYPE,
+                        Types.BYTE_ARRAY_TYPE,
+                        Types.BYTE_ARRAY_TYPE,
+                        Types.BYTE_ARRAY_TYPE,
+                        Types.BYTE_TYPE,
+                        Types.UINT32_TYPE,
+                        Types.BOOLEAN_TYPE,
+                        Types.SINGLE_TYPE,
+                        Types.STRING_TYPE,
+                        Types.STEAM_ID_TYPE,
+                        Types.BYTE_TYPE,
+                        Types.BYTE_TYPE,
+                        Types.BYTE_TYPE,
+                        Types.COLOR_TYPE,
+                        Types.COLOR_TYPE,
+                        Types.COLOR_TYPE,
+                        Types.BOOLEAN_TYPE,
+                        Types.UINT64_TYPE,
+                        Types.UINT64_TYPE,
+                        Types.UINT64_TYPE,
+                        Types.UINT64_TYPE,
+                        Types.UINT64_TYPE,
+                        Types.UINT64_TYPE,
+                        Types.UINT64_TYPE,
+                        Types.UINT64_ARRAY_TYPE,
+                        Types.BYTE_TYPE,
+                        Types.STRING_TYPE,
+                        Types.STRING_TYPE,
+                        Types.STEAM_ID_TYPE,
+                        Types.UINT32_TYPE,
+                        Types.BYTE_ARRAY_TYPE,
+                        Types.BYTE_ARRAY_TYPE
                 });
-                var array3 = (byte[])objects[33];
+                byte[] array3 = (byte[])objects[33];
+                byte[] hash_ = (byte[])objects[34];
                 if (array3.Length != 20)
                 {
                     Provider.reject(steamID, ESteamRejection.WRONG_HASH_ASSEMBLY);
@@ -85,7 +88,8 @@ namespace EvolutionPlugins.Dummy.Patches
                 {
                     newCharacterID = 0;
                 }
-                var steamPlayerID = new SteamPlayerID(steamID, newCharacterID, (string)objects[2], (string)objects[3], (string)objects[11], (CSteamID)objects[12], array3);
+                var steamPlayerID = new SteamPlayerID(steamID, newCharacterID, (string)objects[2], (string)objects[3],
+                    (string)objects[11], (CSteamID)objects[12], array3);
                 if ((uint)objects[8] != Provider.APP_VERSION_PACKED)
                 {
                     Provider.reject(steamID, ESteamRejection.WRONG_VERSION, Provider.APP_VERSION);
@@ -116,14 +120,14 @@ namespace EvolutionPlugins.Dummy.Patches
                     Provider.reject(steamID, ESteamRejection.NAME_CHARACTER_LONG);
                     return false;
                 }
-
-                if (long.TryParse(steamPlayerID.playerName, NumberStyles.Any, CultureInfo.InvariantCulture, out _) || double.TryParse(steamPlayerID.playerName, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
+                if (long.TryParse(steamPlayerID.playerName, NumberStyles.Any, CultureInfo.InvariantCulture, out _) ||
+                    double.TryParse(steamPlayerID.playerName, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
                 {
                     Provider.reject(steamID, ESteamRejection.NAME_PLAYER_NUMBER);
                     return false;
                 }
-
-                if (long.TryParse(steamPlayerID.characterName, NumberStyles.Any, CultureInfo.InvariantCulture, out _) || double.TryParse(steamPlayerID.characterName, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
+                if (long.TryParse(steamPlayerID.characterName, NumberStyles.Any, CultureInfo.InvariantCulture, out _) ||
+                    double.TryParse(steamPlayerID.characterName, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
                 {
                     Provider.reject(steamID, ESteamRejection.NAME_CHARACTER_NUMBER);
                     return false;
@@ -151,16 +155,8 @@ namespace EvolutionPlugins.Dummy.Patches
                     Provider.reject(steamID, ESteamRejection.NAME_CHARACTER_INVALID);
                     return false;
                 }
-                uint remoteIP;
-                if (SteamGameServerNetworking.GetP2PSessionState(steamID, out P2PSessionState_t p2PSessionState_t))
-                {
-                    remoteIP = p2PSessionState_t.m_nRemoteIP;
-                }
-                else
-                {
-                    remoteIP = 0U;
-                }
-                Utils.checkBanStatus(steamPlayerID, remoteIP, out bool flag3, out string object_, out uint num5);
+                uint ipv4AddressOrZero = SteamGameServerNetworkingUtils.getIPv4AddressOrZero(steamID);
+                Utils.checkBanStatus(steamPlayerID, ipv4AddressOrZero, out bool flag3, out string object_, out uint num5);
                 if (flag3)
                 {
                     var bytes3 = SteamPacker.getBytes(0, out int size4, 9, object_, num5);
@@ -196,6 +192,12 @@ namespace EvolutionPlugins.Dummy.Patches
                 {
                     Provider.reject(steamID, ESteamRejection.WRONG_HASH_ASSEMBLY);
                     return false;
+                }
+                // 3.20.8.0
+                if (Provider.configData.Server.Validate_EconInfo_Hash && !Hash.verifyHash(hash_, TempSteamworksEconomy.econInfoHash))
+                {
+                    Provider.reject(steamID, ESteamRejection.WRONG_HASH_ECON);
+                    return;
                 }
                 var text = (string)objects[29];
                 ModuleDependency[] array7;
@@ -236,7 +238,9 @@ namespace EvolutionPlugins.Dummy.Patches
                     {
                         for (var num7 = 0; num7 < moduleList.Count; num7++)
                         {
-                            if (moduleList[num7]?.config != null && moduleList[num7].config.Name == array7[num6].Name && moduleList[num7].config.Version_Internal >= array7[num6].Version_Internal)
+                            if (moduleList[num7]?.config != null
+                                && moduleList[num7].config.Name == array7[num6].Name
+                                && moduleList[num7].config.Version_Internal >= array7[num6].Version_Internal)
                             {
                                 flag6 = true;
                                 break;
@@ -262,7 +266,9 @@ namespace EvolutionPlugins.Dummy.Patches
                     {
                         for (var num9 = 0; num9 < array7.Length; num9++)
                         {
-                            if (array7[num9] != null && array7[num9].Name == moduleList[num8].config.Name && array7[num9].Version_Internal >= moduleList[num8].config.Version_Internal)
+                            if (array7[num9] != null
+                                && array7[num9].Name == moduleList[num8].config.Name
+                                && array7[num9].Version_Internal >= moduleList[num8].config.Version_Internal)
                             {
                                 flag8 = true;
                                 break;
@@ -301,7 +307,11 @@ namespace EvolutionPlugins.Dummy.Patches
                     return false;
                 }
                 Utils.notifyClientPending(steamID);
-                SteamPending item = new SteamPending(steamPlayerID, (bool)objects[9], (byte)objects[13], (byte)objects[14], (byte)objects[15], (Color)objects[16], (Color)objects[17], (Color)objects[18], (bool)objects[19], (ulong)objects[20], (ulong)objects[21], (ulong)objects[22], (ulong)objects[23], (ulong)objects[24], (ulong)objects[25], (ulong)objects[26], (ulong[])objects[27], (EPlayerSkillset)(byte)objects[28], (string)objects[30], (CSteamID)objects[31]);
+                SteamPending item = new SteamPending(   steamPlayerID, (bool)objects[9], (byte)objects[13],
+                    (byte)objects[14], (byte)objects[15], (Color)objects[16], (Color)objects[17], (Color)objects[18],
+                    (bool)objects[19], (ulong)objects[20], (ulong)objects[21], (ulong)objects[22], (ulong)objects[23],
+                    (ulong)objects[24], (ulong)objects[25], (ulong)objects[26], (ulong[])objects[27],
+                    (EPlayerSkillset)(byte)objects[28], (string)objects[30], (CSteamID)objects[31]);
                 if (Provider.isWhitelisted || !flag4)
                 {
                     Provider.pending.Add(item);

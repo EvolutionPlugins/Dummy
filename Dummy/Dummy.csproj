@@ -1,29 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>net461</TargetFramework>
     </PropertyGroup>
-
-    <ItemGroup>
-      <PackageReference Include="OpenMod.API" Version="1.1.6" />
-      <PackageReference Include="OpenMod.Core" Version="1.1.6" />
-      <PackageReference Include="OpenMod.UniTask" Version="2.0.19" />
-      <PackageReference Include="OpenMod.UnityEngine" Version="1.1.6" />
-      <PackageReference Include="OpenMod.Unturned" Version="1.1.9" />
-      <PackageReference Include="OpenMod.Unturned.Redist" Version="3.20.7" />
-    </ItemGroup>
 
     <ItemGroup>
         <EmbeddedResource Include="config.yaml" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-        <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Unturned\Unturned_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
-      </Reference>
-      <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-        <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Unturned\Unturned_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-      </Reference>
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="OpenMod.Unturned" Version="1.2.1" />
+    <PackageReference Include="OpenMod.Unturned.Redist" Version="3.20.7" />
+    <PackageReference Include="OpenMod.UnityEngine.Redist" Version="2018.4.23" />
+    <PackageReference Include="Legacy2CPSWorkaround" Version="1.0.0">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net461" Version="1.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 
 </Project>
