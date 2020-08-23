@@ -1,3 +1,6 @@
+using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
+
 namespace EvolutionPlugins.Dummy.Extensions.Movement
 {
     public static class Jumping
@@ -15,6 +18,13 @@ namespace EvolutionPlugins.Dummy.Extensions.Movement
         public static void Jump(this PlayerDummy dummy)
         {
             new JumpAction().Do(dummy);
+        }
+
+        public static async Task TempJump(this PlayerDummy playerDummy, float time)
+        {
+            playerDummy.JumpingConstantOn();
+            await Task.Delay((int)(time * 1000));
+            playerDummy.JumpingConstantOff();
         }
     }
 }
