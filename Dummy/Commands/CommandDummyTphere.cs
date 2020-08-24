@@ -1,4 +1,6 @@
-﻿using OpenMod.Core.Commands;
+﻿using Dummy.Extensions;
+using EvolutionPlugins.Dummy.API;
+using OpenMod.Core.Commands;
 using OpenMod.Unturned.Users;
 using System;
 using System.Threading.Tasks;
@@ -12,13 +14,22 @@ namespace EvolutionPlugins.Dummy.Commands
     [CommandParent(typeof(CommandDummy))]
     public class CommandDummyTphere : Command
     {
-        public CommandDummyTphere(IServiceProvider serviceProvider) : base(serviceProvider)
+        private readonly IDummyProvider m_DummyProvider;
+        public CommandDummyTphere(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider)
         {
+            m_DummyProvider = dummyProvider;
         }
 
-        protected override Task OnExecuteAsync()
+        protected override async Task OnExecuteAsync()
         {
-            throw new NotImplementedException();
+            if (Context.Parameters.Count == 0)
+            {
+                throw new CommandWrongUsageException(Context);
+            }
+            var id = await Context.Parameters.GetAsync<ulong>(0);
+
+            var dummy = await m_DummyProvider.GetPlayerDummy(id);
+            await dummy.Data.UnturnedUser.TeleportToPlayerAsync((UnturnedUser)Context.Actor);
         }
     }
 }

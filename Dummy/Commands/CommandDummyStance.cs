@@ -9,6 +9,7 @@ using Command = OpenMod.Core.Commands.Command;
 namespace EvolutionPlugins.Dummy.Commands
 {
     [Command("stance")]
+    [CommandSyntax("<id> <stance>")]
     [CommandParent(typeof(CommandDummy))]
     public class CommandDummyStance : Command
     {
@@ -24,10 +25,10 @@ namespace EvolutionPlugins.Dummy.Commands
             {
                 throw new CommandWrongUsageException(Context);
             }
-            var id = (CSteamID)await Context.Parameters.GetAsync<ulong>(0);
+            var id = await Context.Parameters.GetAsync<ulong>(0);
             var stance = Context.Parameters[1];
 
-            var dummy = await m_DummyProvider.GetPlayerDummy(id.m_SteamID);
+            var dummy = await m_DummyProvider.GetPlayerDummy(id);
 
             if (!Enum.TryParse<EPlayerStance>(stance.ToUpper(), out var eStance))
             {
