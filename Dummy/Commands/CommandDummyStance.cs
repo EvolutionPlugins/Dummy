@@ -1,4 +1,5 @@
-﻿using EvolutionPlugins.Dummy.API;
+﻿using Cysharp.Threading.Tasks;
+using EvolutionPlugins.Dummy.API;
 using OpenMod.Core.Commands;
 using SDG.Unturned;
 using Steamworks;
@@ -35,7 +36,7 @@ namespace EvolutionPlugins.Dummy.Commands
                 await PrintAsync($"Unable to find a stance: {stance}");
                 return;
             }
-
+            await UniTask.SwitchToMainThread();
             dummy.Data.UnturnedUser.Player.stance.checkStance(eStance, false);
         }
     }

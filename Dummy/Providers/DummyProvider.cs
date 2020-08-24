@@ -190,16 +190,18 @@ namespace EvolutionPlugins.Dummy.Providers
             m_Dummies.Add(playerDummy.Data.UnturnedUser.SteamId, playerDummy);
         }
 
-        public Task<bool> RemoveDummyAsync(CSteamID id)
+        public async Task<bool> RemoveDummyAsync(CSteamID id)
         {
             if (m_Dummies.ContainsKey(id))
             {
+                await UniTask.SwitchToMainThread();
                 Provider.kick(id, "");
+
                 m_Dummies.Remove(id);
-                return Task.FromResult(true);
+                return true;
             }
 
-            return Task.FromResult(false);
+            return false;
         }
 
         public async Task ClearDummies()

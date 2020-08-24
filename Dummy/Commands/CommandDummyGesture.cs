@@ -1,4 +1,5 @@
-﻿using EvolutionPlugins.Dummy.API;
+﻿using Cysharp.Threading.Tasks;
+using EvolutionPlugins.Dummy.API;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
 using SDG.Unturned;
@@ -41,7 +42,7 @@ namespace EvolutionPlugins.Dummy.Commands
             {
                 throw new UserFriendlyException($"Unable find a gesture {gesture}");
             }
-
+            await UniTask.SwitchToMainThread();
             dummy.Data.UnturnedUser.Player.animator.sendGesture(eGesture, false);
         }
     }

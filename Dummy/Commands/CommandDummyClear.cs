@@ -20,14 +20,9 @@ namespace EvolutionPlugins.Dummy.Commands
             m_DummyProvider = dummyProvider;
         }
 
-        protected override async Task OnExecuteAsync()
+        protected override Task OnExecuteAsync()
         {
-            await UniTask.SwitchToMainThread();
-
-            foreach (var cSteamID in m_DummyProvider.Dummies.Keys)
-            {
-                Provider.kick(cSteamID, "");
-            }
+            return m_DummyProvider.ClearDummies();
         }
     }
 }

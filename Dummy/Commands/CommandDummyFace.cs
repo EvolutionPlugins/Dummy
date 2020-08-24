@@ -1,4 +1,5 @@
-﻿using EvolutionPlugins.Dummy.API;
+﻿using Cysharp.Threading.Tasks;
+using EvolutionPlugins.Dummy.API;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
 using SDG.Unturned;
@@ -46,7 +47,7 @@ namespace EvolutionPlugins.Dummy.Commands
             {
                 throw new UserFriendlyException($"Can't change to {faceId} because is higher {Customization.FACES_FREE + Customization.FACES_PRO}");
             }
-
+            await UniTask.SwitchToMainThread();
             dummy.Data.UnturnedUser.Player.clothing.channel.send("tellSwapFace", ESteamCall.NOT_OWNER, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
             {
                 faceId
