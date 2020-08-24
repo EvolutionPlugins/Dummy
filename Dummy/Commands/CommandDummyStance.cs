@@ -1,6 +1,10 @@
-﻿using OpenMod.Core.Commands;
+﻿using EvolutionPlugins.Dummy.API;
+using OpenMod.Core.Commands;
+using SDG.Unturned;
+using Steamworks;
 using System;
 using System.Threading.Tasks;
+using Command = OpenMod.Core.Commands.Command;
 
 namespace EvolutionPlugins.Dummy.Commands
 {
@@ -8,13 +12,30 @@ namespace EvolutionPlugins.Dummy.Commands
     [CommandParent(typeof(CommandDummy))]
     public class CommandDummyStance : Command
     {
-        public CommandDummyStance(IServiceProvider serviceProvider) : base(serviceProvider)
+        private readonly IDummyProvider m_DummyProvider;
+        public CommandDummyStance(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider)
         {
+            m_DummyProvider = dummyProvider;
         }
 
-        protected override Task OnExecuteAsync()
+        protected override async Task OnExecuteAsync()
         {
-            throw new NotImplementedException();
+            if (Context.Parameters.Count == 0)
+            {
+                throw new CommandWrongUsageException(Context);
+            }
+            var id = (CSteamID)await Context.Parameters.GetAsync<ulong>(0);
+            var stance = Context.Parameters[1];
+
+            var dummy = await m_DummyProvider.GetPlayerDummy(id.m_SteamID);
+
+            if (!Enum.TryParse<EPlayerStance>(stance.ToUpper(), out var eStance))
+            {
+                await PrintAsync($"Unable to find a stance: {stance}");
+                return;
+            }
+
+            dummy.Data.UnturnedUser.Player.stance.checkStance(eStance, false);
         }
     }
 }
