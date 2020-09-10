@@ -22,23 +22,23 @@ using Color = UnityEngine.Color;
 
 namespace EvolutionPlugins.Dummy.Providers
 {
-    [ServiceImplementation(Lifetime = ServiceLifetime.Singleton, Priority = Priority.Lowest)]
+    [PluginServiceImplementation(Lifetime = ServiceLifetime.Singleton, Priority = Priority.Lowest)]
     public class DummyProvider : IDummyProvider, IAsyncDisposable
     {
         private bool m_IsDisposing;
 
-        private readonly IConfiguration m_Configuration;
-        private readonly IUserProvider m_UserProvider;
+        private readonly IPluginAccessor<Dummy> m_PluginAccessor;
+        private readonly IUserManager m_UserManager;
 
         private readonly Dictionary<CSteamID, PlayerDummy> m_Dummies;
 
         public IReadOnlyDictionary<CSteamID, PlayerDummy> Dummies => m_Dummies;
 
-        public DummyProvider(IPluginAccessor<Dummy> pluginAccessor, IUserProvider userProvider)
+        public DummyProvider(IPluginAccessor<Dummy> pluginAccessor, IUserManager userManager)
         {
             m_Dummies = new Dictionary<CSteamID, PlayerDummy>();
-            m_Configuration = pluginAccessor.Instance.Configuration;
-            m_UserProvider = userProvider;
+            m_PluginAccessor = pluginAccessor;
+            m_UserManager = userManager;
 
             Provider.onServerDisconnected += OnServerDisconnected;
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
@@ -146,7 +146,7 @@ namespace EvolutionPlugins.Dummy.Providers
                 throw new DummyContainsException(id.m_SteamID);
             }
 
-            var amountDummiesConfig = m_Configuration.GetSection("options:amountDummies").Get<byte>();
+            var amountDummiesConfig = m_PluginAccessor.Instance.Configuration.GetSection("options:amountDummies").Get<byte>();
             if (amountDummiesConfig != 0 && Dummies.Count + 1 > amountDummiesConfig)
             {
                 throw new DummyOverflowsException((byte)Dummies.Count, amountDummiesConfig);
@@ -166,7 +166,7 @@ namespace EvolutionPlugins.Dummy.Providers
 
             await UniTask.SwitchToTaskPool();
 
-            var user = (UnturnedUser)await m_UserProvider.FindUserAsync(KnownActorTypes.Player, id.ToString(), UserSearchMode.FindById);
+            var user = (UnturnedUser)await m_UserManager.FindUserAsync(KnownActorTypes.Player, id.ToString(), UserSearchMode.FindById);
             var playerDummyData = new PlayerDummyData(owners, user);
             var playerDummy = new PlayerDummy(playerDummyData);
             AddDummy(playerDummy);
@@ -181,7 +181,7 @@ namespace EvolutionPlugins.Dummy.Providers
 
         private void AddDummy(PlayerDummy playerDummy)
         {
-            var kickTimer = m_Configuration.GetSection("KickDummyAfterSeconds").Get<uint>();
+            var kickTimer = m_PluginAccessor.Instance.Configuration.GetSection("KickDummyAfterSeconds").Get<uint>();
             if (kickTimer != 0)
             {
                 AsyncHelper.Schedule("Kick a dummy timer", () => KickTimerTask(playerDummy.Data.UnturnedUser.SteamId.m_SteamID, kickTimer));
