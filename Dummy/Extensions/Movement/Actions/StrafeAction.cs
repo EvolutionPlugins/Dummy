@@ -5,13 +5,17 @@ namespace EvolutionPlugins.Dummy.Extensions.Movement
 {
     public class StrafeAction : IMovementAction
     {
-        private readonly FieldInfo m_HorizontalField;
+        private static readonly FieldInfo m_HorizontalField = InitFieldInfo();
         public StrafeDirection Dir { get; }
+
+        private static FieldInfo InitFieldInfo()
+        {
+            return typeof(PlayerMovement).GetField("_horizontal");
+        }
 
         public StrafeAction(StrafeDirection dir)
         {
             Dir = dir;
-            m_HorizontalField = typeof(PlayerMovement).GetField("_horizontal");
         }
 
         public void Do(PlayerDummy dummy)
@@ -20,7 +24,7 @@ namespace EvolutionPlugins.Dummy.Extensions.Movement
             int offset;
             if (Dir == StrafeDirection.Left) offset = 1;
             else offset = -1;
-            m_HorizontalField?.SetValue(dummy.Data.UnturnedUser.Player.movement, dummy.Data.UnturnedUser.Player.movement.horizontal + offset);
+            m_HorizontalField?.SetValue(dummy.Data.UnturnedUser.Player.Player.movement, dummy.Data.UnturnedUser.Player.Player.movement.horizontal + offset);
         }
     }
 }

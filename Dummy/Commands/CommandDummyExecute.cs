@@ -10,7 +10,6 @@ using Command = OpenMod.Core.Commands.Command;
 
 namespace EvolutionPlugins.Dummy.Commands
 {
-
     [Command("execute")]
     [CommandDescription("Execute a command by Dummy")]
     [CommandSyntax("<id> <command>")]

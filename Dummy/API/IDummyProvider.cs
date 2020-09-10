@@ -1,11 +1,11 @@
 ﻿using EvolutionPlugins.Dummy.Models;
+using EvolutionPlugins.Dummy.Providers;
 using OpenMod.API.Ioc;
 using OpenMod.Unturned.Users;
 using Steamworks;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
-using EvolutionPlugins.Dummy.Providers;
 
 namespace EvolutionPlugins.Dummy.API
 {

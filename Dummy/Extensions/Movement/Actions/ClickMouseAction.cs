@@ -16,9 +16,9 @@ namespace Dummy.Extensions.Movement.Actions
         {
             var player = dummy.Data.UnturnedUser.Player;
             if (State == ClickMouseState.Left)
-                player.equipment.simulate(1, false, true, false);
+                player.Player.equipment.simulate(1, false, true, false);
             else
-                player.equipment.simulate(1, true, false, false);
+                player.Player.equipment.simulate(1, true, false, false);
         }
     }
 }

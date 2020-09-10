@@ -2,7 +2,6 @@
 using EvolutionPlugins.Dummy.API;
 using OpenMod.Core.Commands;
 using SDG.Unturned;
-using Steamworks;
 using System;
 using System.Threading.Tasks;
 using Command = OpenMod.Core.Commands.Command;
@@ -37,7 +36,7 @@ namespace EvolutionPlugins.Dummy.Commands
                 return;
             }
             await UniTask.SwitchToMainThread();
-            dummy.Data.UnturnedUser.Player.stance.checkStance(eStance, false);
+            dummy.Data.UnturnedUser.Player.Player.stance.checkStance(eStance, false);
         }
     }
 }

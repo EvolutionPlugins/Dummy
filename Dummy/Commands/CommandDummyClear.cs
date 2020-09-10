@@ -1,7 +1,5 @@
-﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.API;
+﻿using EvolutionPlugins.Dummy.API;
 using OpenMod.Core.Commands;
-using SDG.Unturned;
 using System;
 using System.Threading.Tasks;
 using Command = OpenMod.Core.Commands.Command;

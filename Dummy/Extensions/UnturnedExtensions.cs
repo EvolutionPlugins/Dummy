@@ -9,13 +9,13 @@ namespace Dummy.Extensions
         public static async UniTask<bool> TeleportToLocationAsync(this UnturnedUser unturnedUser, Vector3 position, float rotation)
         {
             await UniTask.SwitchToMainThread();
-            return unturnedUser.Player.teleportToLocation(position, rotation);
+            return unturnedUser.Player.Player.teleportToLocation(position, rotation);
         }
 
         public static async UniTask<bool> TeleportToLocationAsync(this UnturnedUser unturnedUser, Vector3 position) =>
-            await TeleportToLocationAsync(unturnedUser, position, unturnedUser.Player.transform.eulerAngles.y);
+            await TeleportToLocationAsync(unturnedUser, position, unturnedUser.Player.Player.transform.eulerAngles.y);
 
         public static async UniTask<bool> TeleportToPlayerAsync(this UnturnedUser from, UnturnedUser to) =>
-            await TeleportToLocationAsync(from, to.Player.transform.position, to.Player.transform.rotation.eulerAngles.y);
+            await TeleportToLocationAsync(from, to.Player.Player.transform.position, to.Player.Player.transform.rotation.eulerAngles.y);
     }
 }

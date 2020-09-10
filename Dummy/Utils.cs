@@ -1,5 +1,4 @@
-﻿using EvolutionPlugins.Dummy.Providers;
-using SDG.Unturned;
+﻿using SDG.Unturned;
 using Steamworks;
 using System;
 using System.Reflection;

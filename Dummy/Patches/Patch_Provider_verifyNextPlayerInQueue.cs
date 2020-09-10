@@ -1,5 +1,4 @@
-﻿using EvolutionPlugins.Dummy.Providers;
-using HarmonyLib;
+﻿using HarmonyLib;
 using SDG.Unturned;
 
 namespace EvolutionPlugins.Dummy.Patches
