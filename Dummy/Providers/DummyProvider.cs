@@ -212,7 +212,7 @@ namespace EvolutionPlugins.Dummy.Providers
             }
 
             m_Dummies.Add(playerDummy.Data.UnturnedUser.SteamId, playerDummy);
-            if(m_PluginAccessor.Instance.Configuration.GetSection("options:isAdmin").Get<bool>())
+            if (m_PluginAccessor.Instance.Configuration.GetSection("options:isAdmin").Get<bool>())
             {
                 SteamAdminlist.admin(playerDummy.SteamID, CSteamID.Nil);
             }

@@ -1,9 +1,7 @@
 ﻿using EvolutionPlugins.Dummy.API;
-using EvolutionPlugins.Dummy.Commands;
 using EvolutionPlugins.Dummy.Extensions.Movement;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
-using OpenMod.Core.Helpers;
 using Steamworks;
 using System;
 using System.Threading.Tasks;

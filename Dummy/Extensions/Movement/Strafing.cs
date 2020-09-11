@@ -1,5 +1,3 @@
-using System.Linq;
-
 namespace EvolutionPlugins.Dummy.Extensions.Movement
 {
     public static class Strafing

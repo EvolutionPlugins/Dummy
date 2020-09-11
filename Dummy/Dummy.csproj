@@ -1,9 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
+        <PackageId>EvolutionPlugins.Dummy</PackageId>
+        <PackageDescription>Creates a dummy to help with debugging a plugins</PackageDescription>
+        <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+        <PackageAuthor>DiFFoZ</PackageAuthor>
         <TargetFramework>net461</TargetFramework>
+        <Version>0.0.0</Version>
+        <PackageTags>openmod openmod-plugin unturned</PackageTags>
         <AssemblyName>Dummy</AssemblyName>
         <RootNamespace>EvolutionPlugins.Dummy</RootNamespace>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <GenerateNugetPackage>true</GenerateNugetPackage>
     </PropertyGroup>
 
     <ItemGroup>

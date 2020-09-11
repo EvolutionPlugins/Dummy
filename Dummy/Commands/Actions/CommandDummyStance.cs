@@ -1,5 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.API;
+﻿using EvolutionPlugins.Dummy.API;
 using EvolutionPlugins.Dummy.Extensions.Movement.Actions;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
