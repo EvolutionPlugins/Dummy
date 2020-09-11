@@ -53,11 +53,7 @@ namespace EvolutionPlugins.Dummy.Providers
             {
                 foreach (var dummy in Dummies)
                 {
-                    var client = Provider.clients.Find(k => k.playerID.steamID == dummy.Key);
-                    if (client == null)
-                    {
-                        continue;
-                    }
+                    var client = dummy.Value.Data.UnturnedUser.Player.SteamPlayer;
                     client.timeLastPacketWasReceivedFromClient = Time.realtimeSinceStartup;
                 }
                 await Task.Delay(5000);
@@ -176,6 +172,7 @@ namespace EvolutionPlugins.Dummy.Providers
 
         public Task<PlayerDummy> AddCopiedDummyAsync(CSteamID id, HashSet<CSteamID> owners, UnturnedUser userCopy)
         {
+            // todo: implement method
             throw new NotImplementedException();
         }
 
@@ -197,6 +194,7 @@ namespace EvolutionPlugins.Dummy.Providers
                 await UniTask.SwitchToMainThread();
                 Provider.kick(id, "");
 
+                m_Dummies[id].Dispose();
                 m_Dummies.Remove(id);
                 return true;
             }

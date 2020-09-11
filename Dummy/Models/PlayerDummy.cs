@@ -1,8 +1,10 @@
 // ReSharper disable CheckNamespace
 
+using Cysharp.Threading.Tasks;
 using EvolutionPlugins.Dummy.Models;
 using EvolutionPlugins.Dummy.Threads;
 using OpenMod.API.Users;
+using OpenMod.Core.Helpers;
 using Steamworks;
 using System;
 using System.Collections.Generic;
@@ -17,6 +19,7 @@ namespace EvolutionPlugins.Dummy
         public PlayerDummyData Data { get; }
         public IUserSession Session { get; }
         public PlayerDummyActionThread Actions { get; }
+        public PlayerDummySimulationThread Simulation { get; }
 
         private readonly Thread _actionThreadControl;
 
@@ -24,8 +27,15 @@ namespace EvolutionPlugins.Dummy
         {
             Data = data;
             Actions = new PlayerDummyActionThread(this);
+            Simulation = new PlayerDummySimulationThread(this);
+
+            Actions.Enabled = true;
+            Simulation.Enabled = true;
+
             _actionThreadControl = new Thread(Actions.Start);
             _actionThreadControl.Start();
+
+            AsyncHelper.Schedule($"Simulation a dummy {data.UnturnedUser.Id}", () => Simulation.StartSimulation().AsTask());
         }
 
         public override bool Equals(object obj)
@@ -40,8 +50,11 @@ namespace EvolutionPlugins.Dummy
 
         public void Dispose()
         {
+            Console.WriteLine("Disposing a dummy");
             Actions.Enabled = false;
             _actionThreadControl.Abort();
+
+            Simulation.Enabled = false;
         }
     }
 }
