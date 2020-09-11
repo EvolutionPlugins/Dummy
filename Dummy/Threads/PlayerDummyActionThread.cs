@@ -1,13 +1,12 @@
 using EvolutionPlugins.Dummy.API;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
 
 namespace EvolutionPlugins.Dummy.Threads
 {
     public class PlayerDummyActionThread
     {
-        public Queue<IAction> Actions { get; private set; }
-        private Queue<IAction> m_Actions => (Queue<IAction>)Actions.Concat(ContinuousActions);
+        public Queue<IAction> Actions { get; }
         public List<IAction> ContinuousActions { get; }
 
         private readonly PlayerDummy _dummy;
@@ -21,15 +20,18 @@ namespace EvolutionPlugins.Dummy.Threads
 
         public bool Enabled { get; set; }
 
-        public void Start()
+        public async Task Start()
         {
             while (Enabled)
             {
-                foreach (IAction action in m_Actions)
+                foreach (IAction action in ContinuousActions)
                 {
-                    action.Do(_dummy);
-                    //Lol
-                    Actions = (Queue<IAction>)Actions.Where(ac => ac != action);
+                    await action.Do(_dummy);
+                }
+                if (Actions.Count > 0)
+                {
+                    var actionQueue = Actions.Dequeue();
+                    await actionQueue.Do(_dummy);
                 }
             }
         }

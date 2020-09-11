@@ -1,7 +1,9 @@
+using System.Threading.Tasks;
+
 namespace EvolutionPlugins.Dummy.API
 {
     public interface IAction
     {
-        void Do(PlayerDummy dummy);
+        Task Do(PlayerDummy dummy);
     }
 }

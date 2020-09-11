@@ -13,7 +13,7 @@ namespace EvolutionPlugins.Dummy.Models
         }
 
         public HashSet<CSteamID> Owners { get; }
-        public UnturnedUser UnturnedUser { get; internal set; }
+        public UnturnedUser UnturnedUser { get; }
 
         public override bool Equals(object obj)
         {

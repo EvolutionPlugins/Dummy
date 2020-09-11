@@ -1,6 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
 using SDG.Unturned;
-using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -154,15 +153,6 @@ namespace EvolutionPlugins.Dummy.Threads
                     //_playerDummy.Data.UnturnedUser.Player.Player.input.channel.openWrite();
                     if (playerInputPackets.Count > 24)
                     {
-#if DEBUG
-                        UnturnedLog.warn("Discarding old unacknowledged input packets (DUMMY {2}) ({0}/{1})", new object[]
-                        {
-                            playerInputPackets.Count,
-                            24,
-                            _playerDummy.Data.UnturnedUser.Id
-                        });
-#endif
-
                         while (playerInputPackets.Count > 24)
                         {
                             playerInputPackets.RemoveAt(0);

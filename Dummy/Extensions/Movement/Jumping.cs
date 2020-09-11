@@ -16,7 +16,7 @@ namespace EvolutionPlugins.Dummy.Extensions.Movement
 
         public static void Jump(this PlayerDummy dummy)
         {
-            new JumpAction().Do(dummy);
+            dummy.Actions.Actions.Enqueue(new JumpAction());
         }
 
         public static async Task TempJump(this PlayerDummy playerDummy, float time)

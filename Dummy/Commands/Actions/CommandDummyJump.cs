@@ -3,16 +3,16 @@ using EvolutionPlugins.Dummy.Commands;
 using EvolutionPlugins.Dummy.Extensions.Movement;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
+using OpenMod.Core.Helpers;
 using Steamworks;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace Dummy.Commands
+namespace EvolutionPlugins.Dummy.Commands.Actions
 {
     [Command("jump")]
+    [CommandDescription("Make dummy to jump")]
+    [CommandSyntax("<id>")]
     [CommandParent(typeof(CommandDummy))]
     public class CommandDummyJump : Command
     {
@@ -25,7 +25,7 @@ namespace Dummy.Commands
 
         protected override async Task OnExecuteAsync()
         {
-            if (Context.Parameters.Count < 2)
+            if (Context.Parameters.Count < 1)
             {
                 throw new CommandWrongUsageException(Context);
             }

@@ -5,10 +5,10 @@ using EvolutionPlugins.Dummy.Models;
 using EvolutionPlugins.Dummy.Threads;
 using OpenMod.API.Users;
 using OpenMod.Core.Helpers;
+using SDG.Unturned;
 using Steamworks;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace EvolutionPlugins.Dummy
 {
@@ -21,7 +21,8 @@ namespace EvolutionPlugins.Dummy
         public PlayerDummyActionThread Actions { get; }
         public PlayerDummySimulationThread Simulation { get; }
 
-        private readonly Thread _actionThreadControl;
+        public CSteamID SteamID => Data.UnturnedUser.SteamId;
+        public Player Player => Data.UnturnedUser.Player.Player;
 
         public PlayerDummy(PlayerDummyData data)
         {
@@ -32,9 +33,7 @@ namespace EvolutionPlugins.Dummy
             Actions.Enabled = true;
             Simulation.Enabled = true;
 
-            _actionThreadControl = new Thread(Actions.Start);
-            _actionThreadControl.Start();
-
+            AsyncHelper.Schedule($"Action a dummy {data.UnturnedUser.Id}", () => Actions.Start());
             AsyncHelper.Schedule($"Simulation a dummy {data.UnturnedUser.Id}", () => Simulation.StartSimulation().AsTask());
         }
 
@@ -52,8 +51,6 @@ namespace EvolutionPlugins.Dummy
         {
             Console.WriteLine("Disposing a dummy");
             Actions.Enabled = false;
-            _actionThreadControl.Abort();
-
             Simulation.Enabled = false;
         }
     }

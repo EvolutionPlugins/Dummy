@@ -2,10 +2,20 @@
 
     <PropertyGroup>
         <TargetFramework>net461</TargetFramework>
+        <AssemblyName>Dummy</AssemblyName>
+        <RootNamespace>EvolutionPlugins.Dummy</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
+      <Compile Remove="Patches\Patch_PlayerInput_askInput.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
         <EmbeddedResource Include="config.yaml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="Patches\Patch_PlayerInput_askInput.cs" />
     </ItemGroup>
 
   <ItemGroup>

@@ -1,3 +1,5 @@
+using System.Linq;
+
 namespace EvolutionPlugins.Dummy.Extensions.Movement
 {
     public static class Strafing
@@ -9,13 +11,12 @@ namespace EvolutionPlugins.Dummy.Extensions.Movement
 
         public static void WalkingConstantOff(this PlayerDummy dummy, StrafeDirection direction)
         {
-            dummy.Actions.ContinuousActions.Remove(dummy.Actions.ContinuousActions
-                .Find(c => c is StrafeAction strafeAction && (strafeAction).Dir == direction));
+            dummy.Actions.ContinuousActions.RemoveAll(c => c is StrafeAction strafeAction && strafeAction.Dir == direction);
         }
 
         public static void Walk(this PlayerDummy dummy, StrafeDirection direction)
         {
-            new StrafeAction(direction).Do(dummy);
+            dummy.Actions.Actions.Enqueue(new StrafeAction(direction));
         }
     }
 }

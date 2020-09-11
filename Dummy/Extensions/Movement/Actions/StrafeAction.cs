@@ -1,30 +1,28 @@
 using SDG.Unturned;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace EvolutionPlugins.Dummy.Extensions.Movement
 {
     public class StrafeAction : IMovementAction
     {
-        private static readonly FieldInfo m_HorizontalField = InitFieldInfo();
+        private readonly FieldInfo m_HorizontalField;
         public StrafeDirection Dir { get; }
-
-        private static FieldInfo InitFieldInfo()
-        {
-            return typeof(PlayerMovement).GetField("_horizontal");
-        }
 
         public StrafeAction(StrafeDirection dir)
         {
+            m_HorizontalField = typeof(PlayerMovement).GetField("_horizontal");
             Dir = dir;
         }
 
-        public void Do(PlayerDummy dummy)
+        public Task Do(PlayerDummy dummy)
         {
             //TODO: Use harmony to manually add a setter for the public property
             int offset;
             if (Dir == StrafeDirection.Left) offset = 1;
             else offset = -1;
             m_HorizontalField?.SetValue(dummy.Data.UnturnedUser.Player.Player.movement, dummy.Data.UnturnedUser.Player.Player.movement.horizontal + offset);
+            return Task.CompletedTask;
         }
     }
 }

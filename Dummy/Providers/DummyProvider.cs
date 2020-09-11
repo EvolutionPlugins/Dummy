@@ -67,7 +67,7 @@ namespace EvolutionPlugins.Dummy.Providers
                 return;
             }
 
-            await Task.Delay((int)(timer * 1000));
+            await Task.Delay((int)(timer * 1000));  
 
             var user = await GetPlayerDummy(id);
             if (user == null)
@@ -185,6 +185,10 @@ namespace EvolutionPlugins.Dummy.Providers
             }
 
             m_Dummies.Add(playerDummy.Data.UnturnedUser.SteamId, playerDummy);
+            if(m_PluginAccessor.Instance.Configuration.GetSection("options:isAdmin").Get<bool>())
+            {
+                SteamAdminlist.admin(playerDummy.SteamID, CSteamID.Nil);
+            }
         }
 
         public async Task<bool> RemoveDummyAsync(CSteamID id)
@@ -255,7 +259,7 @@ namespace EvolutionPlugins.Dummy.Providers
             Provider.onServerDisconnected -= OnServerDisconnected;
             ChatManager.onServerSendingMessage -= OnServerSendingMessage;
             DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
-
+            Console.WriteLine("test");
             return new ValueTask(ClearDummies());
         }
     }

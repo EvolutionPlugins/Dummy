@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using EvolutionPlugins.Dummy.API;
+using EvolutionPlugins.Dummy.Extensions.Interaction.Actions;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
 using SDG.Unturned;
@@ -8,17 +9,17 @@ using System;
 using System.Threading.Tasks;
 using Command = OpenMod.Core.Commands.Command;
 
-namespace EvolutionPlugins.Dummy.Commands
+namespace EvolutionPlugins.Dummy.Commands.Actions
 {
-    [Command("gesture")]
-    [CommandDescription("Make a dummy gesture")]
+    [Command("face")]
+    [CommandDescription("Send a face to dummy")]
     [CommandParent(typeof(CommandDummy))]
-    [CommandSyntax("<id> <gesture>")]
-    public class CommandDummyGesture : Command
+    [CommandSyntax("<id> <face>")]
+    public class CommandDummyFace : Command
     {
         private readonly IDummyProvider m_DummyProvider;
 
-        public CommandDummyGesture(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider)
+        public CommandDummyFace(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider)
         {
             m_DummyProvider = dummyProvider;
         }
@@ -29,6 +30,7 @@ namespace EvolutionPlugins.Dummy.Commands
             {
                 throw new CommandWrongUsageException(Context);
             }
+
             var id = (CSteamID)await Context.Parameters.GetAsync<ulong>(0);
 
             var dummy = await m_DummyProvider.GetPlayerDummy(id.m_SteamID);
@@ -37,13 +39,12 @@ namespace EvolutionPlugins.Dummy.Commands
                 throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
             }
 
-            var gesture = await Context.Parameters.GetAsync<string>(1);
-            if (!Enum.TryParse<EPlayerGesture>(gesture.ToUpper(), out var eGesture))
+            var faceId = await Context.Parameters.GetAsync<byte>(1);
+            if (faceId > Customization.FACES_FREE + Customization.FACES_PRO)
             {
-                throw new UserFriendlyException($"Unable find a gesture {gesture}");
+                throw new UserFriendlyException($"Can't change to {faceId} because is higher {Customization.FACES_FREE + Customization.FACES_PRO}");
             }
-            await UniTask.SwitchToMainThread();
-            dummy.Data.UnturnedUser.Player.Player.animator.sendGesture(eGesture, false);
+            dummy.Actions.Actions.Enqueue(new FaceAction(faceId));
         }
     }
 }

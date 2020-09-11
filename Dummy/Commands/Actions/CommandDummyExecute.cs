@@ -1,4 +1,5 @@
 ﻿using EvolutionPlugins.Dummy.API;
+using EvolutionPlugins.Dummy.Extensions.Interaction.Actions;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
 using Steamworks;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 using Color = System.Drawing.Color;
 using Command = OpenMod.Core.Commands.Command;
 
-namespace EvolutionPlugins.Dummy.Commands
+namespace EvolutionPlugins.Dummy.Commands.Actions
 {
     [Command("execute")]
     [CommandDescription("Execute a command by Dummy")]
@@ -40,14 +41,14 @@ namespace EvolutionPlugins.Dummy.Commands
             {
                 throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
             }
-
-            var commandContext = await m_CommandExecutor.ExecuteAsync(dummy.Data.UnturnedUser, Context.Parameters.Skip(1).ToArray(), "");
-
-            await PrintAsync($"Dummy has {(commandContext.Exception == null ? "<color=green>successfully" : "<color=red>unsuccessfully")}</color> executed command");
-            if (commandContext.Exception != null && !(commandContext.Exception is UserFriendlyException))
+            dummy.Actions.Actions.Enqueue(new ExecuteAction(m_CommandExecutor, Context.Parameters.Skip(1).ToArray(), async e =>
             {
-                await PrintAsync(commandContext.Exception.Message, Color.Red);
-            }
+                await PrintAsync($"Dummy has {(e == null ? "<color=green>successfully" : "<color=red>unsuccessfully")}</color> executed command");
+                if (e != null && !(e is UserFriendlyException))
+                {
+                    await PrintAsync(e.Message, Color.Red);
+                }
+            }));
         }
     }
 }

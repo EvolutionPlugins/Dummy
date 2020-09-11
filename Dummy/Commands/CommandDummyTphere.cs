@@ -1,5 +1,6 @@
 ﻿using Dummy.Extensions;
 using EvolutionPlugins.Dummy.API;
+using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
 using OpenMod.Unturned.Users;
 using System;
@@ -29,6 +30,10 @@ namespace EvolutionPlugins.Dummy.Commands
             var id = await Context.Parameters.GetAsync<ulong>(0);
 
             var dummy = await m_DummyProvider.GetPlayerDummy(id);
+            if (dummy == null)
+            {
+                throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
+            }
             await dummy.Data.UnturnedUser.TeleportToPlayerAsync((UnturnedUser)Context.Actor);
         }
     }
