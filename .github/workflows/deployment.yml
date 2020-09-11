@@ -1,0 +1,31 @@
+name: Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Plugin Version (SemVer: https://semver.org)'
+        required: true
+jobs:
+  deploy:
+    name: "NuGet Deployment"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      name: Checkout Repository
+      with:
+        fetch-depth: 0
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Update version
+      run: "sed -i \"s#<Version>0.0.0</Version>#<Version>${{ github.event.inputs.version }}</Version>#\" Dummy/Dummy.csproj"  
+    - name: Build
+      run: dotnet build Dummy/Dummy.csproj --configuration Release --no-restore
+    - name: Push to NuGet
+      run: dotnet nuget push Dummy/bin/Release/*.nupkg
+             --api-key ${{ secrets.NUGET_DEPLOY_KEY }}
+             --source https://api.nuget.org/v3/index.json
