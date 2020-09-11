@@ -67,7 +67,7 @@ namespace EvolutionPlugins.Dummy.Providers
                 return;
             }
 
-            await Task.Delay((int)(timer * 1000));  
+            await Task.Delay((int)(timer * 1000));
 
             var user = await GetPlayerDummy(id);
             if (user == null)
@@ -134,8 +134,7 @@ namespace EvolutionPlugins.Dummy.Providers
             ChatManager.say(killerId, $"Amount damage to dummy: {totalDamage}", Color.green, true);
         }
         #endregion
-
-        public async Task<PlayerDummy> AddDummyAsync(CSteamID id, HashSet<CSteamID> owners)
+        private void CheckSpawn(CSteamID id)
         {
             if (m_Dummies.ContainsKey(id))
             {
@@ -147,6 +146,10 @@ namespace EvolutionPlugins.Dummy.Providers
             {
                 throw new DummyOverflowsException((byte)Dummies.Count, amountDummiesConfig);
             }
+        }
+        public async Task<PlayerDummy> AddDummyAsync(CSteamID id, HashSet<CSteamID> owners)
+        {
+            CheckSpawn(id);
 
             await UniTask.SwitchToMainThread();
 
@@ -170,15 +173,39 @@ namespace EvolutionPlugins.Dummy.Providers
             return playerDummy;
         }
 
-        public Task<PlayerDummy> AddCopiedDummyAsync(CSteamID id, HashSet<CSteamID> owners, UnturnedUser userCopy)
+        public async Task<PlayerDummy> AddCopiedDummyAsync(CSteamID id, HashSet<CSteamID> owners, UnturnedUser userCopy)
         {
-            // todo: implement method
-            throw new NotImplementedException();
+            CheckSpawn(id);
+
+            await UniTask.SwitchToMainThread();
+
+            var steamPlayer = userCopy.Player.SteamPlayer;
+
+            Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
+                true, steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
+                Color.white, steamPlayer.hand, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, Array.Empty<ulong>(),
+                EPlayerSkillset.NONE, "english", CSteamID.Nil));
+
+            Provider.accept(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, false,
+                steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
+                Color.white, steamPlayer.hand, steamPlayer.shirtItem, steamPlayer.pantsItem, steamPlayer.hatItem,
+                steamPlayer.backpackItem, steamPlayer.vestItem, steamPlayer.maskItem, steamPlayer.glassesItem,
+                steamPlayer.skinItems, steamPlayer.skinTags, steamPlayer.skinDynamicProps, EPlayerSkillset.NONE,
+                "english", CSteamID.Nil);
+
+            await UniTask.SwitchToTaskPool();
+
+            var user = (UnturnedUser)await m_UserManager.FindUserAsync(KnownActorTypes.Player, id.ToString(), UserSearchMode.FindById);
+            var playerDummyData = new PlayerDummyData(owners, user);
+            var playerDummy = new PlayerDummy(playerDummyData);
+            AddDummy(playerDummy);
+
+            return playerDummy;
         }
 
         private void AddDummy(PlayerDummy playerDummy)
         {
-            var kickTimer = m_PluginAccessor.Instance.Configuration.GetSection("KickDummyAfterSeconds").Get<uint>();
+            var kickTimer = m_PluginAccessor.Instance.Configuration.GetSection("options:kickDummyAfterSeconds").Get<uint>();
             if (kickTimer != 0)
             {
                 AsyncHelper.Schedule("Kick a dummy timer", () => KickTimerTask(playerDummy.Data.UnturnedUser.SteamId.m_SteamID, kickTimer));

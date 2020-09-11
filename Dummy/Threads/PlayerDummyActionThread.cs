@@ -26,12 +26,12 @@ namespace EvolutionPlugins.Dummy.Threads
             {
                 foreach (IAction action in ContinuousActions)
                 {
-                    await action.Do(_dummy);
+                    await action?.Do(_dummy);
                 }
                 if (Actions.Count > 0)
                 {
                     var actionQueue = Actions.Dequeue();
-                    await actionQueue.Do(_dummy);
+                    await actionQueue?.Do(_dummy);
                 }
             }
         }
