@@ -6,6 +6,8 @@ on:
       version:
         description: 'Plugin Version (SemVer: https://semver.org)'
         required: true
+    with:
+      ref: openmod 
 jobs:
   deploy:
     name: "NuGet Deployment"
