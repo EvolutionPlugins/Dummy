@@ -1,5 +1,5 @@
 # Dummy
-Dummy is a plugin for Unturned / OpenMod. It spawns a dummy and shows the amount of damage when damaged.
+Dummy is a plugin for Unturned / OpenMod. It spawns a dummy and shows the amount of damage when damaged. Also very helpful with debugging plugins.
 
 # Commands
 - /dummy create - Creates a dummy with unique ID.
@@ -12,7 +12,7 @@ Dummy is a plugin for Unturned / OpenMod. It spawns a dummy and shows the amount
 
 - /dummy execute &lt;id&gt; &lt;command&gt; - Execute a command.
 
-- /dummy teleport &lt;id&gt; - Teleport to you a dummy.
+- /dummy tphere &lt;id&gt; - Teleport to you a dummy.
 
 - /dummy gesture &lt;id&gt; &lt;gesture&gt; - Send gesture to a dummy. Gesture can be found [here.](https://github.com/EvolutionPlugins/Dummy#gestures)
 
@@ -20,13 +20,31 @@ Dummy is a plugin for Unturned / OpenMod. It spawns a dummy and shows the amount
         
 - /dummy face &lt;id&gt; &lt;faceIndex&gt; - Send face to a dummy. FaceIndex can be found [here.](https://github.com/EvolutionPlugins/Dummy#index-of-faces)
 
-# Permission
-- dummy
+- /dummy button &lt;id&gt; &lt;buttonName&gt; - Click to button.
+
+- /dummy inputfield &lt;id&gt; &lt;inputFieldName&gt; &lt;Text&gt; - Input text in *InputField*
+
+# Permissions
+  - EvolutionPlugins.Dummy:commands.dummy
+  - EvolutionPlugins.Dummy:commands.dummy.clear
+  - EvolutionPlugins.Dummy:commands.dummy.copy
+  - EvolutionPlugins.Dummy:commands.dummy.create 
+  - EvolutionPlugins.Dummy:commands.dummy.remove
+  - EvolutionPlugins.Dummy:commands.dummy.tphere
+  - EvolutionPlugins.Dummy:commands.dummy.button
+  - EvolutionPlugins.Dummy:commands.dummy.execute
+  - EvolutionPlugins.Dummy:commands.dummy.face
+  - EvolutionPlugins.Dummy:commands.dummy.gesture
+  - EvolutionPlugins.Dummy:commands.dummy.inputfield
+  - EvolutionPlugins.Dummy:commands.dummy.jump
+  - EvolutionPlugins.Dummy:commands.dummy.stance
 
 # Configuration
-- AmountDummiesInSameTime _( default: 1 )_ - Max dummies in same time.
+- amountDummies _( default: 1 )_ - Max dummies in same time.
 
-- KickDummyAfterSeconds _( default: 300 )_ - Kick automatically dummy after amount of seconds.
+- kickDummyAfterSeconds _( default: 300 )_ - Kick automatically dummy after amount of seconds.
+
+- isAdmin _(default: false)_ - On spawning make a dummy admin
 
 # Tips
 
