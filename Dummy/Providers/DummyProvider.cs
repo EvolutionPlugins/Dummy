@@ -22,10 +22,11 @@ using Color = UnityEngine.Color;
 
 namespace EvolutionPlugins.Dummy.Providers
 {
-    [PluginServiceImplementation(Lifetime = ServiceLifetime.Singleton, Priority = Priority.Lowest)]
+    [ServiceImplementation(Lifetime = ServiceLifetime.Singleton, Priority = Priority.Lowest)]
     public class DummyProvider : IDummyProvider, IAsyncDisposable
     {
         private bool m_IsDisposing;
+        private bool m_IsQuitting;
 
         private readonly IPluginAccessor<Dummy> m_PluginAccessor;
         private readonly IUserManager m_UserManager;
@@ -43,6 +44,7 @@ namespace EvolutionPlugins.Dummy.Providers
             Provider.onServerDisconnected += OnServerDisconnected;
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
+            Provider.onCommenceShutdown += Provider_onCommenceShutdown;
 
             AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
         }
@@ -78,6 +80,11 @@ namespace EvolutionPlugins.Dummy.Providers
         }
 
         #region Events
+        protected virtual void Provider_onCommenceShutdown()
+        {
+            m_IsQuitting = true;
+        }
+
         protected virtual void OnServerSendingMessage(ref string text, ref Color color, SteamPlayer fromPlayer,
             SteamPlayer toPlayer, EChatMode mode, ref string iconURL, ref bool useRichTextFormatting)
         {
@@ -107,7 +114,7 @@ namespace EvolutionPlugins.Dummy.Providers
 
         protected virtual void OnServerDisconnected(CSteamID steamID)
         {
-            m_Dummies.Remove(steamID);
+            AsyncHelper.RunSync(() => RemoveDummyAsync(steamID));
         }
 
         protected virtual void DamageTool_damagePlayerRequested(ref DamagePlayerParameters parameters, ref bool shouldAllow)
@@ -222,11 +229,12 @@ namespace EvolutionPlugins.Dummy.Providers
         {
             if (m_Dummies.ContainsKey(id))
             {
-                await UniTask.SwitchToMainThread();
-                Provider.kick(id, "");
+                await UniTask.SwitchToMainThread();     
 
                 m_Dummies[id].Dispose();
                 m_Dummies.Remove(id);
+                if (!m_IsQuitting)
+                    Provider.kick(id, "");
                 return true;
             }
 
@@ -235,7 +243,7 @@ namespace EvolutionPlugins.Dummy.Providers
 
         public async Task ClearDummies()
         {
-            foreach (var steamID in m_Dummies.Keys)
+            foreach (var steamID in Dummies.Keys.ToList())
             {
                 await RemoveDummyAsync(steamID);
             }
@@ -269,12 +277,6 @@ namespace EvolutionPlugins.Dummy.Providers
             return result;
         }
 
-        public async Task MoveDummy(ulong id, Vector3 position, float rotation)
-        {
-            var dummy = await GetPlayerDummy(id);
-            dummy?.Data.UnturnedUser.TeleportToLocationAsync(position, rotation);
-        }
-
         public ValueTask DisposeAsync()
         {
             if (m_IsDisposing)
@@ -286,7 +288,7 @@ namespace EvolutionPlugins.Dummy.Providers
             Provider.onServerDisconnected -= OnServerDisconnected;
             ChatManager.onServerSendingMessage -= OnServerSendingMessage;
             DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
-            Console.WriteLine("test");
+            Provider.onCommenceShutdown -= Provider_onCommenceShutdown;
             return new ValueTask(ClearDummies());
         }
     }

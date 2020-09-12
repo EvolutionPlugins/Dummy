@@ -40,7 +40,5 @@ namespace EvolutionPlugins.Dummy.API
         Task<bool> GetDummyDataAsync(ulong id, out PlayerDummyData playerDummyData);
 
         Task<CSteamID> GetAvailableIdAsync();
-
-        Task MoveDummy(ulong id, Vector3 position, float rotation);
     }
 }
