@@ -8,21 +8,22 @@ namespace EvolutionPlugins.Dummy.Threads
 {
     public class PlayerDummySimulationThread
     {
-        private readonly FieldInfo _serverSidePacketsField;
+        private static readonly FieldInfo _ServerSidePacketsField = typeof(PlayerInput).GetField("serversidePackets",
+            BindingFlags.NonPublic | BindingFlags.Instance);
 
-        public byte analog;
-        public uint count;
-        public float tick;
-        public uint buffer;
-        public uint simulation;
-        public int sequence;
-        public int recov;
-        public uint consumed;
-        public uint clock;
-        public ushort[] flags;
-        public float yaw;
-        public float pitch;
-        public List<PlayerInputPacket> playerInputPackets;
+        public byte Analog { get; private set; }
+        public uint Count { get; private set; }
+        public float Tick { get; private set; }
+        public uint Buffer { get; private set; }
+        public uint Simulation { get; private set; }
+        public int Sequence { get; private set; }
+        public int Recov { get; }
+        public uint Consumed { get; private set; }
+        public uint Clock { get; private set; }
+        public ushort[] Flags { get; }
+        public float Yaw { get; private set; }
+        public float Pitch { get; private set; }
+        public List<PlayerInputPacket> PlayerInputPackets { get; }
 
         public bool Enabled { get; set; }
 
@@ -31,24 +32,23 @@ namespace EvolutionPlugins.Dummy.Threads
 
         public PlayerDummySimulationThread(PlayerDummy playerDummy)
         {
-            _serverSidePacketsField = typeof(PlayerInput).GetField("serversidePackets", BindingFlags.NonPublic | BindingFlags.Instance);
             _playerDummy = playerDummy;
-            analog = 0;
-            count = 0;
-            tick = Time.realtimeSinceStartup;
-            buffer = 0;
-            simulation = 0;
-            sequence = -1;
-            recov = -1;
-            consumed = 0;
-            clock = 0;
-            yaw = 0;
-            pitch = 0;
-            playerInputPackets = new List<PlayerInputPacket>();
-            flags = new ushort[9 + ControlsSettings.NUM_PLUGIN_KEYS];
+            Analog = 0;
+            Count = 0;
+            Tick = Time.realtimeSinceStartup;
+            Buffer = 0;
+            Simulation = 0;
+            Sequence = -1;
+            Recov = -1;
+            Consumed = 0;
+            Clock = 0;
+            Yaw = 0;
+            Pitch = 0;
+            PlayerInputPackets = new List<PlayerInputPacket>();
+            Flags = new ushort[9 + ControlsSettings.NUM_PLUGIN_KEYS];
             for (byte b = 0; b < 9 + ControlsSettings.NUM_PLUGIN_KEYS; b++)
             {
-                flags[b] = (ushort)(1 << b);
+                Flags[b] = (ushort)(1 << b);
             }
         }
 
@@ -57,9 +57,9 @@ namespace EvolutionPlugins.Dummy.Threads
             await UniTask.Delay(1000); // waiting
             while (Enabled)
             {
-                if (count % PlayerInput.SAMPLES == 0)
+                if (Count % PlayerInput.SAMPLES == 0)
                 {
-                    tick = Time.realtimeSinceStartup;
+                    Tick = Time.realtimeSinceStartup;
 
                     Player.input.keys[0] = Player.movement.jump;
                     Player.input.keys[1] = Player.equipment.primary;
@@ -77,43 +77,43 @@ namespace EvolutionPlugins.Dummy.Threads
                         Player.input.keys[num] = false;
                     }
 
-                    analog = (byte)(Player.movement.horizontal << 4 | Player.movement.vertical);
-                    pitch = Player.look.pitch;
-                    yaw = Player.look.yaw;
-                    sequence++;
+                    Analog = (byte)(Player.movement.horizontal << 4 | Player.movement.vertical);
+                    Pitch = Player.look.pitch;
+                    Yaw = Player.look.yaw;
+                    Sequence++;
 
                     if (Player.stance.stance == EPlayerStance.DRIVING)
                     {
-                        playerInputPackets.Add(new DrivingPlayerInputPacket());
+                        PlayerInputPackets.Add(new DrivingPlayerInputPacket());
                     }
                     else
                     {
-                        playerInputPackets.Add(new WalkingPlayerInputPacket());
+                        PlayerInputPackets.Add(new WalkingPlayerInputPacket());
                     }
-                    var playerInputPacket = playerInputPackets[playerInputPackets.Count - 1];
-                    playerInputPacket.sequence = sequence;
-                    playerInputPacket.recov = recov;
+                    var playerInputPacket = PlayerInputPackets[PlayerInputPackets.Count - 1];
+                    playerInputPacket.sequence = Sequence;
+                    playerInputPacket.recov = Recov;
 
-                    buffer += PlayerInput.SAMPLES;
-                    simulation++;
+                    Buffer += PlayerInput.SAMPLES;
+                    Simulation++;
                 }
-                if (consumed < buffer)
+                if (Consumed < Buffer)
                 {
-                    consumed++;
-                    clock++;
+                    Consumed++;
+                    Clock++;
                 }
-                if (consumed == buffer && playerInputPackets.Count > 0)
+                if (Consumed == Buffer && PlayerInputPackets.Count > 0)
                 {
                     ushort num2 = 0;
                     for (byte b = 0; b < Player.input.keys.Length; b++)
                     {
                         if (Player.input.keys[b])
                         {
-                            num2 |= flags[b];
+                            num2 |= Flags[b];
                         }
                     }
 
-                    var playerInputPacket2 = playerInputPackets[playerInputPackets.Count - 1];
+                    var playerInputPacket2 = PlayerInputPackets[PlayerInputPackets.Count - 1];
                     playerInputPacket2.keys = num2;
                     if (playerInputPacket2 is DrivingPlayerInputPacket)
                     {
@@ -143,32 +143,32 @@ namespace EvolutionPlugins.Dummy.Threads
                     {
                         var walkingPlayerInputPacket = playerInputPacket2 as WalkingPlayerInputPacket;
 
-                        walkingPlayerInputPacket.analog = analog;
+                        walkingPlayerInputPacket.analog = Analog;
                         walkingPlayerInputPacket.position = _playerDummy.Data.UnturnedUser.Player.Player.transform.localPosition;
-                        walkingPlayerInputPacket.yaw = yaw;
-                        walkingPlayerInputPacket.pitch = pitch;
+                        walkingPlayerInputPacket.yaw = Yaw;
+                        walkingPlayerInputPacket.pitch = Pitch;
                     }
 
                     await UniTask.SwitchToMainThread();
                     //_playerDummy.Data.UnturnedUser.Player.Player.input.channel.openWrite();
-                    if (playerInputPackets.Count > 24)
+                    if (PlayerInputPackets.Count > 24)
                     {
-                        while (playerInputPackets.Count > 24)
+                        while (PlayerInputPackets.Count > 24)
                         {
-                            playerInputPackets.RemoveAt(0);
+                            PlayerInputPackets.RemoveAt(0);
                         }
                     }
                     //_playerDummy.Data.UnturnedUser.Player.Player.input.channel.write((byte)playerInputPackets.Count);
                     // todo: remake
-                    var queue = (Queue<PlayerInputPacket>)_serverSidePacketsField.GetValue(Player.input);
-                    foreach (var playerInputPacket3 in playerInputPackets)
+                    var queue = (Queue<PlayerInputPacket>)_ServerSidePacketsField.GetValue(Player.input);
+                    foreach (var playerInputPacket3 in PlayerInputPackets)
                     {
                         queue.Enqueue(playerInputPacket3);
                     }
-                    _serverSidePacketsField.SetValue(Player.input, queue);
+                    _ServerSidePacketsField.SetValue(Player.input, queue);
                     await UniTask.SwitchToTaskPool();
                 }
-                count++;
+                Count++;
             }
         }
     }

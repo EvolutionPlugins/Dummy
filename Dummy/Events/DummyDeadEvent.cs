@@ -5,7 +5,7 @@ using OpenMod.API.Users;
 using OpenMod.Core.Eventing;
 using OpenMod.Core.Users;
 using OpenMod.UnityEngine.Extensions;
-using OpenMod.Unturned.Players.Events.Life;
+using OpenMod.Unturned.Players.Life.Events;
 using SDG.Unturned;
 using System.Threading.Tasks;
 

@@ -17,10 +17,10 @@ namespace EvolutionPlugins.Dummy
 #pragma warning restore CA1063 // Implement IDisposable Correctly
     {
         public PlayerDummyData Data { get; }
-        public IUserSession Session { get; }
         public PlayerDummyActionThread Actions { get; }
         public PlayerDummySimulationThread Simulation { get; }
 
+        public IUserSession Session => Data.UnturnedUser.Session;
         public CSteamID SteamID => Data.UnturnedUser.SteamId;
         public Player Player => Data.UnturnedUser.Player.Player;
 
@@ -49,7 +49,6 @@ namespace EvolutionPlugins.Dummy
 
         public void Dispose()
         {
-            Console.WriteLine("Disposing a dummy");
             Actions.Enabled = false;
             Simulation.Enabled = false;
         }

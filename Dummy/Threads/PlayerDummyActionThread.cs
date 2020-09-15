@@ -33,6 +33,7 @@ namespace EvolutionPlugins.Dummy.Threads
                     var actionQueue = Actions.Dequeue();
                     await actionQueue?.Do(_dummy);
                 }
+                await Task.Delay(10);
             }
         }
     }

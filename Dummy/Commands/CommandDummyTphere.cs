@@ -1,10 +1,9 @@
-﻿using Dummy.Extensions;
+﻿using Cysharp.Threading.Tasks;
+using Dummy.Extensions;
 using EvolutionPlugins.Dummy.API;
-using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
 using OpenMod.Unturned.Users;
 using System;
-using System.Threading.Tasks;
 
 namespace EvolutionPlugins.Dummy.Commands
 {
@@ -13,28 +12,15 @@ namespace EvolutionPlugins.Dummy.Commands
     [CommandActor(typeof(UnturnedUser))]
     [CommandSyntax("<id>")]
     [CommandParent(typeof(CommandDummy))]
-    public class CommandDummyTphere : Command
+    public class CommandDummyTphere : CommandDummyAction
     {
-        private readonly IDummyProvider m_DummyProvider;
-        public CommandDummyTphere(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider)
+        public CommandDummyTphere(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider, dummyProvider)
         {
-            m_DummyProvider = dummyProvider;
         }
 
-        protected override async Task OnExecuteAsync()
+        protected override UniTask ExecuteDummyAsync(PlayerDummy playerDummy)
         {
-            if (Context.Parameters.Count == 0)
-            {
-                throw new CommandWrongUsageException(Context);
-            }
-            var id = await Context.Parameters.GetAsync<ulong>(0);
-
-            var dummy = await m_DummyProvider.GetPlayerDummy(id);
-            if (dummy == null)
-            {
-                throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
-            }
-            await dummy.Data.UnturnedUser.TeleportToPlayerAsync((UnturnedUser)Context.Actor);
+            return playerDummy.Data.UnturnedUser.TeleportToPlayerAsync((UnturnedUser)Context.Actor);
         }
     }
 }

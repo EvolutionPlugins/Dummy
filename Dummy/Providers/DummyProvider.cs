@@ -1,5 +1,4 @@
 ﻿using Cysharp.Threading.Tasks;
-using Dummy.Extensions;
 using EvolutionPlugins.Dummy.API;
 using EvolutionPlugins.Dummy.Models;
 using Microsoft.Extensions.Configuration;
@@ -68,7 +67,6 @@ namespace EvolutionPlugins.Dummy.Providers
             {
                 return;
             }
-
             await Task.Delay((int)(timer * 1000));
 
             var user = await GetPlayerDummy(id);
@@ -229,7 +227,7 @@ namespace EvolutionPlugins.Dummy.Providers
         {
             if (m_Dummies.ContainsKey(id))
             {
-                await UniTask.SwitchToMainThread();     
+                await UniTask.SwitchToMainThread();
 
                 m_Dummies[id].Dispose();
                 m_Dummies.Remove(id);

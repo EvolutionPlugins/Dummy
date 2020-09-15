@@ -5,7 +5,6 @@ using OpenMod.Unturned.Users;
 using Steamworks;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using UnityEngine;
 
 namespace EvolutionPlugins.Dummy.API
 {
