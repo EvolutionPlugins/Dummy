@@ -1,6 +1,8 @@
 # Dummy
 Dummy is a plugin for Unturned / OpenMod. It spawns a dummy and shows the amount of damage when damaged. Also very helpful with debugging plugins.
 
+[NuGet package](https://www.nuget.org/packages/EvolutionPlugins.Dummy/)
+
 ![NuGet deployment](https://github.com/EvolutionPlugins/Dummy/workflows/Deployment/badge.svg)
 
 # Commands
