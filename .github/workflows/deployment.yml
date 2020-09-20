@@ -35,6 +35,7 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ steps.get-release.outputs.upload_url }}
+        asset_name: Dummy.dll
         asset_path: Dummy/bin/Release/net461/Dummy.dll
         asset_content_type: application/x-msdownload
     - name: Push to NuGet
