@@ -1,13 +1,8 @@
-name: Deployment
+name: "Build & Push NuGet"
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Plugin Version (SemVer: https://semver.org)'
-        required: true
-    with:
-      ref: openmod 
+  release:
+    types: [published]
 jobs:
   deploy:
     name: "NuGet Deployment"
@@ -17,16 +12,35 @@ jobs:
       name: Checkout Repository
       with:
         fetch-depth: 0
+    - name: Extract version
+      id: get_version
+      run: echo ::set-output name=VERSION::$(git describe --tags)
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.101
+    - name: Get Release
+      if: github.event_name == 'release'
+      id: get-release
+      uses: bruceadams/get-release@v1.2.0
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
     - name: Install dependencies
       run: dotnet restore
     - name: Update version
-      run: "sed -i \"s#<Version>0.0.0</Version>#<Version>${{ github.event.inputs.version }}</Version>#\" Dummy/Dummy.csproj"  
+      run: "sed -i \"s#<Version>0.0.0</Version>#<Version>${{ steps.get_version.outputs.VERSION }}</Version>#\" Dummy/Dummy.csproj"  
     - name: Build
       run: dotnet build Dummy/Dummy.csproj --configuration Release --no-restore
+    - name: Upload release asset
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.get-release.outputs.upload_url }}
+        asset_path: Dummy/bin/Release/net461/Dummy.dll
+        asset_name: Dummy.dll
+        asset_content_type: application/x-msdownload
     - name: Push to NuGet
       run: dotnet nuget push Dummy/bin/Release/*.nupkg
              --api-key ${{ secrets.NUGET_DEPLOY_KEY }}
