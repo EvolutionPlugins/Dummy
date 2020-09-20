@@ -236,6 +236,7 @@ namespace EvolutionPlugins.Dummy.Providers
             await UniTask.Delay(1500);
             await UniTask.SwitchToMainThread();
             UnityEngine.Object.Destroy(movement.GetComponent<Rigidbody>());
+            movement.controller.Move(Vector3.down);
         }
 
         public async Task<bool> RemoveDummyAsync(CSteamID id)

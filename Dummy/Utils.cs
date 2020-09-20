@@ -1,5 +1,5 @@
-﻿using SDG.Unturned;
-using Steamworks;
+﻿using SDG.NetTransport;
+using SDG.Unturned;
 using System;
 using System.Reflection;
 
@@ -24,10 +24,10 @@ namespace EvolutionPlugins.Dummy
             banRemainingDuration = (uint)parameters[4];
         }
 
-        public static void notifyClientPending(CSteamID remoteSteamID)
+        public static void notifyClientPending(ITransportConnection transportConnection)
         {
             var dynMethod = typeof(Provider).GetMethod("notifyClientPending", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-            dynMethod.Invoke(typeof(Provider), new object[] { remoteSteamID });
+            dynMethod.Invoke(typeof(Provider), new[] { transportConnection });
         }
 
         public static void verifyNextPlayerInQueue()

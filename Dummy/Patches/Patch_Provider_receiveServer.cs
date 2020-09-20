@@ -314,7 +314,7 @@ namespace EvolutionPlugins.Dummy.Patches
                     Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.PING);
                     return false;
                 }
-                Utils.notifyClientPending(steamID);
+                Utils.notifyClientPending(transportConnection);
                 SteamPending item = new SteamPending(/* 3.20.10.0 */ transportConnection, steamPlayerID, (bool)objects[9], (byte)objects[13],
                     (byte)objects[14], (byte)objects[15], (Color)objects[16], (Color)objects[17], (Color)objects[18],
                     (bool)objects[19], (ulong)objects[20], (ulong)objects[21], (ulong)objects[22], (ulong)objects[23],
