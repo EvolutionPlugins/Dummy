@@ -1,11 +1,10 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy;
-using EvolutionPlugins.Dummy.Extensions.Movement;
+using EvolutionPlugins.Dummy.Models;
 using SDG.Unturned;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace Dummy.Extensions.Movement.Actions
+namespace EvolutionPlugins.Dummy.Extensions.Movement.Actions
 {
     public class SprintAction : IMovementAction
     {

@@ -1,4 +1,5 @@
 using EvolutionPlugins.Dummy.API;
+using EvolutionPlugins.Dummy.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -9,13 +10,13 @@ namespace EvolutionPlugins.Dummy.Threads
         public Queue<IAction> Actions { get; }
         public List<IAction> ContinuousActions { get; }
 
-        private readonly PlayerDummy _dummy;
+        private readonly PlayerDummy m_Dummy;
 
         public PlayerDummyActionThread(PlayerDummy dummy)
         {
             Actions = new Queue<IAction>();
             ContinuousActions = new List<IAction>();
-            _dummy = dummy;
+            m_Dummy = dummy;
         }
 
         public bool Enabled { get; set; }
@@ -26,12 +27,12 @@ namespace EvolutionPlugins.Dummy.Threads
             {
                 foreach (IAction action in ContinuousActions)
                 {
-                    await action?.Do(_dummy);
+                    await action?.Do(m_Dummy);
                 }
                 if (Actions.Count > 0)
                 {
                     var actionQueue = Actions.Dequeue();
-                    await actionQueue?.Do(_dummy);
+                    await actionQueue?.Do(m_Dummy);
                 }
                 await Task.Delay(10);
             }

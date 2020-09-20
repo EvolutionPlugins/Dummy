@@ -1,34 +1,21 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using Microsoft.Extensions.Localization;
+using OpenMod.API.Commands;
+using System;
 
 namespace EvolutionPlugins.Dummy.Providers
 {
     [Serializable]
-    public class DummyOverflowsException : Exception
+    public class DummyOverflowsException : UserFriendlyException
     {
-        public byte DummiesCount;
-        public byte MaxDummies;
+        public byte DummiesCount { get; }
+        public byte MaxDummies { get; }
 
-        public DummyOverflowsException()
+        public DummyOverflowsException(IStringLocalizer stringLocalizer, byte dummiesCount, byte maxDummies) : base(stringLocalizer[
+            "exceptions:overflow",
+            new { Dummies = dummiesCount, MaxDummies = maxDummies }])
         {
-        }
-
-        public DummyOverflowsException(string message) : base(message)
-        {
-        }
-
-        public DummyOverflowsException(byte count, byte amountDummiesConfig)
-        {
-            DummiesCount = count;
-            MaxDummies = amountDummiesConfig;
-        }
-
-        public DummyOverflowsException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
-
-        protected DummyOverflowsException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
+            DummiesCount = dummiesCount;
+            MaxDummies = maxDummies;
         }
     }
 }

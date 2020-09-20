@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using EvolutionPlugins.Dummy.Models;
 using System.Threading.Tasks;
 
 namespace EvolutionPlugins.Dummy.Extensions.Interaction.Actions

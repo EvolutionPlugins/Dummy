@@ -1,32 +1,18 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using Microsoft.Extensions.Localization;
+using OpenMod.API.Commands;
+using System;
 
 namespace EvolutionPlugins.Dummy.Providers
 {
     [Serializable]
-    public class DummyContainsException : Exception
+    public class DummyContainsException : UserFriendlyException
     {
         public ulong Id { get; }
 
-        public DummyContainsException(ulong id)
+        public DummyContainsException(IStringLocalizer stringLocalizer, ulong id) : base(stringLocalizer["exceptions:contains",
+            new { Id = id }])
         {
             Id = id;
-        }
-
-        public DummyContainsException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
-
-        protected DummyContainsException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
-
-        public DummyContainsException()
-        {
-        }
-
-        public DummyContainsException(string message) : base(message)
-        {
         }
     }
 }

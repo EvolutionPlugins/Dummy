@@ -9,7 +9,7 @@ using OpenMod.Unturned.Players.Life.Events;
 using SDG.Unturned;
 using System.Threading.Tasks;
 
-namespace Dummy.Events
+namespace EvolutionPlugins.Dummy.Events
 {
     public class DummyDeadEvent : IEventListener<UnturnedPlayerDeadEvent>
     {

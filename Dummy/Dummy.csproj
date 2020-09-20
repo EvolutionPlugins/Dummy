@@ -20,7 +20,12 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Remove="translation.yaml" />
+    </ItemGroup>
+
+    <ItemGroup>
         <EmbeddedResource Include="config.yaml" />
+        <EmbeddedResource Include="translation.yaml" />
     </ItemGroup>
 
     <ItemGroup>

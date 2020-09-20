@@ -1,8 +1,10 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using Autofac;
+using Cysharp.Threading.Tasks;
 using EvolutionPlugins.Dummy.API;
 using EvolutionPlugins.Dummy.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 using OpenMod.API.Ioc;
 using OpenMod.API.Plugins;
 using OpenMod.API.Prioritization;
@@ -31,7 +33,6 @@ namespace EvolutionPlugins.Dummy.Providers
         private readonly IUserManager m_UserManager;
 
         private readonly Dictionary<CSteamID, PlayerDummy> m_Dummies;
-
         public IReadOnlyDictionary<CSteamID, PlayerDummy> Dummies => m_Dummies;
 
         public DummyProvider(IPluginAccessor<Dummy> pluginAccessor, IUserManager userManager)
@@ -44,8 +45,21 @@ namespace EvolutionPlugins.Dummy.Providers
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
             Provider.onCommenceShutdown += Provider_onCommenceShutdown;
+            SteamChannel.onTriggerSend += onTriggerSend;
 
             AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
+        }
+
+        private void onTriggerSend(SteamPlayer player, string name, ESteamCall mode, ESteamPacket type, object[] arguments)
+        {
+            if(player.playerID.steamID.m_SteamID == 1)
+            {
+                Console.WriteLine(name);
+            }
+            else if(name == "tellPlayerStates")
+            {
+                Console.WriteLine("get state");
+            }
         }
 
         private async Task DontAutoKickTask()
@@ -141,15 +155,16 @@ namespace EvolutionPlugins.Dummy.Providers
         #endregion
         private void CheckSpawn(CSteamID id)
         {
+            var stringLocalizer = m_PluginAccessor.Instance.LifetimeScope.Resolve<IStringLocalizer>();
             if (m_Dummies.ContainsKey(id))
             {
-                throw new DummyContainsException(id.m_SteamID);
+                throw new DummyContainsException(stringLocalizer, id.m_SteamID);
             }
 
             var amountDummiesConfig = m_PluginAccessor.Instance.Configuration.GetSection("options:amountDummies").Get<byte>();
             if (amountDummiesConfig != 0 && Dummies.Count + 1 > amountDummiesConfig)
             {
-                throw new DummyOverflowsException((byte)Dummies.Count, amountDummiesConfig);
+                throw new DummyOverflowsException(stringLocalizer, (byte)Dummies.Count, amountDummiesConfig);
             }
         }
         public async Task<PlayerDummy> AddDummyAsync(CSteamID id, HashSet<CSteamID> owners)
@@ -221,6 +236,18 @@ namespace EvolutionPlugins.Dummy.Providers
             {
                 SteamAdminlist.admin(playerDummy.SteamID, CSteamID.Nil);
             }
+
+            // remove kinematic rigidbody because the dummy is flying
+            AsyncHelper.Schedule(
+                $"Remove a rigidbody from a dummy {playerDummy.Data.UnturnedUser.Id}",
+                () => RemoveRigidBody(playerDummy.Player.movement).AsTask());
+        }
+
+        private async UniTask RemoveRigidBody(PlayerMovement movement)
+        {
+            await UniTask.Delay(1500);
+            await UniTask.SwitchToMainThread();
+            UnityEngine.Object.Destroy(movement.GetComponent<Rigidbody>());
         }
 
         public async Task<bool> RemoveDummyAsync(CSteamID id)

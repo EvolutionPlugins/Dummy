@@ -1,8 +1,9 @@
 using Cysharp.Threading.Tasks;
+using EvolutionPlugins.Dummy.Models;
 using SDG.Unturned;
 using System.Threading.Tasks;
 
-namespace EvolutionPlugins.Dummy.Extensions.Movement
+namespace EvolutionPlugins.Dummy.Extensions.Movement.Actions
 {
     public class JumpAction : IMovementAction
     {

@@ -2,7 +2,7 @@
 using OpenMod.Unturned.Users;
 using UnityEngine;
 
-namespace Dummy.Extensions
+namespace EvolutionPlugins.Dummy.Extensions
 {
     public static class UnturnedExtensions
     {
@@ -13,9 +13,9 @@ namespace Dummy.Extensions
         }
 
         public static async UniTask<bool> TeleportToLocationAsync(this UnturnedUser unturnedUser, Vector3 position) =>
-            await TeleportToLocationAsync(unturnedUser, position, unturnedUser.Player.Player.transform.eulerAngles.y);
+            await unturnedUser.TeleportToLocationAsync(position, unturnedUser.Player.Player.transform.eulerAngles.y);
 
         public static async UniTask<bool> TeleportToPlayerAsync(this UnturnedUser from, UnturnedUser to) =>
-            await TeleportToLocationAsync(from, to.Player.Player.transform.position, to.Player.Player.transform.rotation.eulerAngles.y);
+            await from.TeleportToLocationAsync(to.Player.Player.transform.position, to.Player.Player.transform.rotation.eulerAngles.y);
     }
 }

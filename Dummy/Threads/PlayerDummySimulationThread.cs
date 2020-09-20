@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using EvolutionPlugins.Dummy.Models;
 using SDG.Unturned;
 using System.Collections.Generic;
 using System.Reflection;
@@ -8,7 +9,7 @@ namespace EvolutionPlugins.Dummy.Threads
 {
     public class PlayerDummySimulationThread
     {
-        private static readonly FieldInfo _ServerSidePacketsField = typeof(PlayerInput).GetField("serversidePackets",
+        private static readonly FieldInfo s_ServerSidePacketsField = typeof(PlayerInput).GetField("serversidePackets",
             BindingFlags.NonPublic | BindingFlags.Instance);
 
         public byte Analog { get; private set; }
@@ -24,15 +25,14 @@ namespace EvolutionPlugins.Dummy.Threads
         public float Yaw { get; private set; }
         public float Pitch { get; private set; }
         public List<PlayerInputPacket> PlayerInputPackets { get; }
-
         public bool Enabled { get; set; }
 
-        private readonly PlayerDummy _playerDummy;
-        private Player Player => _playerDummy.Data.UnturnedUser.Player.Player;
+        private readonly PlayerDummy m_PlayerDummy;
+        private Player Player => m_PlayerDummy.Data.UnturnedUser.Player.Player;
 
         public PlayerDummySimulationThread(PlayerDummy playerDummy)
         {
-            _playerDummy = playerDummy;
+            m_PlayerDummy = playerDummy;
             Analog = 0;
             Count = 0;
             Tick = Time.realtimeSinceStartup;
@@ -118,7 +118,7 @@ namespace EvolutionPlugins.Dummy.Threads
                     if (playerInputPacket2 is DrivingPlayerInputPacket)
                     {
                         var drivingPlayerInputPacket = playerInputPacket2 as DrivingPlayerInputPacket;
-                        var vehicle = _playerDummy.Data.UnturnedUser.Player.Player.movement.getVehicle();
+                        var vehicle = m_PlayerDummy.Data.UnturnedUser.Player.Player.movement.getVehicle();
 
                         if (vehicle != null)
                         {
@@ -144,7 +144,7 @@ namespace EvolutionPlugins.Dummy.Threads
                         var walkingPlayerInputPacket = playerInputPacket2 as WalkingPlayerInputPacket;
 
                         walkingPlayerInputPacket.analog = Analog;
-                        walkingPlayerInputPacket.position = _playerDummy.Data.UnturnedUser.Player.Player.transform.localPosition;
+                        walkingPlayerInputPacket.position = m_PlayerDummy.Data.UnturnedUser.Player.Player.transform.localPosition;
                         walkingPlayerInputPacket.yaw = Yaw;
                         walkingPlayerInputPacket.pitch = Pitch;
                     }
@@ -160,12 +160,12 @@ namespace EvolutionPlugins.Dummy.Threads
                     }
                     //_playerDummy.Data.UnturnedUser.Player.Player.input.channel.write((byte)playerInputPackets.Count);
                     // todo: remake
-                    var queue = (Queue<PlayerInputPacket>)_ServerSidePacketsField.GetValue(Player.input);
+                    var queue = (Queue<PlayerInputPacket>)s_ServerSidePacketsField.GetValue(Player.input);
                     foreach (var playerInputPacket3 in PlayerInputPackets)
                     {
                         queue.Enqueue(playerInputPacket3);
                     }
-                    _ServerSidePacketsField.SetValue(Player.input, queue);
+                    s_ServerSidePacketsField.SetValue(Player.input, queue);
                     await UniTask.SwitchToTaskPool();
                 }
                 Count++;

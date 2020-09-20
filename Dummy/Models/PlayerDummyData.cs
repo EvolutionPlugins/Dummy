@@ -14,25 +14,5 @@ namespace EvolutionPlugins.Dummy.Models
 
         public HashSet<CSteamID> Owners { get; }
         public UnturnedUser UnturnedUser { get; }
-
-        public override bool Equals(object obj)
-        {
-            return obj is PlayerDummyData data && data.Owners == Owners && UnturnedUser == data.UnturnedUser;
-        }
-
-        public override int GetHashCode()
-        {
-            return 1599248077 + EqualityComparer<HashSet<CSteamID>>.Default.GetHashCode(Owners);
-        }
-
-        public static bool operator ==(PlayerDummyData left, PlayerDummyData right)
-        {
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(PlayerDummyData left, PlayerDummyData right)
-        {
-            return !(left == right);
-        }
     }
 }

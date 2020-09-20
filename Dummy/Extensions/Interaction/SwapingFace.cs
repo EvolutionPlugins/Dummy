@@ -1,4 +1,5 @@
 ﻿using EvolutionPlugins.Dummy.Extensions.Interaction.Actions;
+using EvolutionPlugins.Dummy.Models;
 
 namespace EvolutionPlugins.Dummy.Extensions.Interaction
 {

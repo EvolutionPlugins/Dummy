@@ -1,7 +1,6 @@
 // ReSharper disable CheckNamespace
 
 using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models;
 using EvolutionPlugins.Dummy.Threads;
 using OpenMod.API.Users;
 using OpenMod.Core.Helpers;
@@ -10,11 +9,9 @@ using Steamworks;
 using System;
 using System.Collections.Generic;
 
-namespace EvolutionPlugins.Dummy
+namespace EvolutionPlugins.Dummy.Models
 {
-#pragma warning disable CA1063 // Implement IDisposable Correctly
     public class PlayerDummy : IDisposable
-#pragma warning restore CA1063 // Implement IDisposable Correctly
     {
         public PlayerDummyData Data { get; }
         public PlayerDummyActionThread Actions { get; }

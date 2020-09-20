@@ -1,3 +1,4 @@
+using EvolutionPlugins.Dummy.Models;
 using System.Threading.Tasks;
 
 namespace EvolutionPlugins.Dummy.API

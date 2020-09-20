@@ -1,3 +1,5 @@
+using EvolutionPlugins.Dummy.Extensions.Movement.Actions;
+using EvolutionPlugins.Dummy.Models;
 using System.Threading.Tasks;
 
 namespace EvolutionPlugins.Dummy.Extensions.Movement

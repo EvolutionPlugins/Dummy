@@ -1,0 +1,34 @@
+﻿commands:
+  dummyNotFound: "Dummy with id: {Id} not found"
+  actions:
+    button:
+      success: "Dummy click to {ButtonName} button"
+    execute:
+      success: "Dummy <color=green>successfully</color> executed a command: {Command}"
+      fail: "Dummy <color=red>failed</color> executed a command: {Command}"
+    face:
+      success: "Dummy change a face {FaceIndex}"
+    gesture:
+      success: "Dummy gestures a {EGesture}"
+    inputText:
+      success: "Dummy enter a text {Text} to inputfield {InputFieldName}"
+    stance:
+      success: "Dummy stances a {EStance}"
+  general:
+    clear: "Dummies has been cleared"
+    create: "Dummy {Id} has been created"
+    copy: "Dummy {Id} has been created"
+    remove: 
+      success:"Dummy {Id} has been removed"
+      fail: "Dummy {Id} has not been removed"
+    tphere: "Dummy {Id} teleported to you"
+
+events:
+  dead: "Dummy has been died. Reason: {Reason}, killer = {Killer}. Respawning..."
+  revived: "Dummy has been revived"
+  damaged: "Dummy has been damaged {DamageAmount}"
+  chatted: "Dummy got message: {Text}"
+
+exceptions:
+  contains: "Dummy with id: {Id} already created"
+  overflow: "Can't create a dummy. Max dummies reach limit: {DummiesCount}/{MaxDummies}"

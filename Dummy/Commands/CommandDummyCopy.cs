@@ -1,5 +1,5 @@
-﻿using Dummy.Extensions;
-using EvolutionPlugins.Dummy.API;
+﻿using EvolutionPlugins.Dummy.API;
+using EvolutionPlugins.Dummy.Extensions;
 using OpenMod.Core.Commands;
 using OpenMod.Unturned.Users;
 using Steamworks;
