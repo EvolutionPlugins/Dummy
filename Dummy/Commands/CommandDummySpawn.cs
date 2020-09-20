@@ -1,28 +1,27 @@
-﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models;
-using OpenMod.Core.Commands;
+﻿using OpenMod.Core.Commands;
 using Steamworks;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using EvolutionPlugins.Dummy.API;
 
 namespace EvolutionPlugins.Dummy.Commands
 {
     [Command("spawn")]
+    [CommandParent(typeof(CommandDummy))]
     public class CommandDummySpawn : Command
     {
-        private readonly API.IDummyProvider dummyProvider;
+        private readonly IDummyProvider m_DummyProvider;
 
-        public CommandDummySpawn(IServiceProvider serviceProvider, API.IDummyProvider dummyProvider) : base(serviceProvider)
+        public CommandDummySpawn(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider)
         {
-            this.dummyProvider = dummyProvider;
+            m_DummyProvider = dummyProvider;
         }
 
-        protected override Task OnExecuteAsync()
+        protected override async Task OnExecuteAsync()
         {
-            return dummyProvider.AddDummyAsync((CSteamID)1, new HashSet<CSteamID>());
+            var id = await m_DummyProvider.GetAvailableIdAsync();
+            await m_DummyProvider.AddDummyAsync(id, new HashSet<CSteamID>());
         }
     }
 }

@@ -2,6 +2,7 @@
 using Cysharp.Threading.Tasks;
 using EvolutionPlugins.Dummy.API;
 using EvolutionPlugins.Dummy.Models;
+using EvolutionPlugins.Dummy.NetTransport;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
@@ -45,21 +46,8 @@ namespace EvolutionPlugins.Dummy.Providers
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
             Provider.onCommenceShutdown += Provider_onCommenceShutdown;
-            SteamChannel.onTriggerSend += onTriggerSend;
 
             AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
-        }
-
-        private void onTriggerSend(SteamPlayer player, string name, ESteamCall mode, ESteamPacket type, object[] arguments)
-        {
-            if(player.playerID.steamID.m_SteamID == 1)
-            {
-                Console.WriteLine(name);
-            }
-            else if(name == "tellPlayerStates")
-            {
-                Console.WriteLine("get state");
-            }
         }
 
         private async Task DontAutoKickTask()
@@ -173,7 +161,7 @@ namespace EvolutionPlugins.Dummy.Providers
 
             await UniTask.SwitchToMainThread();
 
-            Provider.pending.Add(new SteamPending(null,
+            Provider.pending.Add(new SteamPending(new NullTransportConnection(),
                     new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, 0, 0, 0,
                     Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL,
                     0UL, 0UL, 0UL, Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
@@ -201,7 +189,7 @@ namespace EvolutionPlugins.Dummy.Providers
 
             var steamPlayer = userCopy.Player.SteamPlayer;
 
-            Provider.pending.Add(new SteamPending(null, new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
+            Provider.pending.Add(new SteamPending(new NullTransportConnection(), new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
                 true, steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
                 Color.white, steamPlayer.hand, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, Array.Empty<ulong>(),
                 EPlayerSkillset.NONE, "english", CSteamID.Nil));
