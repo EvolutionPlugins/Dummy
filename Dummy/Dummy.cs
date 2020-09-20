@@ -1,20 +1,13 @@
 ﻿using Dummy.Configurations;
-
 using HarmonyLib;
-
 using Rocket.Core.Plugins;
-
 using SDG.Unturned;
-
 using Steamworks;
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-
 using UnityEngine;
-
 using Logger = Rocket.Core.Logging.Logger;
 
 namespace Dummy
@@ -342,11 +335,6 @@ namespace Dummy
                 }
                 client.channel.owner.timeLastPacketWasReceivedFromClient = Time.realtimeSinceStartup;
             }
-        }
-
-        private void SimulationDummies()
-        {
-
         }
 
         private IEnumerator KickTimer(CSteamID id)

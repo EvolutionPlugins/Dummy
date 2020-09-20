@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using SDG.Framework.Modules;
+using SDG.NetTransport;
 using SDG.Unturned;
 using Steamworks;
 using System;
@@ -13,66 +14,64 @@ namespace Dummy.Patches
     [HarmonyPatch(typeof(Provider), "receiveServer")]
     public static class Patch_Provider_receiveServer
     {
-        public static bool Prefix(CSteamID steamID, byte[] packet, int offset)
+        public static bool Prefix(ITransportConnection transportConnection, byte[] packet, int offset)
         {
             var steamPacket = (ESteamPacket)packet[offset];
 
             if (steamPacket == ESteamPacket.CONNECT)
             {
-                for (int l = 0; l < Provider.pending.Count; l++)
+                if (Provider.findPendingPlayer(transportConnection) != null)
                 {
-                    if (Provider.pending[l].playerID.steamID == steamID)
-                    {
-                        Provider.reject(steamID, ESteamRejection.ALREADY_PENDING);
-                        return false;
-                    }
+                    Provider.reject(transportConnection, ESteamRejection.ALREADY_PENDING);
+                    return false;
                 }
-                for (int m = 0; m < Provider.clients.Count; m++)
+                if (Provider.findPlayer(transportConnection) != null)
                 {
-                    if (Provider.clients[m].playerID.steamID == steamID)
-                    {
-                        Provider.reject(steamID, ESteamRejection.ALREADY_CONNECTED);
-                        return false;
-                    }
+                    Provider.reject(transportConnection, ESteamRejection.ALREADY_CONNECTED);
+                    return false;
                 }
-                object[] objects = SteamPacker.getObjects(steamID, offset, 0, packet, new Type[]
+                object[] objects = SteamPacker.getObjects(CSteamID.Nil, offset, 0, packet, new Type[]
                 {
-                Types.BYTE_TYPE,
-                Types.BYTE_TYPE,
-                Types.STRING_TYPE,
-                Types.STRING_TYPE,
-                Types.BYTE_ARRAY_TYPE,
-                Types.BYTE_ARRAY_TYPE,
-                Types.BYTE_ARRAY_TYPE,
-                Types.BYTE_TYPE,
-                Types.UINT32_TYPE,
-                Types.BOOLEAN_TYPE,
-                Types.SINGLE_TYPE,
-                Types.STRING_TYPE,
-                Types.STEAM_ID_TYPE,
-                Types.BYTE_TYPE,
-                Types.BYTE_TYPE,
-                Types.BYTE_TYPE,
-                Types.COLOR_TYPE,
-                Types.COLOR_TYPE,
-                Types.COLOR_TYPE,
-                Types.BOOLEAN_TYPE,
-                Types.UINT64_TYPE,
-                Types.UINT64_TYPE,
-                Types.UINT64_TYPE,
-                Types.UINT64_TYPE,
-                Types.UINT64_TYPE,
-                Types.UINT64_TYPE,
-                Types.UINT64_TYPE,
-                Types.UINT64_ARRAY_TYPE,
-                Types.BYTE_TYPE,
-                Types.STRING_TYPE,
-                Types.STRING_TYPE,
-                Types.STEAM_ID_TYPE,
-                Types.UINT32_TYPE,
-                Types.BYTE_ARRAY_TYPE
+                    Types.BYTE_TYPE,
+                    Types.BYTE_TYPE,
+                    Types.STRING_TYPE,
+                    Types.STRING_TYPE,
+                    Types.BYTE_ARRAY_TYPE,
+                    Types.BYTE_ARRAY_TYPE,
+                    Types.BYTE_ARRAY_TYPE,
+                    Types.BYTE_TYPE,
+                    Types.UINT32_TYPE,
+                    Types.BOOLEAN_TYPE,
+                    Types.SINGLE_TYPE,
+                    Types.STRING_TYPE,
+                    Types.STEAM_ID_TYPE,
+                    Types.BYTE_TYPE,
+                    Types.BYTE_TYPE,
+                    Types.BYTE_TYPE,
+                    Types.COLOR_TYPE,
+                    Types.COLOR_TYPE,
+                    Types.COLOR_TYPE,
+                    Types.BOOLEAN_TYPE,
+                    Types.UINT64_TYPE,
+                    Types.UINT64_TYPE,
+                    Types.UINT64_TYPE,
+                    Types.UINT64_TYPE,
+                    Types.UINT64_TYPE,
+                    Types.UINT64_TYPE,
+                    Types.UINT64_TYPE,
+                    Types.UINT64_ARRAY_TYPE,
+                    Types.BYTE_TYPE,
+                    Types.STRING_TYPE,
+                    Types.STRING_TYPE,
+                    Types.STEAM_ID_TYPE,
+                    Types.UINT32_TYPE,
+                    Types.BYTE_ARRAY_TYPE,
+                    Types.BYTE_ARRAY_TYPE,
+                    Types.STEAM_ID_TYPE
                 });
                 byte[] array3 = (byte[])objects[33];
+                byte[] hash_ = (byte[])objects[34];
+                CSteamID steamID = (CSteamID)objects[35];
                 if (array3.Length != 20)
                 {
                     Provider.reject(steamID, ESteamRejection.WRONG_HASH_ASSEMBLY);
@@ -298,7 +297,7 @@ namespace Dummy.Patches
                     return false;
                 }
                 Utils.notifyClientPending(steamID);
-                SteamPending item = new SteamPending(steamPlayerID, (bool)objects[9], (byte)objects[13], (byte)objects[14], (byte)objects[15], (Color)objects[16], (Color)objects[17], (Color)objects[18], (bool)objects[19], (ulong)objects[20], (ulong)objects[21], (ulong)objects[22], (ulong)objects[23], (ulong)objects[24], (ulong)objects[25], (ulong)objects[26], (ulong[])objects[27], (EPlayerSkillset)((byte)objects[28]), (string)objects[30], (CSteamID)objects[31]);
+                SteamPending item = new SteamPending(transportConnection, steamPlayerID, (bool)objects[9], (byte)objects[13], (byte)objects[14], (byte)objects[15], (Color)objects[16], (Color)objects[17], (Color)objects[18], (bool)objects[19], (ulong)objects[20], (ulong)objects[21], (ulong)objects[22], (ulong)objects[23], (ulong)objects[24], (ulong)objects[25], (ulong)objects[26], (ulong[])objects[27], (EPlayerSkillset)((byte)objects[28]), (string)objects[30], (CSteamID)objects[31]);
                 if (Provider.isWhitelisted || !flag4)
                 {
                     Provider.pending.Add(item);

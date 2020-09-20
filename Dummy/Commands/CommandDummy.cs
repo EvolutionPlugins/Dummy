@@ -2,15 +2,11 @@
 using Rocket.Core;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
-
 using SDG.Unturned;
-
 using Steamworks;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using UnityEngine;
 
 namespace Dummy.Commands
@@ -340,7 +336,7 @@ namespace Dummy.Commands
             {
                 var steamPlayer = player.SteamPlayer();
 
-                Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
+                Provider.pending.Add(new SteamPending(null, new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
                     true, steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
                     Color.white, steamPlayer.hand, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, Array.Empty<ulong>(),
                     EPlayerSkillset.NONE, "english", CSteamID.Nil));
@@ -354,7 +350,7 @@ namespace Dummy.Commands
             }
             else
             {
-                Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
+                Provider.pending.Add(new SteamPending(null, new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
                 true, 0, 0, 0, Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
                 Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
 
