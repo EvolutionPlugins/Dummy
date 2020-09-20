@@ -15,7 +15,7 @@ namespace EvolutionPlugins.Dummy.Patches
     [HarmonyPatch(typeof(Provider), "receiveServer")]
     public static class Patch_Provider_receiveServer
     {
-        public static NeedProvider onNeedProvider;
+        internal static NeedDummyProvider OnNeedDummyProvider;
 
         public static bool Prefix(ITransportConnection transportConnection, byte[] packet, int offset)
         {
@@ -176,7 +176,7 @@ namespace EvolutionPlugins.Dummy.Patches
                     Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.WHITELISTED);
                     return false;
                 }
-                var dummiesCount = onNeedProvider?.Invoke()?.Dummies.Count ?? 0;
+                var dummiesCount = OnNeedDummyProvider?.Invoke()?.Dummies.Count ?? 0;
                 if (Provider.clients.Count - dummiesCount + 1 > Provider.maxPlayers && Provider.pending.Count + 1 > Provider.queueSize)
                 {
                     Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.SERVER_FULL);

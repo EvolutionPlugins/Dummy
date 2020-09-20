@@ -6,14 +6,15 @@ namespace EvolutionPlugins.Dummy.Patches
     [HarmonyPatch(typeof(Provider), "verifyNextPlayerInQueue")]
     public static class Patch_Provider_verifyNextPlayerInQueue
     {
-        public static NeedProvider OnNeedProvider;
+        internal static NeedDummyProvider OnNeedDummyProvider;
+
         public static bool Prefix()
         {
             if (Provider.pending.Count < 1)
             {
                 return false;
             }
-            var dummiesCount = OnNeedProvider?.Invoke()?.Dummies.Count ?? 0;
+            var dummiesCount = OnNeedDummyProvider?.Invoke()?.Dummies.Count ?? 0;
 
             if (Provider.clients.Count - dummiesCount >= Provider.maxPlayers)
             {

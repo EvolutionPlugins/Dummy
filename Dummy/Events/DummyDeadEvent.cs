@@ -3,8 +3,10 @@ using EvolutionPlugins.Dummy.API;
 using OpenMod.API.Eventing;
 using OpenMod.API.Users;
 using OpenMod.Core.Eventing;
+using OpenMod.Core.Helpers;
 using OpenMod.Core.Users;
 using OpenMod.UnityEngine.Extensions;
+using OpenMod.Unturned.Players;
 using OpenMod.Unturned.Players.Life.Events;
 using SDG.Unturned;
 using System.Threading.Tasks;
@@ -37,20 +39,21 @@ namespace EvolutionPlugins.Dummy.Events
                     await player.PrintMessageAsync($"Dummy {@event.Player.SteamId} has died. Death reason: {@event.DeathCause.ToString().ToLower()}, killer = {@event.Instigator}. Respawning...");
                 }
 
-                async UniTask Revive()
-                {
-                    await UniTask.Delay(1500);
-                    if (@event.Player.IsAlive) return; // double-check
-                    await UniTask.SwitchToMainThread();
-                    @event.Player.Player.life.sendRevive();
-                    @event.Player.Player.life.channel.send("tellRevive", ESteamCall.ALL, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
-                    {
-                        @event.Player.Transform.Position.ToUnityVector(),
-                        MeasurementTool.angleToByte(@event.Player.Player.transform.rotation.eulerAngles.y)
-                    });
-                }
-                await Revive();
+                AsyncHelper.Schedule($"Revive dummy {@event.Player.SteamId}", () => Revive(@event.Player).AsTask());
             }
+        }
+
+        private async UniTask Revive(UnturnedPlayer player)
+        {
+            await UniTask.Delay(1500);
+            if (player.IsAlive) return; // double-check
+            await UniTask.SwitchToMainThread();
+            player.Player.life.sendRevive();
+            player.Player.life.channel.send("tellRevive", ESteamCall.ALL, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
+            {
+                player.Transform.Position.ToUnityVector(),
+                MeasurementTool.angleToByte(player.Player.transform.rotation.eulerAngles.y)
+            });
         }
     }
 }
