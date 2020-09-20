@@ -23,9 +23,6 @@ namespace EvolutionPlugins.Dummy.Commands.Actions
         protected override async UniTask ExecuteDummyAsync(PlayerDummy playerDummy)
         {
             var user = (UnturnedUser)Context.Actor;
-            Console.WriteLine(user.Player.Player.stance.transform.position.ToString());
-            Console.WriteLine(playerDummy.Data.UnturnedUser.Player.Player.stance.transform.position.ToString());
-            return;
             var gesture = await Context.Parameters.GetAsync<string>(1);
             if (!Enum.TryParse<EPlayerGesture>(gesture.ToUpper(), out var eGesture))
             {

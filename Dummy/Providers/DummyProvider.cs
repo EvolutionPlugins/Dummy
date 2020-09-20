@@ -173,7 +173,7 @@ namespace EvolutionPlugins.Dummy.Providers
 
             await UniTask.SwitchToMainThread();
 
-            Provider.pending.Add(new SteamPending(
+            Provider.pending.Add(new SteamPending(null,
                     new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, 0, 0, 0,
                     Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL,
                     0UL, 0UL, 0UL, Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
@@ -201,7 +201,7 @@ namespace EvolutionPlugins.Dummy.Providers
 
             var steamPlayer = userCopy.Player.SteamPlayer;
 
-            Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
+            Provider.pending.Add(new SteamPending(null, new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
                 true, steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
                 Color.white, steamPlayer.hand, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, Array.Empty<ulong>(),
                 EPlayerSkillset.NONE, "english", CSteamID.Nil));

@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using SDG.Framework.Modules;
+using SDG.NetTransport;
 using SDG.Provider;
 using SDG.Unturned;
 using Steamworks;
@@ -16,29 +17,25 @@ namespace EvolutionPlugins.Dummy.Patches
     {
         public static NeedProvider onNeedProvider;
 
-        public static bool Prefix(CSteamID steamID, byte[] packet, int offset)
+        public static bool Prefix(ITransportConnection transportConnection, byte[] packet, int offset)
         {
             var steamPacket = (ESteamPacket)packet[offset];
 
             if (steamPacket == ESteamPacket.CONNECT)
             {
-                for (var l = 0; l < Provider.pending.Count; l++)
+                // start 3.20.10.0
+                if (Provider.findPendingPlayer(transportConnection) != null)
                 {
-                    if (Provider.pending[l].playerID.steamID == steamID)
-                    {
-                        Provider.reject(steamID, ESteamRejection.ALREADY_PENDING);
-                        return false;
-                    }
+                    Provider.reject(transportConnection, ESteamRejection.ALREADY_PENDING);
+                    return false;
                 }
-                for (var m = 0; m < Provider.clients.Count; m++)
+                if (Provider.findPlayer(transportConnection) != null)
                 {
-                    if (Provider.clients[m].playerID.steamID == steamID)
-                    {
-                        Provider.reject(steamID, ESteamRejection.ALREADY_CONNECTED);
-                        return false;
-                    }
+                    Provider.reject(transportConnection, ESteamRejection.ALREADY_CONNECTED);
+                    return false;
                 }
-                var objects = SteamPacker.getObjects(steamID, offset, 0, packet, new Type[]
+                // end 3.20.10.0
+                var objects = SteamPacker.getObjects(/* 3.20.10.0 */ CSteamID.Nil, offset, 0, packet, new Type[]
                 {
                         Types.BYTE_TYPE,
                         Types.BYTE_TYPE,
@@ -74,13 +71,19 @@ namespace EvolutionPlugins.Dummy.Patches
                         Types.STEAM_ID_TYPE,
                         Types.UINT32_TYPE,
                         Types.BYTE_ARRAY_TYPE,
-                        Types.BYTE_ARRAY_TYPE
+                        Types.BYTE_ARRAY_TYPE,
+                        // start 3.20.10.0
+                        Types.STEAM_ID_TYPE
+                        // end 3.20.10.0
                 });
                 byte[] array3 = (byte[])objects[33];
                 byte[] hash_ = (byte[])objects[34];
+                // start 3.20.10.0
+                var steamID = (CSteamID)objects[35];
+                // end 3.20.10.0
                 if (array3.Length != 20)
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_HASH_ASSEMBLY);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.WRONG_HASH_ASSEMBLY);
                     return false;
                 }
                 var newCharacterID = (byte)objects[1];
@@ -92,113 +95,118 @@ namespace EvolutionPlugins.Dummy.Patches
                     (string)objects[11], (CSteamID)objects[12], array3);
                 if ((uint)objects[8] != Provider.APP_VERSION_PACKED)
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_VERSION, Provider.APP_VERSION);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.WRONG_VERSION, Provider.APP_VERSION);
                     return false;
                 }
                 if ((uint)objects[32] != Level.packedVersion)
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_LEVEL_VERSION, Level.version);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.WRONG_LEVEL_VERSION, Level.version);
                     return false;
                 }
                 if (steamPlayerID.playerName.Length < 2)
                 {
-                    Provider.reject(steamID, ESteamRejection.NAME_PLAYER_SHORT);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.NAME_PLAYER_SHORT);
                     return false;
                 }
                 if (steamPlayerID.characterName.Length < 2)
                 {
-                    Provider.reject(steamID, ESteamRejection.NAME_CHARACTER_SHORT);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.NAME_CHARACTER_SHORT);
                     return false;
                 }
                 if (steamPlayerID.playerName.Length > 32)
                 {
-                    Provider.reject(steamID, ESteamRejection.NAME_PLAYER_LONG);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.NAME_PLAYER_LONG);
                     return false;
                 }
                 if (steamPlayerID.characterName.Length > 32)
                 {
-                    Provider.reject(steamID, ESteamRejection.NAME_CHARACTER_LONG);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.NAME_CHARACTER_LONG);
                     return false;
                 }
                 if (long.TryParse(steamPlayerID.playerName, NumberStyles.Any, CultureInfo.InvariantCulture, out _) ||
                     double.TryParse(steamPlayerID.playerName, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
                 {
-                    Provider.reject(steamID, ESteamRejection.NAME_PLAYER_NUMBER);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.NAME_PLAYER_NUMBER);
                     return false;
                 }
                 if (long.TryParse(steamPlayerID.characterName, NumberStyles.Any, CultureInfo.InvariantCulture, out _) ||
                     double.TryParse(steamPlayerID.characterName, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
                 {
-                    Provider.reject(steamID, ESteamRejection.NAME_CHARACTER_NUMBER);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.NAME_CHARACTER_NUMBER);
                     return false;
                 }
                 if (Provider.filterName)
                 {
                     if (!NameTool.isValid(steamPlayerID.playerName))
                     {
-                        Provider.reject(steamID, ESteamRejection.NAME_PLAYER_INVALID);
+                        Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.NAME_PLAYER_INVALID);
                         return false;
                     }
                     if (!NameTool.isValid(steamPlayerID.characterName))
                     {
-                        Provider.reject(steamID, ESteamRejection.NAME_CHARACTER_INVALID);
+                        Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.NAME_CHARACTER_INVALID);
                         return false;
                     }
                 }
                 if (NameTool.containsRichText(steamPlayerID.playerName))
                 {
-                    Provider.reject(steamID, ESteamRejection.NAME_PLAYER_INVALID);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.NAME_PLAYER_INVALID);
                     return false;
                 }
                 if (NameTool.containsRichText(steamPlayerID.characterName))
                 {
-                    Provider.reject(steamID, ESteamRejection.NAME_CHARACTER_INVALID);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.NAME_CHARACTER_INVALID);
                     return false;
                 }
-                uint ipv4AddressOrZero = SteamGameServerNetworkingUtils.getIPv4AddressOrZero(steamID);
-                Utils.checkBanStatus(steamPlayerID, ipv4AddressOrZero, out bool flag3, out string object_, out uint num5);
+                // start 3.20.10.0
+                transportConnection.TryGetIPv4Address(out var remoteIP);
+                // end 3.20.10.0
+                Utils.checkBanStatus(steamPlayerID, remoteIP, out bool flag3, out string object_, out uint num5);
                 if (flag3)
                 {
                     var bytes3 = SteamPacker.getBytes(0, out int size4, 9, object_, num5);
-                    Provider.send(steamID, ESteamPacket.BANNED, bytes3, size4, 0);
+                    // start 3.20.10.0
+                    Provider.sendToClient(transportConnection, ESteamPacket.BANNED, bytes3, size4);
+                    // end 3.20.10.0
                     return false;
                 }
                 var flag4 = SteamWhitelist.checkWhitelisted(steamID);
                 if (Provider.isWhitelisted && !flag4)
                 {
-                    Provider.reject(steamID, ESteamRejection.WHITELISTED);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.WHITELISTED);
                     return false;
                 }
                 var dummiesCount = onNeedProvider?.Invoke()?.Dummies.Count ?? 0;
                 if (Provider.clients.Count - dummiesCount + 1 > Provider.maxPlayers && Provider.pending.Count + 1 > Provider.queueSize)
                 {
-                    Provider.reject(steamID, ESteamRejection.SERVER_FULL);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.SERVER_FULL);
                     return false;
                 }
                 var array4 = (byte[])objects[4];
                 if (array4.Length != 20)
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_PASSWORD);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.WRONG_PASSWORD);
                     return false;
                 }
                 var array5 = (byte[])objects[5];
                 if (array5.Length != 20)
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_HASH_LEVEL);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.WRONG_HASH_LEVEL);
                     return false;
                 }
                 var array6 = (byte[])objects[6];
                 if (array6.Length != 20)
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_HASH_ASSEMBLY);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.WRONG_HASH_ASSEMBLY);
                     return false;
                 }
                 // 3.20.8.0
                 if (Provider.configData.Server.Validate_EconInfo_Hash && !Hash.verifyHash(hash_, TempSteamworksEconomy.econInfoHash))
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_HASH_ECON);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.WRONG_HASH_ECON);
                     return false;
                 }
+                // end 3.20.8.0
                 var text = (string)objects[29];
                 ModuleDependency[] array7;
                 if (string.IsNullOrEmpty(text))
@@ -255,7 +263,7 @@ namespace EvolutionPlugins.Dummy.Patches
                 }
                 if (!flag5)
                 {
-                    Provider.reject(steamID, ESteamRejection.CLIENT_MODULE_DESYNC);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.CLIENT_MODULE_DESYNC);
                     return false;
                 }
                 var flag7 = true;
@@ -283,31 +291,31 @@ namespace EvolutionPlugins.Dummy.Patches
                 }
                 if (!flag7)
                 {
-                    Provider.reject(steamID, ESteamRejection.SERVER_MODULE_DESYNC);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.SERVER_MODULE_DESYNC);
                     return false;
                 }
                 if (!string.IsNullOrEmpty(Provider.serverPassword) && !Hash.verifyHash(array4, Provider.serverPasswordHash))
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_PASSWORD);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.WRONG_PASSWORD);
                     return false;
                 }
                 if (!Hash.verifyHash(array5, Level.hash))
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_HASH_LEVEL);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.WRONG_HASH_LEVEL);
                     return false;
                 }
                 if (!ReadWrite.appIn(array6, (byte)objects[7]))
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_HASH_ASSEMBLY);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.WRONG_HASH_ASSEMBLY);
                     return false;
                 }
                 if ((float)objects[10] >= Provider.configData.Server.Max_Ping_Milliseconds / 1000f)
                 {
-                    Provider.reject(steamID, ESteamRejection.PING);
+                    Provider.reject(/* 3.20.10.0 */ transportConnection, ESteamRejection.PING);
                     return false;
                 }
                 Utils.notifyClientPending(steamID);
-                SteamPending item = new SteamPending(steamPlayerID, (bool)objects[9], (byte)objects[13],
+                SteamPending item = new SteamPending(/* 3.20.10.0 */ transportConnection, steamPlayerID, (bool)objects[9], (byte)objects[13],
                     (byte)objects[14], (byte)objects[15], (Color)objects[16], (Color)objects[17], (Color)objects[18],
                     (bool)objects[19], (ulong)objects[20], (ulong)objects[21], (ulong)objects[22], (ulong)objects[23],
                     (ulong)objects[24], (ulong)objects[25], (ulong)objects[26], (ulong[])objects[27],
