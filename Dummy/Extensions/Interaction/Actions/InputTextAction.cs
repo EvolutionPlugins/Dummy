@@ -1,5 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models;
+using EvolutionPlugins.Dummy.Models.Users;
 using SDG.Unturned;
 using System.Threading.Tasks;
 
@@ -16,10 +16,10 @@ namespace EvolutionPlugins.Dummy.Extensions.Interaction.Actions
         public string InputtedText { get; }
         public string InputFieldName { get; }
 
-        public async Task Do(PlayerDummy dummy)
+        public async Task Do(DummyUser dummy)
         {
             await UniTask.SwitchToMainThread();
-            EffectManager.instance.tellEffectTextCommitted(dummy.SteamID, InputFieldName, InputtedText);
+            EffectManager.onEffectTextCommitted(dummy.Player.Player, InputFieldName, InputtedText);
         }
     }
 }

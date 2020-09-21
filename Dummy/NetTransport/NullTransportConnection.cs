@@ -21,13 +21,13 @@ namespace EvolutionPlugins.Dummy.NetTransport
         {
             // todo: add default IP
             address = 0;
-            return true;
+            return false;
         }
 
         public bool TryGetPort(out ushort port)
         {
             port = 0;
-            return true;
+            return false;
         }
     }
 }

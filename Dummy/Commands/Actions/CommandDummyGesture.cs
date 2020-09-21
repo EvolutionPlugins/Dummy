@@ -1,9 +1,8 @@
 ﻿using Cysharp.Threading.Tasks;
 using EvolutionPlugins.Dummy.API;
 using EvolutionPlugins.Dummy.Extensions.Interaction.Actions;
-using EvolutionPlugins.Dummy.Models;
+using EvolutionPlugins.Dummy.Models.Users;
 using OpenMod.Core.Commands;
-using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using System;
 using Command = OpenMod.Core.Commands.Command;
@@ -20,9 +19,8 @@ namespace EvolutionPlugins.Dummy.Commands.Actions
         {
         }
 
-        protected override async UniTask ExecuteDummyAsync(PlayerDummy playerDummy)
+        protected override async UniTask ExecuteDummyAsync(DummyUser playerDummy)
         {
-            var user = (UnturnedUser)Context.Actor;
             var gesture = await Context.Parameters.GetAsync<string>(1);
             if (!Enum.TryParse<EPlayerGesture>(gesture.ToUpper(), out var eGesture))
             {

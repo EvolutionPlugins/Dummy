@@ -1,7 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using EvolutionPlugins.Dummy.API;
 using EvolutionPlugins.Dummy.Extensions;
-using EvolutionPlugins.Dummy.Models;
+using EvolutionPlugins.Dummy.Models.Users;
 using OpenMod.Core.Commands;
 using OpenMod.Unturned.Users;
 using System;
@@ -19,9 +19,9 @@ namespace EvolutionPlugins.Dummy.Commands
         {
         }
 
-        protected override UniTask ExecuteDummyAsync(PlayerDummy playerDummy)
+        protected override UniTask ExecuteDummyAsync(DummyUser playerDummy)
         {
-            return playerDummy.Data.UnturnedUser.TeleportToPlayerAsync((UnturnedUser)Context.Actor);
+            return playerDummy.TeleportToPlayerAsync((UnturnedUser)Context.Actor);
         }
     }
 }

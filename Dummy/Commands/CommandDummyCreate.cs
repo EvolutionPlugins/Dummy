@@ -29,9 +29,9 @@ namespace EvolutionPlugins.Dummy.Commands
 
             var id = await m_DummyProvider.GetAvailableIdAsync();
             var playerDummy = await m_DummyProvider.AddDummyAsync(id, new HashSet<CSteamID> { user.SteamId });
-            await playerDummy.Data.UnturnedUser.TeleportToPlayerAsync(user);
+            await playerDummy.TeleportToPlayerAsync(user);
 
-            await PrintAsync($"Dummy {playerDummy.Data.UnturnedUser.SteamId} has created");
+            await PrintAsync($"Dummy {playerDummy.Id} has created");
         }
     }
 }

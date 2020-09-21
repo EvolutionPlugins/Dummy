@@ -1,5 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models;
+using EvolutionPlugins.Dummy.Models.Users;
 using SDG.Unturned;
 using System.Threading.Tasks;
 
@@ -14,10 +14,10 @@ namespace EvolutionPlugins.Dummy.Extensions.Movement.Actions
 
         public EPlayerStance Stance { get; }
 
-        public async Task Do(PlayerDummy dummy)
+        public async Task Do(DummyUser dummy)
         {
             await UniTask.SwitchToMainThread();
-            dummy.Data.UnturnedUser.Player.Player.stance.stance = Stance;
+            dummy.Player.Player.stance.stance = Stance;
         }
     }
 }

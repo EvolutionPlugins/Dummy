@@ -1,12 +1,11 @@
 ﻿using Cysharp.Threading.Tasks;
 using EvolutionPlugins.Dummy.API;
 using EvolutionPlugins.Dummy.Extensions.Interaction.Actions;
-using EvolutionPlugins.Dummy.Models;
+using EvolutionPlugins.Dummy.Models.Users;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
 using System;
 using System.Linq;
-using Color = System.Drawing.Color;
 using Command = OpenMod.Core.Commands.Command;
 
 namespace EvolutionPlugins.Dummy.Commands.Actions
@@ -25,17 +24,11 @@ namespace EvolutionPlugins.Dummy.Commands.Actions
             m_CommandExecutor = commandExecutor;
         }
 
-        protected override UniTask ExecuteDummyAsync(PlayerDummy playerDummy)
+        protected override async UniTask ExecuteDummyAsync(DummyUser playerDummy)
         {
-            playerDummy.Actions.Actions.Enqueue(new ExecuteAction(m_CommandExecutor, Context.Parameters.Skip(1).ToArray(), async e =>
-            {
-                await PrintAsync($"Dummy has {(e == null ? "<color=green>successfully" : "<color=red>unsuccessfully")}</color> executed command");
-                if (e != null && !(e is UserFriendlyException))
-                {
-                    await PrintAsync(e.Message, Color.Red);
-                }
-            }));
-            return UniTask.CompletedTask;
+            var wait = false;
+            playerDummy.Actions.Actions.Enqueue(new ExecuteAction(m_CommandExecutor, Context.Parameters.Skip(1).ToArray(), e => wait = true));
+            await UniTask.WaitUntil(() => wait);
         }
     }
 }

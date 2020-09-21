@@ -1,9 +1,9 @@
-﻿using OpenMod.Core.Commands;
+﻿using EvolutionPlugins.Dummy.API;
+using OpenMod.Core.Commands;
 using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using EvolutionPlugins.Dummy.API;
 
 namespace EvolutionPlugins.Dummy.Commands
 {

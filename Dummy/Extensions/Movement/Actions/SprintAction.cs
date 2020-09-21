@@ -1,5 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models;
+using EvolutionPlugins.Dummy.Models.Users;
 using SDG.Unturned;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -8,14 +8,14 @@ namespace EvolutionPlugins.Dummy.Extensions.Movement.Actions
 {
     public class SprintAction : IMovementAction
     {
-        public Task Do(PlayerDummy dummy)
+        public Task Do(DummyUser dummy)
         {
-            var player = dummy.Data.UnturnedUser.Player;
+            var player = dummy.Player.Player;
             async UniTask Sprint()
             {
                 await UniTask.SwitchToMainThread();
-                player.Player.movement.simulate(1, 0, player.Player.movement.horizontal - 1, player.Player.movement.vertical - 1,
-                player.Player.look.look_x, player.Player.look.look_y, false, true, Vector3.zero, PlayerInput.RATE);
+                player.movement.simulate(1, 0, player.movement.horizontal - 1, player.movement.vertical - 1,
+                player.look.look_x, player.look.look_y, false, true, Vector3.zero, PlayerInput.RATE);
             }
             return Sprint().AsTask();
         }

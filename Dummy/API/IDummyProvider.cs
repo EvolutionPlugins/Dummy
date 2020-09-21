@@ -1,4 +1,4 @@
-﻿using EvolutionPlugins.Dummy.Models;
+﻿using EvolutionPlugins.Dummy.Models.Users;
 using EvolutionPlugins.Dummy.Providers;
 using OpenMod.API.Ioc;
 using OpenMod.Unturned.Users;
@@ -11,7 +11,7 @@ namespace EvolutionPlugins.Dummy.API
     [Service]
     public interface IDummyProvider
     {
-        IReadOnlyDictionary<CSteamID, PlayerDummy> Dummies { get; }
+        IReadOnlyCollection<DummyUser> Dummies { get; }
 
         /// <summary>
         /// Spawn a dummy
@@ -20,7 +20,7 @@ namespace EvolutionPlugins.Dummy.API
         /// <param name="owners">Owners get all notification about a dummy</param>
         /// <exception cref="DummyContainsException">Dummy with id already created. Use GetAvailableIdAsync to get available ID</exception>
         /// <exception cref="DummyOverflowsException">Dummies limit reached</exception>
-        Task<PlayerDummy> AddDummyAsync(CSteamID id, HashSet<CSteamID> owners);
+        Task<DummyUser> AddDummyAsync(CSteamID id, HashSet<CSteamID> owners);
         /// <summary>
         /// Spawn a dummy and copy all of the user
         /// </summary>
@@ -28,15 +28,13 @@ namespace EvolutionPlugins.Dummy.API
         /// <param name="owners">Owners get all notification about a dummy</param>
         /// <exception cref="DummyContainsException">Dummy with id already created. Use GetAvailableIdAsync to get available ID</exception>
         /// <exception cref="DummyOverflowsException">Dummies limit reached</exception>
-        Task<PlayerDummy> AddCopiedDummyAsync(CSteamID id, HashSet<CSteamID> owners, UnturnedUser userCopy);
+        Task<DummyUser> AddCopiedDummyAsync(CSteamID id, HashSet<CSteamID> owners, UnturnedUser userCopy);
 
         Task<bool> RemoveDummyAsync(CSteamID id);
 
-        Task ClearDummies();
+        Task ClearDummiesAsync();
 
-        Task<PlayerDummy> GetPlayerDummy(ulong id);
-
-        Task<bool> GetDummyDataAsync(ulong id, out PlayerDummyData playerDummyData);
+        Task<DummyUser> GetPlayerDummyAsync(ulong id);
 
         Task<CSteamID> GetAvailableIdAsync();
     }

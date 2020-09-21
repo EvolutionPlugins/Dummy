@@ -1,7 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using EvolutionPlugins.Dummy.API;
 using EvolutionPlugins.Dummy.Extensions.Interaction.Actions;
-using EvolutionPlugins.Dummy.Models;
+using EvolutionPlugins.Dummy.Models.Users;
 using OpenMod.Core.Commands;
 using System;
 
@@ -17,9 +17,9 @@ namespace EvolutionPlugins.Dummy.Commands.Actions
         {
         }
 
-        protected override UniTask ExecuteDummyAsync(PlayerDummy playerDummy)
+        protected override UniTask ExecuteDummyAsync(DummyUser playerDummy)
         {
-            playerDummy.Actions.Actions.Enqueue(new InputTextAction(Context.Parameters[1], Context.Parameters[2]));
+            playerDummy.Actions.Actions.Enqueue(new InputTextAction(Context.Parameters[1], Context.Parameters.GetArgumentLine(2)));
             return UniTask.CompletedTask;
         }
     }

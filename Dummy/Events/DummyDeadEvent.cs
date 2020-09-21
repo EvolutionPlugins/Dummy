@@ -27,20 +27,23 @@ namespace EvolutionPlugins.Dummy.Events
         [EventListener(Priority = EventListenerPriority.Monitor)]
         public async Task HandleEventAsync(object sender, UnturnedPlayerDeadEvent @event)
         {
-            if (m_DummyProvider.Dummies.ContainsKey(@event.Player.SteamId))
+            var dummy = await m_DummyProvider.GetPlayerDummyAsync(@event.Player.SteamId.m_SteamID);
+            if (dummy == null)
             {
-                foreach (var owner in m_DummyProvider.Dummies[@event.Player.SteamId].Data.Owners)
-                {
-                    var player = await m_UserManager.FindUserAsync(KnownActorTypes.Player, owner.ToString(), UserSearchMode.FindById);
-                    if (player == null)
-                    {
-                        continue;
-                    }
-                    await player.PrintMessageAsync($"Dummy {@event.Player.SteamId} has died. Death reason: {@event.DeathCause.ToString().ToLower()}, killer = {@event.Instigator}. Respawning...");
-                }
-
-                AsyncHelper.Schedule($"Revive dummy {@event.Player.SteamId}", () => Revive(@event.Player).AsTask());
+                return;
             }
+
+            foreach (var owner in dummy.Owners)
+            {
+                var player = await m_UserManager.FindUserAsync(KnownActorTypes.Player, owner.ToString(), UserSearchMode.FindById);
+                if (player == null)
+                {
+                    continue;
+                }
+                await player.PrintMessageAsync($"Dummy {@event.Player.SteamId} has died. Death reason: {@event.DeathCause.ToString().ToLower()}, killer = {@event.Instigator}. Respawning...");
+            }
+
+            AsyncHelper.Schedule($"Revive dummy {@event.Player.SteamId}", () => Revive(@event.Player).AsTask());
         }
 
         private async UniTask Revive(UnturnedPlayer player)

@@ -1,5 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models;
+using EvolutionPlugins.Dummy.Models.Users;
 using SDG.Unturned;
 using System;
 using System.Threading.Tasks;
@@ -19,10 +19,10 @@ namespace EvolutionPlugins.Dummy.Extensions.Interaction.Actions
 
         public byte Index { get; }
 
-        public async Task Do(PlayerDummy dummy)
+        public async Task Do(DummyUser dummy)
         {
             await UniTask.SwitchToMainThread();
-            dummy.Data.UnturnedUser.Player.Player.equipment.channel.send("tellSwapFace", ESteamCall.ALL, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
+            dummy.Player.Player.equipment.channel.send("tellSwapFace", ESteamCall.ALL, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
             {
                 Index
             });

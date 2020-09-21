@@ -20,7 +20,7 @@ namespace EvolutionPlugins.Dummy.Commands
 
         protected override Task OnExecuteAsync()
         {
-            return m_DummyProvider.ClearDummies();
+            return m_DummyProvider.ClearDummiesAsync();
         }
     }
 }

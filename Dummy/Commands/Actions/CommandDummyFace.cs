@@ -1,7 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using EvolutionPlugins.Dummy.API;
 using EvolutionPlugins.Dummy.Extensions.Interaction.Actions;
-using EvolutionPlugins.Dummy.Models;
+using EvolutionPlugins.Dummy.Models.Users;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
 using SDG.Unturned;
@@ -20,7 +20,7 @@ namespace EvolutionPlugins.Dummy.Commands.Actions
         {
         }
 
-        protected override async UniTask ExecuteDummyAsync(PlayerDummy playerDummy)
+        protected override async UniTask ExecuteDummyAsync(DummyUser playerDummy)
         {
             var faceId = await Context.Parameters.GetAsync<byte>(1);
             if (faceId > Customization.FACES_FREE + Customization.FACES_PRO)

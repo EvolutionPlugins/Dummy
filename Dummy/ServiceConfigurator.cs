@@ -2,6 +2,7 @@
 using EvolutionPlugins.Dummy.Providers;
 using Microsoft.Extensions.DependencyInjection;
 using OpenMod.API.Ioc;
+using OpenMod.Core.Users;
 
 namespace EvolutionPlugins.Dummy
 {
@@ -10,6 +11,8 @@ namespace EvolutionPlugins.Dummy
         public void ConfigureServices(IOpenModServiceConfigurationContext openModStartupContext, IServiceCollection serviceCollection)
         {
             serviceCollection.AddSingleton<IDummyProvider, DummyProvider>();
+
+            serviceCollection.Configure<UserManagerOptions>(options => options.AddUserProvider<DummyProvider>());
         }
     }
 }

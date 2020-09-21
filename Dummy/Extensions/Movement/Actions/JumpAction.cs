@@ -1,5 +1,5 @@
 using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models;
+using EvolutionPlugins.Dummy.Models.Users;
 using SDG.Unturned;
 using System.Threading.Tasks;
 
@@ -7,9 +7,9 @@ namespace EvolutionPlugins.Dummy.Extensions.Movement.Actions
 {
     public class JumpAction : IMovementAction
     {
-        public Task Do(PlayerDummy dummy)
+        public Task Do(DummyUser dummy)
         {
-            Player player = dummy.Data.UnturnedUser.Player.Player;
+            Player player = dummy.Player.Player;
             async UniTask Jump()
             {
                 await UniTask.SwitchToMainThread();

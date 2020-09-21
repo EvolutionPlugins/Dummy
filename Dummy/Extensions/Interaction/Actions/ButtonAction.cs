@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models;
+using EvolutionPlugins.Dummy.Models.Users;
 using SDG.Unturned;
+using System;
 using System.Threading.Tasks;
 
 namespace EvolutionPlugins.Dummy.Extensions.Interaction.Actions
@@ -14,10 +15,10 @@ namespace EvolutionPlugins.Dummy.Extensions.Interaction.Actions
 
         public string ButtonName { get; }
 
-        public async Task Do(PlayerDummy dummy)
+        public async Task Do(DummyUser dummy)
         {
             await UniTask.SwitchToMainThread();
-            EffectManager.instance.tellEffectClicked(dummy.SteamID, ButtonName);
+            EffectManager.onEffectButtonClicked(dummy.Player.Player, ButtonName);
         }
     }
 }

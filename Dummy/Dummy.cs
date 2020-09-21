@@ -27,8 +27,7 @@ namespace EvolutionPlugins.Dummy
 
         protected override UniTask OnLoadAsync()
         {
-            Patch_Provider_receiveServer.OnNeedDummyProvider += GiveProvider;
-            Patch_Provider_verifyNextPlayerInQueue.OnNeedDummyProvider += GiveProvider;
+            Patch_PlayerTool.OnNeedDummyProvider += GiveProvider;
 
             m_Logger.LogInformation("Made with <3 by Evolution Plugins");
             m_Logger.LogInformation("https://github.com/evolutionplugins \\ https://github.com/diffoz");
@@ -38,9 +37,7 @@ namespace EvolutionPlugins.Dummy
 
         protected override UniTask OnUnloadAsync()
         {
-            Patch_Provider_receiveServer.OnNeedDummyProvider -= GiveProvider;
-            Patch_Provider_verifyNextPlayerInQueue.OnNeedDummyProvider -= GiveProvider;
-
+            Patch_PlayerTool.OnNeedDummyProvider += GiveProvider;
             return UniTask.CompletedTask;
         }
 

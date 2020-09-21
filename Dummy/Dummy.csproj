@@ -16,8 +16,6 @@
 
     <ItemGroup>
       <Compile Remove="Commands\Actions\CommandDummyJump.cs" />
-      <Compile Remove="Patches\Patch_PlayerInput_askInput.cs" />
-      <Compile Remove="Patches\Patch_PlayerTool_getSteamPlayer.cs" />
     </ItemGroup>
 
     <ItemGroup>
@@ -31,8 +29,6 @@
 
     <ItemGroup>
       <None Include="Commands\Actions\CommandDummyJump.cs" />
-      <None Include="Patches\Patch_PlayerInput_askInput.cs" />
-      <None Include="Patches\Patch_PlayerTool_getSteamPlayer.cs" />
     </ItemGroup>
 
   <ItemGroup>

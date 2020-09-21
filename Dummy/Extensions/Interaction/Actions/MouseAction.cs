@@ -1,5 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models;
+using EvolutionPlugins.Dummy.Models.Users;
 using System.Threading.Tasks;
 
 namespace EvolutionPlugins.Dummy.Extensions.Interaction.Actions
@@ -13,17 +13,17 @@ namespace EvolutionPlugins.Dummy.Extensions.Interaction.Actions
 
         public MouseState State { get; }
 
-        public Task Do(PlayerDummy dummy)
+        public Task Do(DummyUser dummy)
         {
-            var player = dummy.Data.UnturnedUser.Player;
+            var player = dummy.Player.Player;
 
             async UniTask ClickMouse()
             {
                 await UniTask.SwitchToMainThread();
                 if (State == MouseState.Left)
-                    player.Player.equipment.simulate(player.Player.input.simulation, false, true, false);
+                    player.equipment.simulate(player.input.simulation, false, true, false);
                 else
-                    player.Player.equipment.simulate(player.Player.input.simulation, true, false, false);
+                    player.equipment.simulate(player.input.simulation, true, false, false);
             }
             return ClickMouse().AsTask();
         }

@@ -1,8 +1,7 @@
 ﻿using Autofac;
 using Cysharp.Threading.Tasks;
 using EvolutionPlugins.Dummy.API;
-using EvolutionPlugins.Dummy.Models;
-using EvolutionPlugins.Dummy.NetTransport;
+using EvolutionPlugins.Dummy.Models.Users;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
@@ -12,6 +11,7 @@ using OpenMod.API.Prioritization;
 using OpenMod.API.Users;
 using OpenMod.Core.Helpers;
 using OpenMod.Core.Users;
+using OpenMod.UnityEngine.Extensions;
 using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
@@ -25,38 +25,46 @@ using Color = UnityEngine.Color;
 namespace EvolutionPlugins.Dummy.Providers
 {
     [ServiceImplementation(Lifetime = ServiceLifetime.Singleton, Priority = Priority.Lowest)]
-    public class DummyProvider : IDummyProvider, IAsyncDisposable
+    public class DummyProvider : IDummyProvider, IUserProvider, IAsyncDisposable
     {
         private bool m_IsDisposing;
-        private bool m_IsQuitting;
 
+        private readonly HashSet<DummyUser> m_Dummies;
         private readonly IPluginAccessor<Dummy> m_PluginAccessor;
-        private readonly IUserManager m_UserManager;
+        private readonly IUserDataStore m_UserDataStore;
 
-        private readonly Dictionary<CSteamID, PlayerDummy> m_Dummies;
-        public IReadOnlyDictionary<CSteamID, PlayerDummy> Dummies => m_Dummies;
+        private IReadOnlyCollection<IUser> m_Users => m_Dummies.Cast<IUser>().ToList().AsReadOnly();
 
-        public DummyProvider(IPluginAccessor<Dummy> pluginAccessor, IUserManager userManager)
+        public IReadOnlyCollection<DummyUser> Dummies => m_Dummies;
+
+        public DummyProvider(IPluginAccessor<Dummy> pluginAccessor, IUserDataStore userDataStore)
         {
-            m_Dummies = new Dictionary<CSteamID, PlayerDummy>();
+            m_Dummies = new HashSet<DummyUser>();
             m_PluginAccessor = pluginAccessor;
-            m_UserManager = userManager;
+            m_UserDataStore = userDataStore;
 
             Provider.onServerDisconnected += OnServerDisconnected;
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
-            Provider.onCommenceShutdown += Provider_onCommenceShutdown;
+#if DEBUG
+            EffectManager.onEffectButtonClicked += onEffectButtonClicked;
+#endif
 
             AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
         }
-
+#if DEBUG
+        private void onEffectButtonClicked(Player player, string buttonName)
+        {
+            Console.WriteLine(buttonName);
+        }
+#endif
         private async Task DontAutoKickTask()
         {
             while (!m_IsDisposing)
             {
                 foreach (var dummy in Dummies)
                 {
-                    var client = dummy.Value.Data.UnturnedUser.Player.SteamPlayer;
+                    var client = dummy.SteamPlayer;
                     client.timeLastPacketWasReceivedFromClient = Time.realtimeSinceStartup;
                 }
                 await Task.Delay(5000);
@@ -71,7 +79,7 @@ namespace EvolutionPlugins.Dummy.Providers
             }
             await Task.Delay((int)(timer * 1000));
 
-            var user = await GetPlayerDummy(id);
+            var user = await GetPlayerDummyAsync(id);
             if (user == null)
             {
                 return;
@@ -80,11 +88,6 @@ namespace EvolutionPlugins.Dummy.Providers
         }
 
         #region Events
-        protected virtual void Provider_onCommenceShutdown()
-        {
-            m_IsQuitting = true;
-        }
-
         protected virtual void OnServerSendingMessage(ref string text, ref Color color, SteamPlayer fromPlayer,
             SteamPlayer toPlayer, EChatMode mode, ref string iconURL, ref bool useRichTextFormatting)
         {
@@ -93,14 +96,13 @@ namespace EvolutionPlugins.Dummy.Providers
                 return;
             }
 
-            if (!Dummies.ContainsKey(toPlayer.playerID.steamID))
+            var dummy = Dummies.FirstOrDefault(d => d.SteamID == toPlayer.playerID.steamID);
+            if (dummy == null)
             {
                 return;
             }
 
-            var data = Dummies[toPlayer.playerID.steamID];
-
-            foreach (var owner in data.Data.Owners)
+            foreach (var owner in dummy.Owners)
             {
                 var steamPlayerOwner = PlayerTool.getSteamPlayer(owner);
                 if (steamPlayerOwner == null)
@@ -119,7 +121,8 @@ namespace EvolutionPlugins.Dummy.Providers
 
         protected virtual void DamageTool_damagePlayerRequested(ref DamagePlayerParameters parameters, ref bool shouldAllow)
         {
-            if (!Dummies.ContainsKey(parameters.player.channel.owner.playerID.steamID))
+            var steamId = parameters.player.channel.owner.playerID.steamID;
+            if (!Dummies.Any(x => x.SteamID == steamId))
             {
                 return;
             }
@@ -144,7 +147,7 @@ namespace EvolutionPlugins.Dummy.Providers
         private void CheckSpawn(CSteamID id)
         {
             var stringLocalizer = m_PluginAccessor.Instance.LifetimeScope.Resolve<IStringLocalizer>();
-            if (m_Dummies.ContainsKey(id))
+            if (m_Dummies.Any(x => x.SteamID == id))
             {
                 throw new DummyContainsException(stringLocalizer, id.m_SteamID);
             }
@@ -155,71 +158,122 @@ namespace EvolutionPlugins.Dummy.Providers
                 throw new DummyOverflowsException(stringLocalizer, (byte)Dummies.Count, amountDummiesConfig);
             }
         }
-        public async Task<PlayerDummy> AddDummyAsync(CSteamID id, HashSet<CSteamID> owners)
+        public async Task<DummyUser> AddDummyAsync(CSteamID id, HashSet<CSteamID> owners)
         {
             CheckSpawn(id);
 
             await UniTask.SwitchToMainThread();
 
-            Provider.pending.Add(new SteamPending(new NullTransportConnection(),
-                    new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, 0, 0, 0,
-                    Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL,
-                    0UL, 0UL, 0UL, Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
+            var index = Provider.clients.Count - 1;
+            var dummyPlayerID = new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil);
 
-            Provider.accept(new SteamPlayerID(id, 1, "dummy", "dummy", "dummy", CSteamID.Nil), true, false, 0, 0, 0,
-                Color.white, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0,
-                0, Array.Empty<int>(), Array.Empty<string>(), Array.Empty<string>(), EPlayerSkillset.NONE, "english",
-                CSteamID.Nil);
+            string characterName = dummyPlayerID.characterName;
+            const uint uScore = 1;
+            SteamGameServer.BUpdateUserData(id, characterName, uScore);
+
+            Utils.loadPlayerSpawn(dummyPlayerID, out var point, out var angle, out var initialStance);
+            int channel = Utils.allocPlayerChannelId();
+            var dummySteamPlayer = Utils.addPlayer(dummyPlayerID, point, angle, true, false, channel, 0, 0, 0,
+                Color.white, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0, 0, Array.Empty<int>(),
+                Array.Empty<string>(), Array.Empty<string>(), EPlayerSkillset.NONE, "english", CSteamID.Nil);
+
+            PreAddDummy(index, initialStance, dummySteamPlayer);
 
             await UniTask.SwitchToTaskPool();
 
-            var user = (UnturnedUser)await m_UserManager.FindUserAsync(KnownActorTypes.Player, id.ToString(), UserSearchMode.FindById);
-            var playerDummyData = new PlayerDummyData(owners, user);
-            var playerDummy = new PlayerDummy(playerDummyData);
-            AddDummy(playerDummy);
+            var playerDummy = new DummyUser(this, m_UserDataStore, dummySteamPlayer, index++, owners);
+            PostAddDummy(playerDummy);
 
             return playerDummy;
         }
 
-        public async Task<PlayerDummy> AddCopiedDummyAsync(CSteamID id, HashSet<CSteamID> owners, UnturnedUser userCopy)
+        public async Task<DummyUser> AddCopiedDummyAsync(CSteamID id, HashSet<CSteamID> owners, UnturnedUser userCopy)
         {
             CheckSpawn(id);
 
             await UniTask.SwitchToMainThread();
 
-            var steamPlayer = userCopy.Player.SteamPlayer;
+            var index = Provider.clients.Count - 1;
+            var userSteamPlayer = userCopy.Player.SteamPlayer;
+            var dummyPlayerID = new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil);
 
-            Provider.pending.Add(new SteamPending(new NullTransportConnection(), new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
-                true, steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
-                Color.white, steamPlayer.hand, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, Array.Empty<ulong>(),
-                EPlayerSkillset.NONE, "english", CSteamID.Nil));
+            string characterName = dummyPlayerID.characterName;
+            const uint uScore = 1;
+            SteamGameServer.BUpdateUserData(id, characterName, uScore);
 
-            Provider.accept(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, false,
-                steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
-                Color.white, steamPlayer.hand, steamPlayer.shirtItem, steamPlayer.pantsItem, steamPlayer.hatItem,
-                steamPlayer.backpackItem, steamPlayer.vestItem, steamPlayer.maskItem, steamPlayer.glassesItem,
-                steamPlayer.skinItems, steamPlayer.skinTags, steamPlayer.skinDynamicProps, EPlayerSkillset.NONE,
+            Utils.loadPlayerSpawn(dummyPlayerID, out var point, out var angle, out var initialStance);
+            int channel = Utils.allocPlayerChannelId();
+            var dummySteamPlayer = Utils.addPlayer(dummyPlayerID, point, angle, true, false, channel,
+                userSteamPlayer.face, userSteamPlayer.hair, userSteamPlayer.beard, userSteamPlayer.skin, userSteamPlayer.color, Color.white,
+                userSteamPlayer.hand, userSteamPlayer.shirtItem, userSteamPlayer.pantsItem, userSteamPlayer.hatItem,
+                userSteamPlayer.backpackItem, userSteamPlayer.vestItem, userSteamPlayer.maskItem, userSteamPlayer.glassesItem,
+                userSteamPlayer.skinItems, userSteamPlayer.skinTags, userSteamPlayer.skinDynamicProps, EPlayerSkillset.NONE,
                 "english", CSteamID.Nil);
 
+            PreAddDummy(index, initialStance, dummySteamPlayer);
+
             await UniTask.SwitchToTaskPool();
 
-            var user = (UnturnedUser)await m_UserManager.FindUserAsync(KnownActorTypes.Player, id.ToString(), UserSearchMode.FindById);
-            var playerDummyData = new PlayerDummyData(owners, user);
-            var playerDummy = new PlayerDummy(playerDummyData);
-            AddDummy(playerDummy);
+            var playerDummy = new DummyUser(this, m_UserDataStore, dummySteamPlayer, index++, owners);
+            PostAddDummy(playerDummy);
 
             return playerDummy;
         }
 
-        private void AddDummy(PlayerDummy playerDummy)
+        private void PreAddDummy(int index, EPlayerStance stance, SteamPlayer steamPlayer)
+        {
+            var component = steamPlayer.player.GetComponent<PlayerStance>();
+            if (component != null)
+            {
+                component.initialStance = stance;
+            }
+            else
+            {
+                UnturnedLog.warn("Was unable to get PlayerStance for new connection!");
+            }
+
+            // sending to players a dummy connected
+            var packet = Utils.buildConnectionPacket(steamPlayer, null, out var size);
+            foreach (var client in Provider.clients)
+            {
+                Provider.sendToClient(client.transportConnection, ESteamPacket.CONNECTED, packet, size);
+            }
+
+            // todo: add config option
+            //try
+            //{
+            //    Provider.onServerConnected?.Invoke(steamPlayer.playerID.steamID);
+            //}
+            //catch (Exception e)
+            //{
+            //    UnturnedLog.warn("Plugin raised an exception from onServerConnected:");
+            //    UnturnedLog.exception(e);
+            //}
+
+            if (CommandWindow.shouldLogJoinLeave)
+            {
+                CommandWindow.Log(Provider.localization.format("PlayerConnectedText", new object[]
+                {
+                    steamPlayer.playerID.steamID,
+                    steamPlayer.playerID.playerName,
+                    steamPlayer.playerID.characterName
+                }));
+            }
+            if (index == 0)
+            {
+                Utils.verifyNextPlayerInQueue();
+            }
+        }
+
+        private void PostAddDummy(DummyUser playerDummy)
         {
             var kickTimer = m_PluginAccessor.Instance.Configuration.GetSection("options:kickDummyAfterSeconds").Get<uint>();
             if (kickTimer != 0)
             {
-                AsyncHelper.Schedule("Kick a dummy timer", () => KickTimerTask(playerDummy.Data.UnturnedUser.SteamId.m_SteamID, kickTimer));
+                AsyncHelper.Schedule("Kick a dummy timer", () => KickTimerTask(playerDummy.SteamID.m_SteamID, kickTimer));
             }
 
-            m_Dummies.Add(playerDummy.Data.UnturnedUser.SteamId, playerDummy);
+            m_Dummies.Add(playerDummy);
             if (m_PluginAccessor.Instance.Configuration.GetSection("options:isAdmin").Get<bool>())
             {
                 SteamAdminlist.admin(playerDummy.SteamID, CSteamID.Nil);
@@ -227,8 +281,8 @@ namespace EvolutionPlugins.Dummy.Providers
 
             // remove kinematic rigidbody because the dummy is flying
             AsyncHelper.Schedule(
-                $"Remove a rigidbody from a dummy {playerDummy.Data.UnturnedUser.Id}",
-                () => RemoveRigidBody(playerDummy.Player.movement).AsTask());
+                $"Remove a rigidbody from a dummy {playerDummy.Id}",
+                () => RemoveRigidBody(playerDummy.Player.Player.movement).AsTask());
         }
 
         private async UniTask RemoveRigidBody(PlayerMovement movement)
@@ -236,59 +290,143 @@ namespace EvolutionPlugins.Dummy.Providers
             await UniTask.Delay(1500);
             await UniTask.SwitchToMainThread();
             UnityEngine.Object.Destroy(movement.GetComponent<Rigidbody>());
-            movement.controller.Move(Vector3.down);
+            movement.controller.Move(Vector3.down * 2);
         }
 
         public async Task<bool> RemoveDummyAsync(CSteamID id)
         {
-            if (m_Dummies.ContainsKey(id))
+            var playerDummy = await GetPlayerDummyAsync(id.m_SteamID);
+            if (playerDummy == null)
             {
-                await UniTask.SwitchToMainThread();
-
-                m_Dummies[id].Dispose();
-                m_Dummies.Remove(id);
-                if (!m_IsQuitting)
-                    Provider.kick(id, "");
-                return true;
+                return false;
             }
+            await UniTask.SwitchToMainThread();
+            await playerDummy.DisposeAsync();
+            m_Dummies.Remove(playerDummy);
 
-            return false;
+            return true;
         }
 
-        public async Task ClearDummies()
+        public Task ClearDummiesAsync()
         {
-            foreach (var steamID in Dummies.Keys.ToList())
-            {
-                await RemoveDummyAsync(steamID);
-            }
+            return m_Dummies.DisposeAllAsync();
         }
 
         public Task<CSteamID> GetAvailableIdAsync()
         {
             var result = new CSteamID(1);
 
-            while (Dummies.ContainsKey(result))
+            while (Dummies.Any(x => x.SteamID == result))
             {
                 result.m_SteamID++;
             }
             return Task.FromResult(result);
         }
 
-        public Task<PlayerDummy> GetPlayerDummy(ulong id)
+        public Task<DummyUser> GetPlayerDummyAsync(ulong id)
         {
-            return Task.FromResult(Dummies.Values.FirstOrDefault(p => p.Data.UnturnedUser.Id == id.ToString()));
+            return Task.FromResult(Dummies.FirstOrDefault(p => p.SteamID.m_SteamID == id));
         }
 
-        public Task<bool> GetDummyDataAsync(ulong Id, out PlayerDummyData playerDummyData)
+        public bool SupportsUserType(string userType)
         {
-            playerDummyData = null;
-            var result = Task.FromResult(m_Dummies.TryGetValue((CSteamID)Id, out PlayerDummy dummy));
-            if (dummy != null)
+            return userType.Equals(KnownActorTypes.Player, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public Task<IUser> FindUserAsync(string userType, string searchString, UserSearchMode searchMode)
+        {
+            var confidence = 0;
+            var unturnedUser = (IUser)null;
+
+            foreach (var user in m_Dummies)
             {
-                playerDummyData = dummy.Data;
+                switch (searchMode)
+                {
+                    case UserSearchMode.FindByNameOrId:
+                    case UserSearchMode.FindById:
+                        if (user.Id.Equals(searchString, StringComparison.OrdinalIgnoreCase))
+                            return Task.FromResult((IUser)user);
+
+                        if (searchMode == UserSearchMode.FindByNameOrId)
+                            goto case UserSearchMode.FindByName;
+                        break;
+
+                    case UserSearchMode.FindByName:
+                        var currentConfidence = NameConfidence(user.DisplayName, searchString, confidence);
+                        if (currentConfidence > confidence)
+                        {
+                            unturnedUser = user;
+                            confidence = currentConfidence;
+                        }
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(searchMode), searchMode, null);
+                }
             }
 
-            return result;
+            return Task.FromResult(unturnedUser);
+        }
+
+        private int NameConfidence(string userName, string searchName, int currentConfidence = -1)
+        {
+            switch (currentConfidence)
+            {
+                case 2:
+                    if (userName.Equals(searchName, StringComparison.OrdinalIgnoreCase))
+                        return 3;
+                    goto case 1;
+
+                case 1:
+                    if (userName.StartsWith(searchName, StringComparison.OrdinalIgnoreCase))
+                        return 2;
+                    goto case 0;
+
+                case 0:
+                    if (userName.IndexOf(searchName, StringComparison.OrdinalIgnoreCase) != -1)
+                        return 1;
+                    break;
+
+                default:
+                    goto case 2;
+            }
+
+            return -1;
+        }
+
+        public Task<IReadOnlyCollection<IUser>> GetUsersAsync(string userType)
+        {
+            return Task.FromResult(m_Users);
+        }
+
+        public Task BroadcastAsync(string userType, string message, System.Drawing.Color? color = null)
+        {
+            if (!KnownActorTypes.Player.Equals(userType, StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.CompletedTask;
+            }
+
+            return BroadcastAsync(message, color);
+        }
+
+        public Task BroadcastAsync(string message, System.Drawing.Color? color = null)
+        {
+            return BroadcastAsync(message, color, true, null);
+        }
+
+        private Task BroadcastAsync(string message, System.Drawing.Color? color, bool isRich, string iconUrl)
+        {
+            async UniTask BroadcastTask()
+            {
+                await UniTask.SwitchToMainThread();
+
+                if (color == null)
+                    color = System.Drawing.Color.White;
+
+                ChatManager.serverSendMessage(text: message, color: color.Value.ToUnityColor(), useRichTextFormatting: isRich, iconURL: iconUrl);
+            }
+
+            return BroadcastTask().AsTask();
         }
 
         public ValueTask DisposeAsync()
@@ -302,8 +440,7 @@ namespace EvolutionPlugins.Dummy.Providers
             Provider.onServerDisconnected -= OnServerDisconnected;
             ChatManager.onServerSendingMessage -= OnServerSendingMessage;
             DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
-            Provider.onCommenceShutdown -= Provider_onCommenceShutdown;
-            return new ValueTask(ClearDummies());
+            return new ValueTask(ClearDummiesAsync());
         }
     }
 }

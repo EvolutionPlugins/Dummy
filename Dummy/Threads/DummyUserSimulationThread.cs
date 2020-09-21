@@ -1,5 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models;
+using EvolutionPlugins.Dummy.Models.Users;
 using SDG.Unturned;
 using System.Collections.Generic;
 using System.Reflection;
@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace EvolutionPlugins.Dummy.Threads
 {
-    public class PlayerDummySimulationThread
+    public class DummyUserSimulationThread
     {
         private static readonly FieldInfo s_ServerSidePacketsField = typeof(PlayerInput).GetField("serversidePackets",
             BindingFlags.NonPublic | BindingFlags.Instance);
@@ -27,10 +27,10 @@ namespace EvolutionPlugins.Dummy.Threads
         public List<PlayerInputPacket> PlayerInputPackets { get; }
         public bool Enabled { get; set; }
 
-        private readonly PlayerDummy m_PlayerDummy;
-        private Player Player => m_PlayerDummy.Data.UnturnedUser.Player.Player;
+        private readonly DummyUser m_PlayerDummy;
+        private Player Player => m_PlayerDummy.Player.Player;
 
-        public PlayerDummySimulationThread(PlayerDummy playerDummy)
+        public DummyUserSimulationThread(DummyUser playerDummy)
         {
             m_PlayerDummy = playerDummy;
             Analog = 0;
@@ -118,7 +118,7 @@ namespace EvolutionPlugins.Dummy.Threads
                     if (playerInputPacket2 is DrivingPlayerInputPacket)
                     {
                         var drivingPlayerInputPacket = playerInputPacket2 as DrivingPlayerInputPacket;
-                        var vehicle = m_PlayerDummy.Data.UnturnedUser.Player.Player.movement.getVehicle();
+                        var vehicle = Player.movement.getVehicle();
 
                         if (vehicle != null)
                         {
@@ -144,7 +144,7 @@ namespace EvolutionPlugins.Dummy.Threads
                         var walkingPlayerInputPacket = playerInputPacket2 as WalkingPlayerInputPacket;
 
                         walkingPlayerInputPacket.analog = Analog;
-                        walkingPlayerInputPacket.position = m_PlayerDummy.Data.UnturnedUser.Player.Player.transform.localPosition;
+                        walkingPlayerInputPacket.position = Player.transform.localPosition;
                         walkingPlayerInputPacket.yaw = Yaw;
                         walkingPlayerInputPacket.pitch = Pitch;
                     }

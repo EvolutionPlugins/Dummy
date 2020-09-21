@@ -1,7 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using EvolutionPlugins.Dummy.API;
 using EvolutionPlugins.Dummy.Extensions.Movement.Actions;
-using EvolutionPlugins.Dummy.Models;
+using EvolutionPlugins.Dummy.Models.Users;
 using OpenMod.Core.Commands;
 using SDG.Unturned;
 using System;
@@ -18,7 +18,7 @@ namespace EvolutionPlugins.Dummy.Commands.Actions
         {
         }
 
-        protected override async UniTask ExecuteDummyAsync(PlayerDummy playerDummy)
+        protected override async UniTask ExecuteDummyAsync(DummyUser playerDummy)
         {
             var stance = Context.Parameters[1];
             if (!Enum.TryParse<EPlayerStance>(stance.ToUpper(), out var eStance))
