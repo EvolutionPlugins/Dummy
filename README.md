@@ -3,7 +3,7 @@ Dummy is a plugin for Unturned / OpenMod. It spawns a dummy and shows the amount
 
 [NuGet package](https://www.nuget.org/packages/EvolutionPlugins.Dummy/)
 
-![NuGet deployment](https://github.com/EvolutionPlugins/Dummy/workflows/Deployment/badge.svg)
+![Build & Push NuGet](https://github.com/EvolutionPlugins/Dummy/workflows/Build%20&%20Push%20NuGet/badge.svg)
 
 # Commands
 - /dummy create - Creates a dummy with unique ID.
