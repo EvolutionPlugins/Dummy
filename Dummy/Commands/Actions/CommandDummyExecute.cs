@@ -18,18 +18,34 @@ namespace Dummy.Commands.Actions
     public class CommandDummyExecute : CommandDummyAction
     {
         private readonly ICommandExecutor m_CommandExecutor;
+        private readonly IStringLocalizer m_StringLocalizer;
 
         public CommandDummyExecute(IServiceProvider serviceProvider, IDummyProvider dummyProvider,
             ICommandExecutor commandExecutor, IStringLocalizer stringLocalizer) : base(serviceProvider, dummyProvider, stringLocalizer)
         {
             m_CommandExecutor = commandExecutor;
+            m_StringLocalizer = stringLocalizer;
         }
 
         protected override async UniTask ExecuteDummyAsync(DummyUser playerDummy)
         {
             var wait = false;
-            playerDummy.Actions.Actions.Enqueue(new ExecuteAction(m_CommandExecutor, Context.Parameters.Skip(1).ToArray(), e => wait = true));
+            Exception exception = null;
+            var command = Context.Parameters.Skip(1);
+            playerDummy.Actions.Actions.Enqueue(new ExecuteAction(m_CommandExecutor, command.ToArray(), e =>
+            {
+                exception = e;
+                wait = true;
+            }));
             await UniTask.WaitUntil(() => wait);
+            if (exception != null)
+            {
+                await PrintAsync(m_StringLocalizer["commands:actions:execute:fail", new { playerDummy.Id, command }]);
+            }
+            else
+            {
+                await PrintAsync(m_StringLocalizer["commands:actions:execute:success", new { playerDummy.Id, command }]);
+            }
         }
     }
 }

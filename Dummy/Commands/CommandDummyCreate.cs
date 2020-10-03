@@ -1,5 +1,6 @@
 ﻿using Dummy.API;
 using Dummy.Extensions;
+using Microsoft.Extensions.Localization;
 using OpenMod.Core.Commands;
 using OpenMod.Unturned.Users;
 using Steamworks;
@@ -17,10 +18,12 @@ namespace Dummy.Commands
     public class CommandDummyCreate : Command
     {
         private readonly IDummyProvider m_DummyProvider;
+        private readonly IStringLocalizer m_StringLocalizer;
 
-        public CommandDummyCreate(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider)
+        public CommandDummyCreate(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IStringLocalizer stringLocalizer) : base(serviceProvider)
         {
             m_DummyProvider = dummyProvider;
+            m_StringLocalizer = stringLocalizer;
         }
 
         protected override async Task OnExecuteAsync()
@@ -31,7 +34,7 @@ namespace Dummy.Commands
             var playerDummy = await m_DummyProvider.AddDummyAsync(id, new HashSet<CSteamID> { user.SteamId });
             await playerDummy.TeleportToPlayerAsync(user);
 
-            await PrintAsync($"Dummy {playerDummy.Id} has created");
+            await PrintAsync(m_StringLocalizer["commands:general:create", new { Id = id }]);
         }
     }
 }

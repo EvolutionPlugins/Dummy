@@ -6,8 +6,6 @@ using Command = OpenMod.Core.Commands.Command;
 namespace Dummy.Commands
 {
     [Command("dummy")]
-    [CommandDescription("---")]
-    [CommandSyntax("<create|remove|clear|tphere|execute|gesture|stance|face>")]
     public class CommandDummy : Command
     {
         public CommandDummy(IServiceProvider serviceProvider) : base(serviceProvider)

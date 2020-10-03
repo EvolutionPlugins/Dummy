@@ -1,27 +1,29 @@
 ﻿commands:
-  dummyNotFound: "Dummy with id: {Id} not found"
+  dummyNotFound: "Dummy with id ({Id}) not found"
   actions:
     button:
-      success: "Dummy click to {ButtonName} button"
+      success: "Dummy {Id} clicked to {ButtonName} button"
     execute:
-      success: "Dummy <color=green>successfully</color> executed a command: {Command}"
-      fail: "Dummy <color=red>failed</color> executed a command: {Command}"
+      success: "Dummy {Id} <color=green>successfully</color> executed a command: {Command}"
+      fail: "Dummy {Id} <color=red>failed</color> executed a command: {Command}"
     face:
-      success: "Dummy change a face {FaceIndex}"
+      success: "Dummy {Id} changed a face {FaceIndex}"
     gesture:
-      success: "Dummy gestures a {EGesture}"
+      success: "Dummy {Id} gestures a {EGesture}"
     inputText:
-      success: "Dummy enter a text {Text} to inputfield {InputFieldName}"
+      success: "Dummy {Id} entered a text {Text} to input field {InputFieldName}"
     stance:
-      success: "Dummy stances a {EStance}"
+      success: "Dummy {Id} stances a {EStance}"
   general:
-    clear: "Dummies has been cleared"
+    clear: "Dummies have been cleared"
     create: "Dummy {Id} has been created"
     copy: "Dummy {Id} has been created"
     remove: 
       success: "Dummy {Id} has been removed"
       fail: "Dummy {Id} has not been removed"
-    tphere: "Dummy {Id} teleported to you"
+    tphere:
+      success: "Dummy {Id} teleported to you"
+      fail: "Dummy {Id} not teleported to you"
 
 events:
   dead: "Dummy {Id} has been died. Reason: {Reason}, killer = {Killer}. Respawning..."

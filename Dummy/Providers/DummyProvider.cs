@@ -53,12 +53,16 @@ namespace Dummy.Providers
 
             AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
         }
+
 #if DEBUG
+
         private void onEffectButtonClicked(Player player, string buttonName)
         {
             Console.WriteLine(buttonName);
         }
+
 #endif
+
         private async Task DontAutoKickTask()
         {
             while (!m_IsDisposing)
@@ -89,6 +93,7 @@ namespace Dummy.Providers
         }
 
         #region Events
+
         protected virtual void OnServerSendingMessage(ref string text, ref Color color, SteamPlayer fromPlayer,
             SteamPlayer toPlayer, EChatMode mode, ref string iconURL, ref bool useRichTextFormatting)
         {
@@ -151,7 +156,9 @@ namespace Dummy.Providers
             }
             ChatManager.say(killerId, stringLocalizer["events:damaged", new { DamageAmount = totalDamage, Id = steamId }], Color.green, true);
         }
-        #endregion
+
+        #endregion Events
+
         private void CheckSpawn(CSteamID id)
         {
             var stringLocalizer = m_PluginAccessor.Instance.LifetimeScope.Resolve<IStringLocalizer>();
@@ -166,6 +173,7 @@ namespace Dummy.Providers
                 throw new DummyOverflowsException(stringLocalizer, (byte)Dummies.Count, amountDummiesConfig);
             }
         }
+
         public async Task<DummyUser> AddDummyAsync(CSteamID id, HashSet<CSteamID> owners)
         {
             CheckSpawn(id);
@@ -278,7 +286,6 @@ namespace Dummy.Providers
             }
 
             m_Dummies.Add(playerDummy);
-
         }
 
         private async UniTask RemoveRigidBody(PlayerMovement movement)

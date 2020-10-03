@@ -13,14 +13,19 @@ namespace Dummy.Commands.Actions
     [CommandParent(typeof(CommandDummy))]
     public class CommandDummyButton : CommandDummyAction
     {
-        public CommandDummyButton(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IStringLocalizer stringLocalizer) : base(serviceProvider, dummyProvider, stringLocalizer)
+        private readonly IStringLocalizer m_StringLocalizer;
+
+        public CommandDummyButton(IServiceProvider serviceProvider, IDummyProvider dummyProvider,
+            IStringLocalizer stringLocalizer) : base(serviceProvider, dummyProvider, stringLocalizer)
         {
+            m_StringLocalizer = stringLocalizer;
         }
 
         protected override UniTask ExecuteDummyAsync(DummyUser playerDummy)
         {
-            playerDummy.Actions.Actions.Enqueue(new ButtonAction(Context.Parameters.GetArgumentLine(1)));
-            return UniTask.CompletedTask;
+            var buttonName = Context.Parameters[1];
+            playerDummy.Actions.Actions.Enqueue(new ButtonAction(buttonName));
+            return PrintAsync(m_StringLocalizer["commands:actions:button:success", new { ButtonName = buttonName }]).AsUniTask();
         }
     }
 }

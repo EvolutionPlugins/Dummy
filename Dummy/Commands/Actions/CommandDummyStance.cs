@@ -15,8 +15,12 @@ namespace Dummy.Commands.Actions
     [CommandParent(typeof(CommandDummy))]
     public class CommandDummyStance : CommandDummyAction
     {
-        public CommandDummyStance(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IStringLocalizer stringLocalizer) : base(serviceProvider, dummyProvider, stringLocalizer)
+        private readonly IStringLocalizer m_StringLocalizer;
+
+        public CommandDummyStance(IServiceProvider serviceProvider, IDummyProvider dummyProvider,
+            IStringLocalizer stringLocalizer) : base(serviceProvider, dummyProvider, stringLocalizer)
         {
+            m_StringLocalizer = stringLocalizer;
         }
 
         protected override async UniTask ExecuteDummyAsync(DummyUser playerDummy)
@@ -25,10 +29,11 @@ namespace Dummy.Commands.Actions
             if (!Enum.TryParse<EPlayerStance>(stance.ToUpper(), out var eStance))
             {
                 await PrintAsync($"Unable to find a stance: {stance}");
-                await PrintAsync($"All stances: {string.Join(",", Enum.GetNames(typeof(EPlayerStance)))}");
+                await PrintAsync($"All stances: {string.Join(", ", Enum.GetNames(typeof(EPlayerStance)))}");
                 return;
             }
             playerDummy.Actions.Actions.Enqueue(new StanceAction(eStance));
+            await PrintAsync(m_StringLocalizer["commands:actions:stance:success", new { playerDummy.Id, EStance = eStance }]);
         }
     }
 }

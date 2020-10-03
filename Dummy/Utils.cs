@@ -10,6 +10,7 @@ namespace Dummy
     public static class Utils
     {
         #region SDG.Unturned methods
+
         public static void verifyNextPlayerInQueue()
         {
             var dynMethod = typeof(Provider).GetMethod("verifyNextPlayerInQueue", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
@@ -74,6 +75,7 @@ namespace Dummy
             //}
             return steamPlayer;
         }
+
         // todo: Nelson deleted this method??
         public static int allocPlayerChannelId()
         {
@@ -92,6 +94,7 @@ namespace Dummy
             size = (int)parametres[2];
             return packet;
         }
-        #endregion
+
+        #endregion SDG.Unturned methods
     }
 }

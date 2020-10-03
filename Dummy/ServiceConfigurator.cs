@@ -15,7 +15,10 @@ namespace Dummy
             serviceCollection.AddSingleton<IDummyProvider, DummyProvider>();
 
             serviceCollection.Configure<UserManagerOptions>(options => options.AddUserProvider<DummyProvider>());
-            serviceCollection.Configure<PermissionCheckerOptions>(options => options.AddPermissionCheckProvider<DummyPermissionCheckProvider>());
+            serviceCollection.Configure<PermissionCheckerOptions>(options =>
+            {
+                options.AddPermissionCheckProvider<DummyPermissionCheckProvider>();
+            });
         }
     }
 }

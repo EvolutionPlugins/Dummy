@@ -7,7 +7,8 @@ using OpenMod.Unturned.Plugins;
 using System;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
-[assembly: PluginMetadata("Dummy", Author = "DiFFoZ", DisplayName = "Dummy", Website = "https://github.com/EvolutionPlugins/Dummy")]
+[assembly: PluginMetadata("Dummy", Author = "DiFFoZ", DisplayName = "Dummy",
+    Website = "https://github.com/EvolutionPlugins/Dummy")]
 
 namespace Dummy
 {

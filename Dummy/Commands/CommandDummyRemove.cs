@@ -1,4 +1,5 @@
 ﻿using Dummy.API;
+using Microsoft.Extensions.Localization;
 using OpenMod.Core.Commands;
 using Steamworks;
 using System;
@@ -15,10 +16,12 @@ namespace Dummy.Commands
     public class CommandDummyRemove : Command
     {
         private readonly IDummyProvider m_DummyProvider;
+        private readonly IStringLocalizer m_StringLocalizer;
 
-        public CommandDummyRemove(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider)
+        public CommandDummyRemove(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IStringLocalizer stringLocalizer) : base(serviceProvider)
         {
             m_DummyProvider = dummyProvider;
+            m_StringLocalizer = stringLocalizer;
         }
 
         protected override async Task OnExecuteAsync()
@@ -29,9 +32,14 @@ namespace Dummy.Commands
             }
             var id = (CSteamID)await Context.Parameters.GetAsync<ulong>(0);
 
-            var deleted = await m_DummyProvider.RemoveDummyAsync(id);
-
-            await PrintAsync($"Dummy {(deleted ? "is" : "not")} kicked");
+            if (await m_DummyProvider.RemoveDummyAsync(id))
+            {
+                await PrintAsync(m_StringLocalizer["commands:general:remove:success", new { Id = id }]);
+            }
+            else
+            {
+                await PrintAsync(m_StringLocalizer["commands:general:remove:fail", new { Id = id }]);
+            }
         }
     }
 }

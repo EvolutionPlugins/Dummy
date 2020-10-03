@@ -1,4 +1,5 @@
 ﻿using Dummy.API;
+using Microsoft.Extensions.Localization;
 using OpenMod.Core.Commands;
 using System;
 using System.Threading.Tasks;
@@ -12,15 +13,19 @@ namespace Dummy.Commands
     public class CommandDummyClear : Command
     {
         private readonly IDummyProvider m_DummyProvider;
+        private readonly IStringLocalizer m_StringLocalizer;
 
-        public CommandDummyClear(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider)
+        public CommandDummyClear(IServiceProvider serviceProvider, IDummyProvider dummyProvider,
+            IStringLocalizer stringLocalizer) : base(serviceProvider)
         {
             m_DummyProvider = dummyProvider;
+            m_StringLocalizer = stringLocalizer;
         }
 
-        protected override Task OnExecuteAsync()
+        protected override async Task OnExecuteAsync()
         {
-            return m_DummyProvider.ClearDummiesAsync();
+            await m_DummyProvider.ClearDummiesAsync();
+            await PrintAsync(m_StringLocalizer["commands:general:clear"]);
         }
     }
 }

@@ -21,6 +21,7 @@ namespace Dummy.API
         /// <exception cref="DummyContainsException">Dummy with id already created. Use GetAvailableIdAsync to get available ID</exception>
         /// <exception cref="DummyOverflowsException">Dummies limit reached</exception>
         Task<DummyUser> AddDummyAsync(CSteamID id, HashSet<CSteamID> owners);
+
         /// <summary>
         /// Spawn a dummy and copy all of the user
         /// </summary>
