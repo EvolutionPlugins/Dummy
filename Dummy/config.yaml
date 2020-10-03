@@ -1,4 +1,5 @@
 ﻿options:
   amountDummies: 1
   kickDummyAfterSeconds: 600 # 0 - to disable timer kick
-  isAdmin: false
+  isAdmin: false # On spawning a dummy will be a admin
+  canExecuteCommands: true # Enabling this a dummy can execute a commands without admin or permission.

@@ -19,15 +19,15 @@
     create: "Dummy {Id} has been created"
     copy: "Dummy {Id} has been created"
     remove: 
-      success:"Dummy {Id} has been removed"
+      success: "Dummy {Id} has been removed"
       fail: "Dummy {Id} has not been removed"
     tphere: "Dummy {Id} teleported to you"
 
 events:
-  dead: "Dummy has been died. Reason: {Reason}, killer = {Killer}. Respawning..."
-  revived: "Dummy has been revived"
-  damaged: "Dummy has been damaged {DamageAmount}"
-  chatted: "Dummy got message: {Text}"
+  dead: "Dummy {Id} has been died. Reason: {Reason}, killer = {Killer}. Respawning..."
+  revived: "Dummy {Id} has been revived"
+  damaged: "Dummy {Id} has been damaged {DamageAmount}"
+  chatted: "Dummy {Id} got message: {Text}"
 
 exceptions:
   contains: "Dummy with id: {Id} already created"

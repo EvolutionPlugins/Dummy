@@ -1,12 +1,13 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.API;
-using EvolutionPlugins.Dummy.Extensions;
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.API;
+using Dummy.Extensions;
+using Dummy.Users;
+using Microsoft.Extensions.Localization;
 using OpenMod.Core.Commands;
 using OpenMod.Unturned.Users;
 using System;
 
-namespace EvolutionPlugins.Dummy.Commands
+namespace Dummy.Commands
 {
     [Command("tphere")]
     [CommandDescription("Teleport to you a dummy")]
@@ -15,7 +16,7 @@ namespace EvolutionPlugins.Dummy.Commands
     [CommandParent(typeof(CommandDummy))]
     public class CommandDummyTphere : CommandDummyAction
     {
-        public CommandDummyTphere(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider, dummyProvider)
+        public CommandDummyTphere(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IStringLocalizer stringLocalizer) : base(serviceProvider, dummyProvider, stringLocalizer)
         {
         }
 

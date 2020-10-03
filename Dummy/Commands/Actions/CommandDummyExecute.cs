@@ -1,14 +1,15 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.API;
-using EvolutionPlugins.Dummy.Extensions.Interaction.Actions;
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.API;
+using Dummy.Extensions.Interaction.Actions;
+using Dummy.Users;
+using Microsoft.Extensions.Localization;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
 using System;
 using System.Linq;
 using Command = OpenMod.Core.Commands.Command;
 
-namespace EvolutionPlugins.Dummy.Commands.Actions
+namespace Dummy.Commands.Actions
 {
     [Command("execute")]
     [CommandDescription("Execute a command by Dummy")]
@@ -19,7 +20,7 @@ namespace EvolutionPlugins.Dummy.Commands.Actions
         private readonly ICommandExecutor m_CommandExecutor;
 
         public CommandDummyExecute(IServiceProvider serviceProvider, IDummyProvider dummyProvider,
-            ICommandExecutor commandExecutor) : base(serviceProvider, dummyProvider)
+            ICommandExecutor commandExecutor, IStringLocalizer stringLocalizer) : base(serviceProvider, dummyProvider, stringLocalizer)
         {
             m_CommandExecutor = commandExecutor;
         }

@@ -1,9 +1,9 @@
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.Users;
 using SDG.Unturned;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace EvolutionPlugins.Dummy.Extensions.Movement.Actions
+namespace Dummy.Extensions.Movement.Actions
 {
     public class StrafeAction : IMovementAction
     {

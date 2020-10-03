@@ -1,10 +1,10 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.Users;
 using SDG.Unturned;
 using System;
 using System.Threading.Tasks;
 
-namespace EvolutionPlugins.Dummy.Extensions.Interaction.Actions
+namespace Dummy.Extensions.Interaction.Actions
 {
     public class FaceAction : IInteractionAction
     {

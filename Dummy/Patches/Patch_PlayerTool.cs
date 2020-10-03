@@ -4,7 +4,7 @@ using Steamworks;
 using System;
 using System.Linq;
 
-namespace EvolutionPlugins.Dummy.Patches
+namespace Dummy.Patches
 {
     [HarmonyPatch(typeof(PlayerTool))]
     public static class Patch_PlayerTool
@@ -35,5 +35,6 @@ namespace EvolutionPlugins.Dummy.Patches
                 __result = dummy.SteamPlayer;
             }
         }
+        // todo: add patch to get by name
     }
 }

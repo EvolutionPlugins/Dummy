@@ -1,9 +1,9 @@
 // ReSharper disable CheckNamespace
 
 using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models.Players;
-using EvolutionPlugins.Dummy.Providers;
-using EvolutionPlugins.Dummy.Threads;
+using Dummy.Players;
+using Dummy.Providers;
+using Dummy.Threads;
 using OpenMod.API.Users;
 using OpenMod.Core.Helpers;
 using OpenMod.Core.Users;
@@ -16,7 +16,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
 
-namespace EvolutionPlugins.Dummy.Models.Users
+namespace Dummy.Users
 {
     public class DummyUser : UserBase, IAsyncDisposable, IEquatable<DummyUser>, IPlayerUser<DummyPlayer>
     {

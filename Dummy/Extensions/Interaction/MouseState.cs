@@ -1,4 +1,4 @@
-﻿namespace EvolutionPlugins.Dummy.Extensions.Interaction
+﻿namespace Dummy.Extensions.Interaction
 {
     public enum MouseState
     {

@@ -3,7 +3,7 @@ using System;
 using System.Threading.Tasks;
 using Command = OpenMod.Core.Commands.Command;
 
-namespace EvolutionPlugins.Dummy.Commands
+namespace Dummy.Commands
 {
     [Command("dummy")]
     [CommandDescription("---")]

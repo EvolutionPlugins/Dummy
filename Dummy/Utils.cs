@@ -1,11 +1,11 @@
-﻿using EvolutionPlugins.Dummy.NetTransport;
+﻿using Dummy.NetTransports;
 using SDG.Unturned;
 using Steamworks;
 using System;
 using System.Reflection;
 using UnityEngine;
 
-namespace EvolutionPlugins.Dummy
+namespace Dummy
 {
     public static class Utils
     {

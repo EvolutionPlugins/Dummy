@@ -1,12 +1,12 @@
-﻿using EvolutionPlugins.Dummy.Models.Users;
-using EvolutionPlugins.Dummy.Providers;
+﻿using Dummy.Providers;
+using Dummy.Users;
 using OpenMod.API.Ioc;
 using OpenMod.Unturned.Users;
 using Steamworks;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace EvolutionPlugins.Dummy.API
+namespace Dummy.API
 {
     [Service]
     public interface IDummyProvider

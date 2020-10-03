@@ -1,7 +1,7 @@
-﻿using EvolutionPlugins.Dummy.Extensions.Interaction.Actions;
-using EvolutionPlugins.Dummy.Models.Users;
+﻿using Dummy.Extensions.Interaction.Actions;
+using Dummy.Users;
 
-namespace EvolutionPlugins.Dummy.Extensions.Interaction
+namespace Dummy.Extensions.Interaction
 {
     public static class SwapingFace
     {

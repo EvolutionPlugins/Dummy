@@ -1,9 +1,9 @@
-﻿using EvolutionPlugins.Dummy.Models.Users;
+﻿using Dummy.Users;
 using OpenMod.API.Commands;
 using System;
 using System.Threading.Tasks;
 
-namespace EvolutionPlugins.Dummy.Extensions.Interaction.Actions
+namespace Dummy.Extensions.Interaction.Actions
 {
     public class ExecuteAction : IInteractionAction
     {

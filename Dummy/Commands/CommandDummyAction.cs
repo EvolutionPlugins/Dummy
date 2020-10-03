@@ -1,20 +1,23 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.API;
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.API;
+using Dummy.Users;
+using Microsoft.Extensions.Localization;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
 using System;
 using System.Threading.Tasks;
 
-namespace EvolutionPlugins.Dummy.Commands
+namespace Dummy.Commands
 {
     public abstract class CommandDummyAction : Command
     {
         private readonly IDummyProvider m_DummyProvider;
+        private readonly IStringLocalizer m_StringLocalizer;
 
-        protected CommandDummyAction(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider)
+        protected CommandDummyAction(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IStringLocalizer stringLocalizer) : base(serviceProvider)
         {
             m_DummyProvider = dummyProvider;
+            m_StringLocalizer = stringLocalizer;
         }
 
         protected override async Task OnExecuteAsync()
@@ -28,7 +31,7 @@ namespace EvolutionPlugins.Dummy.Commands
             var dummy = await m_DummyProvider.GetPlayerDummyAsync(id);
             if (dummy == null)
             {
-                throw new UserFriendlyException($"Dummy \"{id}\" has not found!");
+                throw new UserFriendlyException(m_StringLocalizer["commands:dummyNotFound", new { Id = id }]);
             }
 
             await ExecuteDummyAsync(dummy);

@@ -1,4 +1,4 @@
-namespace EvolutionPlugins.Dummy.Extensions.Movement
+namespace Dummy.Extensions.Movement
 {
     public enum StrafeDirection
     {

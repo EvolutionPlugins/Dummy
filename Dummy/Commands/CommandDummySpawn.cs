@@ -1,11 +1,11 @@
-﻿using EvolutionPlugins.Dummy.API;
+﻿using Dummy.API;
 using OpenMod.Core.Commands;
 using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace EvolutionPlugins.Dummy.Commands
+namespace Dummy.Commands
 {
     [Command("spawn")]
     [CommandParent(typeof(CommandDummy))]

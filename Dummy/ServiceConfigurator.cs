@@ -1,10 +1,12 @@
-﻿using EvolutionPlugins.Dummy.API;
-using EvolutionPlugins.Dummy.Providers;
+﻿using Dummy.API;
+using Dummy.Permissions;
+using Dummy.Providers;
 using Microsoft.Extensions.DependencyInjection;
 using OpenMod.API.Ioc;
+using OpenMod.Core.Permissions;
 using OpenMod.Core.Users;
 
-namespace EvolutionPlugins.Dummy
+namespace Dummy
 {
     public class ServiceConfigurator : IServiceConfigurator
     {
@@ -13,6 +15,7 @@ namespace EvolutionPlugins.Dummy
             serviceCollection.AddSingleton<IDummyProvider, DummyProvider>();
 
             serviceCollection.Configure<UserManagerOptions>(options => options.AddUserProvider<DummyProvider>());
+            serviceCollection.Configure<PermissionCheckerOptions>(options => options.AddPermissionCheckProvider<DummyPermissionCheckProvider>());
         }
     }
 }

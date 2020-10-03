@@ -1,7 +1,7 @@
 ﻿using Autofac;
 using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.API;
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.API;
+using Dummy.Users;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using Color = UnityEngine.Color;
 
-namespace EvolutionPlugins.Dummy.Providers
+namespace Dummy.Providers
 {
     [ServiceImplementation(Lifetime = ServiceLifetime.Singleton, Priority = Priority.Lowest)]
     public class DummyProvider : IDummyProvider, IUserProvider, IAsyncDisposable
@@ -32,6 +32,7 @@ namespace EvolutionPlugins.Dummy.Providers
         private readonly HashSet<DummyUser> m_Dummies;
         private readonly IPluginAccessor<Dummy> m_PluginAccessor;
         private readonly IUserDataStore m_UserDataStore;
+        private IStringLocalizer stringLocalizer;
 
         private IReadOnlyCollection<IUser> m_Users => m_Dummies.Cast<IUser>().ToList().AsReadOnly();
 
@@ -109,7 +110,11 @@ namespace EvolutionPlugins.Dummy.Providers
                 {
                     continue;
                 }
-                ChatManager.serverSendMessage($"Dummy {toPlayer.playerID.steamID} got message: {text}", color,
+                if (stringLocalizer == null)
+                {
+                    stringLocalizer = m_PluginAccessor.Instance.LifetimeScope.Resolve<IStringLocalizer>();
+                }
+                ChatManager.serverSendMessage(stringLocalizer["events:chatted", new { Text = text, dummy.Id }], color,
                     toPlayer: steamPlayerOwner, iconURL: iconURL, useRichTextFormatting: true);
             }
         }
@@ -140,8 +145,11 @@ namespace EvolutionPlugins.Dummy.Providers
             var totalDamage = (byte)Mathf.Min(255, parameters.damage * totalTimes);
 
             var killerId = parameters.killer;
-
-            ChatManager.say(killerId, $"Amount damage to dummy: {totalDamage}", Color.green, true);
+            if (stringLocalizer == null)
+            {
+                stringLocalizer = m_PluginAccessor.Instance.LifetimeScope.Resolve<IStringLocalizer>();
+            }
+            ChatManager.say(killerId, stringLocalizer["events:damaged", new { DamageAmount = totalDamage, Id = steamId }], Color.green, true);
         }
         #endregion
         private void CheckSpawn(CSteamID id)
@@ -222,7 +230,7 @@ namespace EvolutionPlugins.Dummy.Providers
 
         private void PreAddDummy(int index, EPlayerStance stance, SteamPlayer steamPlayer)
         {
-            var component = steamPlayer.player.GetComponent<PlayerStance>();
+            var component = steamPlayer.player.stance;
             if (component != null)
             {
                 component.initialStance = stance;
@@ -231,7 +239,7 @@ namespace EvolutionPlugins.Dummy.Providers
             {
                 UnturnedLog.warn("Was unable to get PlayerStance for new connection!");
             }
-
+            steamPlayer.isAdmin = m_PluginAccessor.Instance.Configuration.GetSection("options:isAdmin").Get<bool>();
             // sending to players a dummy connected
             var packet = Utils.buildConnectionPacket(steamPlayer, null, out var size);
             foreach (var client in Provider.clients)
@@ -274,15 +282,7 @@ namespace EvolutionPlugins.Dummy.Providers
             }
 
             m_Dummies.Add(playerDummy);
-            if (m_PluginAccessor.Instance.Configuration.GetSection("options:isAdmin").Get<bool>())
-            {
-                SteamAdminlist.admin(playerDummy.SteamID, CSteamID.Nil);
-            }
 
-            // remove kinematic rigidbody because the dummy is flying
-            AsyncHelper.Schedule(
-                $"Remove a rigidbody from a dummy {playerDummy.Id}",
-                () => RemoveRigidBody(playerDummy.Player.Player.movement).AsTask());
         }
 
         private async UniTask RemoveRigidBody(PlayerMovement movement)

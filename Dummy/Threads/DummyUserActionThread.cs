@@ -1,11 +1,11 @@
-using EvolutionPlugins.Dummy.API;
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.API;
+using Dummy.Users;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace EvolutionPlugins.Dummy.Threads
+namespace Dummy.Threads
 {
     public class DummyUserActionThread
     {

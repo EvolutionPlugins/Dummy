@@ -1,5 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.Users;
 using OpenMod.Extensions.Games.Abstractions.Entities;
 using OpenMod.Extensions.Games.Abstractions.Items;
 using OpenMod.Extensions.Games.Abstractions.Players;
@@ -18,7 +18,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using IHasInventory = OpenMod.Extensions.Games.Abstractions.Entities.IHasInventory;
 
-namespace EvolutionPlugins.Dummy.Models.Players
+namespace Dummy.Players
 {
     public class DummyPlayer : IEquatable<DummyUser>, IPlayer, IHasHealth, IHasInventory, ICanEnterVehicle, IDamageSource
     {

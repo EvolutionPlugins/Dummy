@@ -1,12 +1,12 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.API;
+using Dummy.API;
 using OpenMod.API.Eventing;
 using OpenMod.Core.Eventing;
 using OpenMod.Unturned.Users.Events;
 using SDG.Unturned;
 using System.Threading.Tasks;
 
-namespace EvolutionPlugins.Dummy.Events
+namespace Dummy.Events
 {
     public class PlayerJoinedEvent : IEventListener<UnturnedUserConnectedEvent>
     {

@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace EvolutionPlugins.Dummy.Models.Users
+namespace Dummy.Users
 {
     public class DummyUserSession : UserSessionBase
     {

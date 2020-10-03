@@ -1,6 +1,6 @@
 ﻿using SDG.NetTransport;
 
-namespace EvolutionPlugins.Dummy.NetTransport
+namespace Dummy.NetTransports
 {
     internal class NullTransportConnection : ITransportConnection
     {

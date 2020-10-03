@@ -1,5 +1,5 @@
-﻿using EvolutionPlugins.Dummy.API;
-using EvolutionPlugins.Dummy.Extensions;
+﻿using Dummy.API;
+using Dummy.Extensions;
 using OpenMod.Core.Commands;
 using OpenMod.Unturned.Users;
 using Steamworks;
@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Command = OpenMod.Core.Commands.Command;
 
-namespace EvolutionPlugins.Dummy.Commands
+namespace Dummy.Commands
 {
     [Command("create")]
     [CommandDescription("Creates a dummy")]

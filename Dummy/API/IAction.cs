@@ -1,7 +1,7 @@
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.Users;
 using System.Threading.Tasks;
 
-namespace EvolutionPlugins.Dummy.API
+namespace Dummy.API
 {
     public interface IAction
     {

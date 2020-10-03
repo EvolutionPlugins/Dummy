@@ -1,13 +1,14 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.API;
-using EvolutionPlugins.Dummy.Extensions.Interaction.Actions;
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.API;
+using Dummy.Extensions.Interaction.Actions;
+using Dummy.Users;
+using Microsoft.Extensions.Localization;
 using OpenMod.Core.Commands;
 using SDG.Unturned;
 using System;
 using Command = OpenMod.Core.Commands.Command;
 
-namespace EvolutionPlugins.Dummy.Commands.Actions
+namespace Dummy.Commands.Actions
 {
     [Command("gesture")]
     [CommandDescription("Make a dummy gesture")]
@@ -15,7 +16,7 @@ namespace EvolutionPlugins.Dummy.Commands.Actions
     [CommandSyntax("<id> <gesture>")]
     public class CommandDummyGesture : CommandDummyAction
     {
-        public CommandDummyGesture(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider, dummyProvider)
+        public CommandDummyGesture(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IStringLocalizer stringLocalizer) : base(serviceProvider, dummyProvider, stringLocalizer)
         {
         }
 

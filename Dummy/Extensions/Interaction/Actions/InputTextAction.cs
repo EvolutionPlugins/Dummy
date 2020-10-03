@@ -1,9 +1,9 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.Users;
 using SDG.Unturned;
 using System.Threading.Tasks;
 
-namespace EvolutionPlugins.Dummy.Extensions.Interaction.Actions
+namespace Dummy.Extensions.Interaction.Actions
 {
     public class InputTextAction : IInteractionAction
     {
@@ -16,10 +16,14 @@ namespace EvolutionPlugins.Dummy.Extensions.Interaction.Actions
         public string InputtedText { get; }
         public string InputFieldName { get; }
 
-        public async Task Do(DummyUser dummy)
+        public Task Do(DummyUser dummy)
         {
-            await UniTask.SwitchToMainThread();
-            EffectManager.onEffectTextCommitted(dummy.Player.Player, InputFieldName, InputtedText);
+            async UniTask EffectTextCommitted()
+            {
+                await UniTask.SwitchToMainThread();
+                EffectManager.onEffectTextCommitted(dummy.Player.Player, InputFieldName, InputtedText);
+            }
+            return EffectTextCommitted().AsTask();
         }
     }
 }

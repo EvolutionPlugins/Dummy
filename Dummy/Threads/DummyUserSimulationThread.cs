@@ -1,11 +1,11 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.Users;
 using SDG.Unturned;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
-namespace EvolutionPlugins.Dummy.Threads
+namespace Dummy.Threads
 {
     public class DummyUserSimulationThread
     {

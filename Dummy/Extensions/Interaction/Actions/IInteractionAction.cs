@@ -1,6 +1,6 @@
-﻿using EvolutionPlugins.Dummy.API;
+﻿using Dummy.API;
 
-namespace EvolutionPlugins.Dummy.Extensions.Interaction.Actions
+namespace Dummy.Extensions.Interaction.Actions
 {
     public interface IInteractionAction : IAction
     {

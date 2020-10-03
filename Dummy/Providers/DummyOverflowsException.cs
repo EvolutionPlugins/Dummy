@@ -2,7 +2,7 @@
 using OpenMod.API.Commands;
 using System;
 
-namespace EvolutionPlugins.Dummy.Providers
+namespace Dummy.Providers
 {
     [Serializable]
     public class DummyOverflowsException : UserFriendlyException

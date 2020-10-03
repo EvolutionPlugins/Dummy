@@ -1,8 +1,8 @@
-using EvolutionPlugins.Dummy.Extensions.Movement.Actions;
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.Extensions.Movement.Actions;
+using Dummy.Users;
 using System.Threading.Tasks;
 
-namespace EvolutionPlugins.Dummy.Extensions.Movement
+namespace Dummy.Extensions.Movement
 {
     public static class Jumping
     {

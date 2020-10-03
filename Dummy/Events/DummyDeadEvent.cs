@@ -1,5 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.API;
+using Dummy.API;
 using OpenMod.API.Eventing;
 using OpenMod.API.Users;
 using OpenMod.Core.Eventing;
@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace EvolutionPlugins.Dummy.Events
 {
-    public class DummyDeadEvent : IEventListener<UnturnedPlayerDeadEvent>
+    public class DummyDeadEvent : IEventListener<UnturnedPlayerDeathEvent>
     {
         private readonly IDummyProvider m_DummyProvider;
         private readonly IUserManager m_UserManager;
@@ -23,9 +23,9 @@ namespace EvolutionPlugins.Dummy.Events
             m_DummyProvider = dummyProvider;
             m_UserManager = userManager;
         }
-
+        // todo: rewrite
         [EventListener(Priority = EventListenerPriority.Monitor)]
-        public async Task HandleEventAsync(object sender, UnturnedPlayerDeadEvent @event)
+        public async Task HandleEventAsync(object sender, UnturnedPlayerDeathEvent @event)
         {
             var dummy = await m_DummyProvider.GetPlayerDummyAsync(@event.Player.SteamId.m_SteamID);
             if (dummy == null)

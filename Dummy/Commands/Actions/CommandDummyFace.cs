@@ -1,14 +1,15 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.API;
-using EvolutionPlugins.Dummy.Extensions.Interaction.Actions;
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.API;
+using Dummy.Extensions.Interaction.Actions;
+using Dummy.Users;
+using Microsoft.Extensions.Localization;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
 using SDG.Unturned;
 using System;
 using Command = OpenMod.Core.Commands.Command;
 
-namespace EvolutionPlugins.Dummy.Commands.Actions
+namespace Dummy.Commands.Actions
 {
     [Command("face")]
     [CommandDescription("Send a face to dummy")]
@@ -16,7 +17,7 @@ namespace EvolutionPlugins.Dummy.Commands.Actions
     [CommandSyntax("<id> <face>")]
     public class CommandDummyFace : CommandDummyAction
     {
-        public CommandDummyFace(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider, dummyProvider)
+        public CommandDummyFace(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IStringLocalizer stringLocalizer) : base(serviceProvider, dummyProvider, stringLocalizer)
         {
         }
 

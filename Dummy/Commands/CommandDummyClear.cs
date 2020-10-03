@@ -1,10 +1,10 @@
-﻿using EvolutionPlugins.Dummy.API;
+﻿using Dummy.API;
 using OpenMod.Core.Commands;
 using System;
 using System.Threading.Tasks;
 using Command = OpenMod.Core.Commands.Command;
 
-namespace EvolutionPlugins.Dummy.Commands
+namespace Dummy.Commands
 {
     [Command("clear")]
     [CommandDescription("Clears all dummies")]

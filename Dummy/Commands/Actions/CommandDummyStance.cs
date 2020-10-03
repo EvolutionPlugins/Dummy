@@ -1,20 +1,21 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.API;
-using EvolutionPlugins.Dummy.Extensions.Movement.Actions;
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.API;
+using Dummy.Extensions.Movement.Actions;
+using Dummy.Users;
+using Microsoft.Extensions.Localization;
 using OpenMod.Core.Commands;
 using SDG.Unturned;
 using System;
 using Command = OpenMod.Core.Commands.Command;
 
-namespace EvolutionPlugins.Dummy.Commands.Actions
+namespace Dummy.Commands.Actions
 {
     [Command("stance")]
     [CommandSyntax("<id> <stance>")]
     [CommandParent(typeof(CommandDummy))]
     public class CommandDummyStance : CommandDummyAction
     {
-        public CommandDummyStance(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider, dummyProvider)
+        public CommandDummyStance(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IStringLocalizer stringLocalizer) : base(serviceProvider, dummyProvider, stringLocalizer)
         {
         }
 

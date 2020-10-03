@@ -1,9 +1,9 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.Users;
 using OpenMod.Unturned.Users;
 using UnityEngine;
 
-namespace EvolutionPlugins.Dummy.Extensions
+namespace Dummy.Extensions
 {
     public static class UnturnedExtensions
     {

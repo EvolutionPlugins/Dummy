@@ -1,10 +1,9 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.Users;
 using SDG.Unturned;
-using System;
 using System.Threading.Tasks;
 
-namespace EvolutionPlugins.Dummy.Extensions.Interaction.Actions
+namespace Dummy.Extensions.Interaction.Actions
 {
     public class ButtonAction : IInteractionAction
     {
@@ -15,10 +14,14 @@ namespace EvolutionPlugins.Dummy.Extensions.Interaction.Actions
 
         public string ButtonName { get; }
 
-        public async Task Do(DummyUser dummy)
+        public Task Do(DummyUser dummy)
         {
-            await UniTask.SwitchToMainThread();
-            EffectManager.onEffectButtonClicked(dummy.Player.Player, ButtonName);
+            async UniTask EffectButtonClicked()
+            {
+                await UniTask.SwitchToMainThread();
+                EffectManager.onEffectButtonClicked(dummy.Player.Player, ButtonName);
+            }
+            return EffectButtonClicked().AsTask();
         }
     }
 }

@@ -1,19 +1,19 @@
 ﻿using Cysharp.Threading.Tasks;
-using EvolutionPlugins.Dummy.API;
-using EvolutionPlugins.Dummy.Extensions.Interaction.Actions;
-using EvolutionPlugins.Dummy.Models.Users;
+using Dummy.API;
+using Dummy.Extensions.Interaction.Actions;
+using Dummy.Users;
+using Microsoft.Extensions.Localization;
 using OpenMod.Core.Commands;
-using OpenMod.Unturned.Users;
 using System;
 
-namespace EvolutionPlugins.Dummy.Commands.Actions
+namespace Dummy.Commands.Actions
 {
     [Command("button")]
     [CommandSyntax("<id> <buttonName>")]
     [CommandParent(typeof(CommandDummy))]
     public class CommandDummyButton : CommandDummyAction
     {
-        public CommandDummyButton(IServiceProvider serviceProvider, IDummyProvider dummyProvider) : base(serviceProvider, dummyProvider)
+        public CommandDummyButton(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IStringLocalizer stringLocalizer) : base(serviceProvider, dummyProvider, stringLocalizer)
         {
         }
 
