@@ -172,7 +172,7 @@ namespace Dummy.Providers
 
             await UniTask.SwitchToMainThread();
 
-            var index = Provider.clients.Count - 1;
+            var index = Provider.clients.Count;
             var dummyPlayerID = new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil);
 
             string characterName = dummyPlayerID.characterName;
@@ -189,7 +189,7 @@ namespace Dummy.Providers
 
             await UniTask.SwitchToTaskPool();
 
-            var playerDummy = new DummyUser(this, m_UserDataStore, dummySteamPlayer, index++, owners);
+            var playerDummy = new DummyUser(this, m_UserDataStore, dummySteamPlayer, index, owners);
             PostAddDummy(playerDummy);
 
             return playerDummy;
@@ -201,7 +201,7 @@ namespace Dummy.Providers
 
             await UniTask.SwitchToMainThread();
 
-            var index = Provider.clients.Count - 1;
+            var index = Provider.clients.Count;
             var userSteamPlayer = userCopy.Player.SteamPlayer;
             var dummyPlayerID = new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil);
 
@@ -222,7 +222,7 @@ namespace Dummy.Providers
 
             await UniTask.SwitchToTaskPool();
 
-            var playerDummy = new DummyUser(this, m_UserDataStore, dummySteamPlayer, index++, owners);
+            var playerDummy = new DummyUser(this, m_UserDataStore, dummySteamPlayer, index, owners);
             PostAddDummy(playerDummy);
 
             return playerDummy;
@@ -266,10 +266,6 @@ namespace Dummy.Providers
                     steamPlayer.playerID.playerName,
                     steamPlayer.playerID.characterName
                 }));
-            }
-            if (index == 0)
-            {
-                Utils.verifyNextPlayerInQueue();
             }
         }
 

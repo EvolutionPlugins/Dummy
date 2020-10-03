@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using OpenMod.Core.Users;
 using SDG.Unturned;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -21,6 +22,7 @@ namespace Dummy.Users
             {
                 await UniTask.SwitchToMainThread();
                 SessionEndTime = DateTime.Now;
+                Log.Verbose(((DummyUser)User).InternalIndex.ToString());
                 RemoveDummy();
                 foreach (SteamPlayer steamPlayer in Provider.clients)
                 {
