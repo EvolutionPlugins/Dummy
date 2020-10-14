@@ -37,7 +37,7 @@ namespace Dummy
 
         protected override UniTask OnUnloadAsync()
         {
-            Patch_PlayerTool.OnNeedDummyProvider += GiveProvider;
+            Patch_PlayerTool.OnNeedDummyProvider -= GiveProvider;
             return UniTask.CompletedTask;
         }
 

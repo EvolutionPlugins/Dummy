@@ -36,7 +36,7 @@ namespace Dummy
             byte angle, bool isPro, bool isAdmin, int channel, byte face, byte hair, byte beard, Color skin, Color color,
             Color markerColor, bool hand, int shirtItem, int pantsItem, int hatItem, int backpackItem, int vestItem,
             int maskItem, int glassesItem, int[] skinItems, string[] skinTags, string[] skinDynamicProps,
-            EPlayerSkillset skillset, string language, CSteamID lobbyID)
+            EPlayerSkillset skillset, string language, CSteamID lobbyID, bool shouldCallEvent)
         {
             Transform transform = null;
             try
@@ -53,7 +53,7 @@ namespace Dummy
             SteamPlayer steamPlayer = null;
             try
             {
-                steamPlayer = new SteamPlayer(new NullTransportConnection(), playerID, transform, isPro, isAdmin, channel, face,
+                steamPlayer = new SteamPlayer(NullTransportConnection.Instance, playerID, transform, isPro, isAdmin, channel, face,
                     hair, beard, skin, color, markerColor, hand, shirtItem, pantsItem, hatItem, backpackItem, vestItem,
                     maskItem, glassesItem, skinItems, skinTags, skinDynamicProps, skillset, language, lobbyID);
             }
@@ -63,16 +63,18 @@ namespace Dummy
                 UnturnedLog.exception(e2);
             }
 
-            //try
-            //{
-            //    // todo: add config option
-            //    Provider.onEnemyConnected?.Invoke(steamPlayer);
-            //}
-            //catch (Exception e)
-            //{
-            //    UnturnedLog.warn("Exception during onEnemyConnected:");
-            //    UnturnedLog.exception(e);
-            //}
+            if(shouldCallEvent)
+            {
+                try
+                {
+                    Provider.onEnemyConnected?.Invoke(steamPlayer);
+                }
+                catch (Exception e)
+                {
+                    UnturnedLog.warn("Exception during onEnemyConnected:");
+                    UnturnedLog.exception(e);
+                }
+            }
             return steamPlayer;
         }
 

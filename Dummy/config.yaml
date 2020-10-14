@@ -3,3 +3,7 @@
   kickDummyAfterSeconds: 600 # A timer to kick a dummy after the amount of time. Set to 0 to disable timer kick
   isAdmin: false # On spawning, a dummy will be an admin
   canExecuteCommands: true # Enabling this a dummy can execute commands without admin or permission.
+
+events:
+  allowDamage: true # Enabling this dummy can be damaged.
+  callOriginalConnectEvent: false # Enabling this will call event Provider.onServerConnected and Provider.onEnemyConnected so it will catch OpenMod and create an instance of UnturnedUser

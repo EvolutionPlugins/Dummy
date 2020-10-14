@@ -1,9 +1,16 @@
 ﻿using SDG.NetTransport;
+using System;
 
 namespace Dummy.NetTransports
 {
-    internal class NullTransportConnection : ITransportConnection
+    public sealed class NullTransportConnection : ITransportConnection
     {
+        private static Lazy<NullTransportConnection> LazyInstance => new Lazy<NullTransportConnection>();
+        public static NullTransportConnection Instance => LazyInstance.Value;
+
+        private NullTransportConnection()
+        {
+        }
         public void CloseConnection()
         {
         }

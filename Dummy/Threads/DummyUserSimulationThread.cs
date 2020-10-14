@@ -21,7 +21,9 @@ namespace Dummy.Threads
         public int Recov { get; }
         public uint Consumed { get; private set; }
         public uint Clock { get; private set; }
+#pragma warning disable CA1819 // Properties should not return arrays
         public ushort[] Flags { get; }
+#pragma warning restore CA1819 // Properties should not return arrays
         public float Yaw { get; private set; }
         public float Pitch { get; private set; }
         public List<PlayerInputPacket> PlayerInputPackets { get; }

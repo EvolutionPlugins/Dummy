@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Dummy.Users;
 using OpenMod.Unturned.Users;
+using SDG.Unturned;
 using UnityEngine;
 
 namespace Dummy.Extensions
@@ -10,7 +11,9 @@ namespace Dummy.Extensions
         public static async UniTask<bool> TeleportToLocationAsync(this DummyUser DummyUser, Vector3 position, float rotation)
         {
             await UniTask.SwitchToMainThread();
-            return DummyUser.Player.Player.teleportToLocation(position, rotation);
+            byte b = MeasurementTool.angleToByte(rotation);
+            DummyUser.Player.Player.channel.send("askTeleport", ESteamCall.ALL, ESteamPacket.UPDATE_RELIABLE_BUFFER, position, b);
+            return true;
         }
 
         public static async UniTask<bool> TeleportToLocationAsync(this DummyUser DummyUser, Vector3 position) =>

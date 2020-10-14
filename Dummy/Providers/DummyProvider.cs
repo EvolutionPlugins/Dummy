@@ -5,6 +5,7 @@ using Dummy.Users;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using OpenMod.API.Ioc;
 using OpenMod.API.Plugins;
 using OpenMod.API.Prioritization;
@@ -27,46 +28,36 @@ namespace Dummy.Providers
     [ServiceImplementation(Lifetime = ServiceLifetime.Singleton, Priority = Priority.Lowest)]
     public class DummyProvider : IDummyProvider, IUserProvider, IAsyncDisposable
     {
-        private bool m_IsDisposing;
-
         private readonly HashSet<DummyUser> m_Dummies;
         private readonly IPluginAccessor<Dummy> m_PluginAccessor;
         private readonly IUserDataStore m_UserDataStore;
-        private IStringLocalizer stringLocalizer;
+        private readonly ILogger<DummyProvider> m_Logger;
 
-        private IReadOnlyCollection<IUser> m_Users => m_Dummies.Cast<IUser>().ToList().AsReadOnly();
+        private IReadOnlyCollection<IUser> Users => m_Dummies.OfType<IUser>().ToList().AsReadOnly();
+        private IStringLocalizer m_StringLocalizer;
+        private bool m_IsDisposing;
 
         public IReadOnlyCollection<DummyUser> Dummies => m_Dummies;
 
-        public DummyProvider(IPluginAccessor<Dummy> pluginAccessor, IUserDataStore userDataStore)
+        public DummyProvider(IPluginAccessor<Dummy> pluginAccessor, IUserDataStore userDataStore, ILogger<DummyProvider> logger)
         {
             m_Dummies = new HashSet<DummyUser>();
             m_PluginAccessor = pluginAccessor;
             m_UserDataStore = userDataStore;
+            m_Logger = logger;
 
             Provider.onServerDisconnected += OnServerDisconnected;
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
-#if DEBUG
-            EffectManager.onEffectButtonClicked += onEffectButtonClicked;
-#endif
 
             AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
         }
-
-#if DEBUG
-
-        private void onEffectButtonClicked(Player player, string buttonName)
-        {
-            Console.WriteLine(buttonName);
-        }
-
-#endif
 
         private async Task DontAutoKickTask()
         {
             while (!m_IsDisposing)
             {
+                m_Logger.LogTrace("Heartbeat dummies");
                 foreach (var dummy in Dummies)
                 {
                     var client = dummy.SteamPlayer;
@@ -82,6 +73,7 @@ namespace Dummy.Providers
             {
                 return;
             }
+            m_Logger.LogTrace($"Start kick timer, will kicked after {timer * 1000} sec");
             await Task.Delay((int)(timer * 1000));
 
             var user = await GetPlayerDummyAsync(id);
@@ -89,6 +81,7 @@ namespace Dummy.Providers
             {
                 return;
             }
+            m_Logger.LogDebug($"[Kick timer] => Kick dummy {id}");
             await user.Session.DisconnectAsync();
         }
 
@@ -115,11 +108,8 @@ namespace Dummy.Providers
                 {
                     continue;
                 }
-                if (stringLocalizer == null)
-                {
-                    stringLocalizer = m_PluginAccessor.Instance.LifetimeScope.Resolve<IStringLocalizer>();
-                }
-                ChatManager.serverSendMessage(stringLocalizer["events:chatted", new { Text = text, dummy.Id }], color,
+                m_StringLocalizer ??= m_PluginAccessor.Instance.LifetimeScope.Resolve<IStringLocalizer>();
+                ChatManager.serverSendMessage(m_StringLocalizer["events:chatted", new { Text = text, dummy.Id }], color,
                     toPlayer: steamPlayerOwner, iconURL: iconURL, useRichTextFormatting: true);
             }
         }
@@ -136,7 +126,7 @@ namespace Dummy.Providers
             {
                 return;
             }
-            shouldAllow = false;
+            shouldAllow = m_PluginAccessor.Instance.Configuration.GetSection("events:allowDamage").Get<bool>();
             var totalTimes = parameters.times;
 
             if (parameters.respectArmor)
@@ -150,27 +140,24 @@ namespace Dummy.Providers
             var totalDamage = (byte)Mathf.Min(255, parameters.damage * totalTimes);
 
             var killerId = parameters.killer;
-            if (stringLocalizer == null)
-            {
-                stringLocalizer = m_PluginAccessor.Instance.LifetimeScope.Resolve<IStringLocalizer>();
-            }
-            ChatManager.say(killerId, stringLocalizer["events:damaged", new { DamageAmount = totalDamage, Id = steamId }], Color.green, true);
+            m_StringLocalizer ??= m_PluginAccessor.Instance.LifetimeScope.Resolve<IStringLocalizer>();
+            ChatManager.say(killerId, m_StringLocalizer["events:damaged", new { DamageAmount = totalDamage, Id = steamId }], Color.green, true);
         }
 
         #endregion Events
 
         private void CheckSpawn(CSteamID id)
         {
-            var stringLocalizer = m_PluginAccessor.Instance.LifetimeScope.Resolve<IStringLocalizer>();
+            m_StringLocalizer ??= m_PluginAccessor.Instance.LifetimeScope.Resolve<IStringLocalizer>();
             if (m_Dummies.Any(x => x.SteamID == id))
             {
-                throw new DummyContainsException(stringLocalizer, id.m_SteamID);
+                throw new DummyContainsException(m_StringLocalizer, id.m_SteamID);
             }
 
             var amountDummiesConfig = m_PluginAccessor.Instance.Configuration.GetSection("options:amountDummies").Get<byte>();
             if (amountDummiesConfig != 0 && Dummies.Count + 1 > amountDummiesConfig)
             {
-                throw new DummyOverflowsException(stringLocalizer, (byte)Dummies.Count, amountDummiesConfig);
+                throw new DummyOverflowsException(m_StringLocalizer, (byte)Dummies.Count, amountDummiesConfig);
             }
         }
 
@@ -189,9 +176,10 @@ namespace Dummy.Providers
 
             Utils.loadPlayerSpawn(dummyPlayerID, out var point, out var angle, out var initialStance);
             int channel = Utils.allocPlayerChannelId();
+            var shouldCallOriginalEvent = m_PluginAccessor.Instance.Configuration.GetSection("events:callOriginalConnectEvent").Get<bool>();
             var dummySteamPlayer = Utils.addPlayer(dummyPlayerID, point, angle, true, false, channel, 0, 0, 0,
                 Color.white, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0, 0, Array.Empty<int>(),
-                Array.Empty<string>(), Array.Empty<string>(), EPlayerSkillset.NONE, "english", CSteamID.Nil);
+                Array.Empty<string>(), Array.Empty<string>(), EPlayerSkillset.NONE, "english", CSteamID.Nil, shouldCallOriginalEvent);
 
             PreAddDummy(index, initialStance, dummySteamPlayer);
 
@@ -219,12 +207,13 @@ namespace Dummy.Providers
 
             Utils.loadPlayerSpawn(dummyPlayerID, out var point, out var angle, out var initialStance);
             int channel = Utils.allocPlayerChannelId();
+            var shouldCallOriginalEvent = m_PluginAccessor.Instance.Configuration.GetSection("events:callOriginalConnectEvent").Get<bool>();
             var dummySteamPlayer = Utils.addPlayer(dummyPlayerID, point, angle, true, false, channel,
                 userSteamPlayer.face, userSteamPlayer.hair, userSteamPlayer.beard, userSteamPlayer.skin, userSteamPlayer.color, Color.white,
                 userSteamPlayer.hand, userSteamPlayer.shirtItem, userSteamPlayer.pantsItem, userSteamPlayer.hatItem,
                 userSteamPlayer.backpackItem, userSteamPlayer.vestItem, userSteamPlayer.maskItem, userSteamPlayer.glassesItem,
                 userSteamPlayer.skinItems, userSteamPlayer.skinTags, userSteamPlayer.skinDynamicProps, EPlayerSkillset.NONE,
-                "english", CSteamID.Nil);
+                "english", CSteamID.Nil, shouldCallOriginalEvent);
 
             PreAddDummy(index, initialStance, dummySteamPlayer);
 
@@ -245,7 +234,7 @@ namespace Dummy.Providers
             }
             else
             {
-                UnturnedLog.warn("Was unable to get PlayerStance for new connection!");
+                m_Logger.LogWarning("Was unable to get PlayerStance for new connection!");
             }
             steamPlayer.isAdmin = m_PluginAccessor.Instance.Configuration.GetSection("options:isAdmin").Get<bool>();
             // sending to players a dummy connected
@@ -255,16 +244,18 @@ namespace Dummy.Providers
                 Provider.sendToClient(client.transportConnection, ESteamPacket.CONNECTED, packet, size);
             }
 
-            // todo: add config option
-            //try
-            //{
-            //    Provider.onServerConnected?.Invoke(steamPlayer.playerID.steamID);
-            //}
-            //catch (Exception e)
-            //{
-            //    UnturnedLog.warn("Plugin raised an exception from onServerConnected:");
-            //    UnturnedLog.exception(e);
-            //}
+            if (m_PluginAccessor.Instance.Configuration.GetSection("events:callOriginalConnectEvent").Get<bool>())
+            {
+                try
+                {
+                    Provider.onServerConnected?.Invoke(steamPlayer.playerID.steamID);
+                }
+                catch (Exception e)
+                {
+                    m_Logger.LogWarning("Plugin raised an exception from onServerConnected:");
+                    m_Logger.LogError(e.ToString());
+                }
+            }
 
             if (CommandWindow.shouldLogJoinLeave)
             {
@@ -286,14 +277,6 @@ namespace Dummy.Providers
             }
 
             m_Dummies.Add(playerDummy);
-        }
-
-        private async UniTask RemoveRigidBody(PlayerMovement movement)
-        {
-            await UniTask.Delay(1500);
-            await UniTask.SwitchToMainThread();
-            UnityEngine.Object.Destroy(movement.GetComponent<Rigidbody>());
-            movement.controller.Move(Vector3.down * 2);
         }
 
         public async Task<bool> RemoveDummyAsync(CSteamID id)
@@ -399,7 +382,7 @@ namespace Dummy.Providers
 
         public Task<IReadOnlyCollection<IUser>> GetUsersAsync(string userType)
         {
-            return Task.FromResult(m_Users);
+            return Task.FromResult(Users);
         }
 
         public Task BroadcastAsync(string userType, string message, System.Drawing.Color? color = null)
@@ -422,10 +405,7 @@ namespace Dummy.Providers
             async UniTask BroadcastTask()
             {
                 await UniTask.SwitchToMainThread();
-
-                if (color == null)
-                    color = System.Drawing.Color.White;
-
+                color ??= System.Drawing.Color.White;
                 ChatManager.serverSendMessage(text: message, color: color.Value.ToUnityColor(), useRichTextFormatting: isRich, iconURL: iconUrl);
             }
 

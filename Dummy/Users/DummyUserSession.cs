@@ -22,7 +22,6 @@ namespace Dummy.Users
             {
                 await UniTask.SwitchToMainThread();
                 SessionEndTime = DateTime.Now;
-                Log.Verbose(((DummyUser)User).InternalIndex.ToString());
                 RemoveDummy();
                 foreach (SteamPlayer steamPlayer in Provider.clients)
                 {
