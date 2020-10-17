@@ -16,7 +16,7 @@ namespace Dummy.Patches
         public static void getSteamPlayerBySteamId(CSteamID steamID, ref SteamPlayer __result)
         {
             if (__result != null || OnNeedDummyProvider == null) return;
-            var dummy = OnNeedDummyProvider.Invoke().Dummies.FirstOrDefault(x => x.SteamID == steamID);
+            var dummy = OnNeedDummyProvider().Dummies.FirstOrDefault(x => x.SteamID == steamID);
             if (dummy != null)
             {
                 __result = dummy.SteamPlayer;
@@ -29,12 +29,26 @@ namespace Dummy.Patches
         {
             if (__result != null || OnNeedDummyProvider == null) return;
 
-            var dummy = OnNeedDummyProvider.Invoke().Dummies.FirstOrDefault(x => x.SteamID == (CSteamID)steamID);
+            var dummy = OnNeedDummyProvider().Dummies.FirstOrDefault(x => x.SteamID == (CSteamID)steamID);
             if (dummy != null)
             {
                 __result = dummy.SteamPlayer;
             }
         }
-        // todo: add patch to get by name
+
+        [HarmonyPatch("getSteamPlayer", new Type[] { typeof(string) })]
+        [HarmonyPostfix]
+        public static void getSteamPlayerByString(string name, ref SteamPlayer __result)
+        {
+            if (__result != null || OnNeedDummyProvider == null) return;
+
+            var dummy = OnNeedDummyProvider().Dummies
+                .FirstOrDefault(x => NameTool.checkNames(name, x.DisplayName)
+                    || NameTool.checkNames(name, x.SteamPlayer.playerID.playerName));
+            if (dummy != null)
+            {
+                __result = dummy.SteamPlayer;
+            }
+        }
     }
 }
