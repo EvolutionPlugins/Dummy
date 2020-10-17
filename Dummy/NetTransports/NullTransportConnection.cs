@@ -1,16 +1,17 @@
 ﻿using SDG.NetTransport;
-using System;
+using System.Net;
 
 namespace Dummy.NetTransports
 {
     public sealed class NullTransportConnection : ITransportConnection
     {
-        private static Lazy<NullTransportConnection> LazyInstance => new Lazy<NullTransportConnection>();
-        public static NullTransportConnection Instance => LazyInstance.Value;
+        private static NullTransportConnection m_Instance;
+        public static NullTransportConnection Instance => m_Instance ??= new();
 
         private NullTransportConnection()
         {
         }
+
         public void CloseConnection()
         {
         }
@@ -35,6 +36,16 @@ namespace Dummy.NetTransports
         {
             port = 0;
             return false;
+        }
+
+        public IPAddress GetAddress()
+        {
+            return new IPAddress(0);
+        }
+
+        public string GetAddressString(bool withPort)
+        {
+            return null;
         }
     }
 }

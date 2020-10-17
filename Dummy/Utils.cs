@@ -78,7 +78,6 @@ namespace Dummy
             return steamPlayer;
         }
 
-        // todo: Nelson deleted this method??
         public static int allocPlayerChannelId()
         {
             var dynMethod = typeof(Provider).GetMethod("allocPlayerChannelId", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);

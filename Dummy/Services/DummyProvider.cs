@@ -49,7 +49,7 @@ namespace Dummy.Providers
             Provider.onServerDisconnected += OnServerDisconnected;
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
-
+            // TODo: called twice
             AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
         }
 
@@ -252,8 +252,7 @@ namespace Dummy.Providers
                 }
                 catch (Exception e)
                 {
-                    m_Logger.LogWarning("Plugin raised an exception from onServerConnected:");
-                    m_Logger.LogError(e.ToString());
+                    m_Logger.LogError("Plugin raised an exception from onServerConnected: ", e);
                 }
             }
 

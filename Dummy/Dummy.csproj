@@ -12,9 +12,9 @@
       <RootNamespace>Dummy</RootNamespace>
       <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
       <GenerateNugetPackage>true</GenerateNugetPackage>
-      <LangVersion>8.0</LangVersion>
       <RepositoryUrl>https://github.com/EvolutionPlugins/Dummy</RepositoryUrl>
       <RepositoryType>git</RepositoryType>
+      <LangVersion>preview</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -32,7 +32,6 @@
     </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenMod.Unturned" Version="2.2.1" />
     <PackageReference Include="Legacy2CPSWorkaround" Version="1.0.0">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
@@ -40,6 +39,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="OpenMod.Unturned" Version="2.2.1" />
   </ItemGroup>
+
 
 </Project>
