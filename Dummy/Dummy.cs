@@ -14,28 +14,31 @@ namespace Dummy
 {
     public class Dummy : RocketPlugin<DummyConfiguration>
     {
-        private const string HarmonyId = "evo.diffoz.dummy";
+        private const string HarmonyId = "evolutionplugins.com/dummy";
 
-        private Harmony _harmony;
+        private readonly Harmony _Harmony = new Harmony(HarmonyId);
 
         public static Dummy Instance;
-        public DummyConfiguration Config;
+        public DummyConfiguration Config { get; private set; }
 
-        public readonly Dictionary<CSteamID, DummyData> Dummies = new Dictionary<CSteamID, DummyData>();
+        public Dictionary<CSteamID, DummyData> Dummies { get; } = new Dictionary<CSteamID, DummyData>();
 
         protected override void Load()
         {
             Instance = this;
             Config = Configuration.Instance;
 
+            Logger.LogWarning("RECOMMENDED USE VERSION PLUGIN FOR OPENMOD!");
+            Logger.LogWarning("https://github.com/evolutionplugins/dummy");
+            Logger.LogWarning("READ ABOUT MIGRATING ROCKETMOD TO OPENMOD HERE:");
+            Logger.LogWarning("https://openmod.github.io/openmod-docs/user-guide/migration/rocketmod/");
             Logger.Log("Made with <3 by Evolution Plugins", ConsoleColor.Cyan);
-            Logger.Log("https://vk.com/evolutionplugins", ConsoleColor.Cyan);
-            Logger.Log("Discord: DiFFoZ#6745", ConsoleColor.Cyan);
+            Logger.Log("https://github.com/diffoz \\ https://github.com/evolutionplugins", ConsoleColor.Cyan);
+            Logger.Log("Discord: https://discord.gg/hXw6JVBWU4", ConsoleColor.Cyan);
 
-            _harmony = new Harmony(HarmonyId);
-            _harmony.PatchAll();
+            _Harmony.PatchAll();
 
-            InvokeRepeating("DontAutoKick", 5f, 5f);
+            StartCoroutine(DontAutoKick());
 
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
             Provider.onServerDisconnected += OnServerDisconnected;
@@ -67,8 +70,7 @@ namespace Dummy
             Instance = null;
             Config = null;
 
-            _harmony.UnpatchAll(HarmonyId);
-            _harmony = null;
+            _Harmony.UnpatchAll(HarmonyId);
 
             foreach (var dummy in Dummies)
             {
@@ -77,7 +79,6 @@ namespace Dummy
             Dummies.Clear();
 
             StopAllCoroutines();
-            CancelInvoke("DontAutoKick");
 
             DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
             Provider.onServerDisconnected -= OnServerDisconnected;
@@ -299,7 +300,7 @@ namespace Dummy
                         playerInputPacket3.write(data.player.input.channel);
                     }
                     var call = data.player.input.channel.getCall("askInput");
-                    data.player.input.channel.getPacket(ESteamPacket.UPDATE_UNRELIABLE_CHUNK_INSTANT, call, out var size, out var packet);
+                    data.player.input.channel.getPacket(ESteamPacket.UPDATE_RELIABLE_BUFFER, call, out var size, out var packet);
                     data.player.input.channel.receive(item, packet, 0, size);
                 }
                 data.count += 1U;
@@ -324,7 +325,7 @@ namespace Dummy
             return Config.KickDummyAfterSeconds != 0 ? StartCoroutine(KickTimer(id)) : null;
         }
 
-        private void DontAutoKick()
+        private IEnumerator DontAutoKick()
         {
             foreach (var dummy in Dummies)
             {
@@ -334,6 +335,7 @@ namespace Dummy
                     continue;
                 }
                 client.channel.owner.timeLastPacketWasReceivedFromClient = Time.realtimeSinceStartup;
+                yield return new WaitForSeconds(5f);
             }
         }
 

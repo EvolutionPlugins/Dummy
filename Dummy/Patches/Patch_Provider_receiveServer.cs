@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using SDG.Framework.Modules;
 using SDG.NetTransport;
+using SDG.Provider;
 using SDG.Unturned;
 using Steamworks;
 using System;
@@ -74,7 +75,7 @@ namespace Dummy.Patches
                 CSteamID steamID = (CSteamID)objects[35];
                 if (array3.Length != 20)
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_HASH_ASSEMBLY);
+                    Provider.reject(transportConnection, ESteamRejection.WRONG_HASH_ASSEMBLY);
                     return false;
                 }
                 byte newCharacterID = (byte)objects[1];
@@ -82,115 +83,115 @@ namespace Dummy.Patches
                 {
                     newCharacterID = 0;
                 }
-                SteamPlayerID steamPlayerID = new SteamPlayerID(steamID, newCharacterID, (string)objects[2], (string)objects[3], (string)objects[11], (CSteamID)objects[12], array3);
+                SteamPlayerID steamPlayerID = new SteamPlayerID(steamID, newCharacterID, (string)objects[2],
+                    (string)objects[3], (string)objects[11], (CSteamID)objects[12], array3);
                 if ((uint)objects[8] != Provider.APP_VERSION_PACKED)
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_VERSION, Provider.APP_VERSION);
+                    Provider.reject(transportConnection, ESteamRejection.WRONG_VERSION, Provider.APP_VERSION);
                     return false;
                 }
                 if ((uint)objects[32] != Level.packedVersion)
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_LEVEL_VERSION, Level.version);
+                    Provider.reject(transportConnection, ESteamRejection.WRONG_LEVEL_VERSION, Level.version);
                     return false;
                 }
                 if (steamPlayerID.playerName.Length < 2)
                 {
-                    Provider.reject(steamID, ESteamRejection.NAME_PLAYER_SHORT);
+                    Provider.reject(transportConnection, ESteamRejection.NAME_PLAYER_SHORT);
                     return false;
                 }
                 if (steamPlayerID.characterName.Length < 2)
                 {
-                    Provider.reject(steamID, ESteamRejection.NAME_CHARACTER_SHORT);
+                    Provider.reject(transportConnection, ESteamRejection.NAME_CHARACTER_SHORT);
                     return false;
                 }
                 if (steamPlayerID.playerName.Length > 32)
                 {
-                    Provider.reject(steamID, ESteamRejection.NAME_PLAYER_LONG);
+                    Provider.reject(transportConnection, ESteamRejection.NAME_PLAYER_LONG);
                     return false;
                 }
                 if (steamPlayerID.characterName.Length > 32)
                 {
-                    Provider.reject(steamID, ESteamRejection.NAME_CHARACTER_LONG);
+                    Provider.reject(transportConnection, ESteamRejection.NAME_CHARACTER_LONG);
                     return false;
                 }
 
-                if (long.TryParse(steamPlayerID.playerName, NumberStyles.Any, CultureInfo.InvariantCulture, out _) || double.TryParse(steamPlayerID.playerName, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
+                if (long.TryParse(steamPlayerID.playerName, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
+                    || double.TryParse(steamPlayerID.playerName, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
                 {
-                    Provider.reject(steamID, ESteamRejection.NAME_PLAYER_NUMBER);
+                    Provider.reject(transportConnection, ESteamRejection.NAME_PLAYER_NUMBER);
                     return false;
                 }
 
-                if (long.TryParse(steamPlayerID.characterName, NumberStyles.Any, CultureInfo.InvariantCulture, out _) || double.TryParse(steamPlayerID.characterName, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
+                if (long.TryParse(steamPlayerID.characterName, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
+                    || double.TryParse(steamPlayerID.characterName, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
                 {
-                    Provider.reject(steamID, ESteamRejection.NAME_CHARACTER_NUMBER);
+                    Provider.reject(transportConnection, ESteamRejection.NAME_CHARACTER_NUMBER);
                     return false;
                 }
                 if (Provider.filterName)
                 {
                     if (!NameTool.isValid(steamPlayerID.playerName))
                     {
-                        Provider.reject(steamID, ESteamRejection.NAME_PLAYER_INVALID);
+                        Provider.reject(transportConnection, ESteamRejection.NAME_PLAYER_INVALID);
                         return false;
                     }
                     if (!NameTool.isValid(steamPlayerID.characterName))
                     {
-                        Provider.reject(steamID, ESteamRejection.NAME_CHARACTER_INVALID);
+                        Provider.reject(transportConnection, ESteamRejection.NAME_CHARACTER_INVALID);
                         return false;
                     }
                 }
                 if (NameTool.containsRichText(steamPlayerID.playerName))
                 {
-                    Provider.reject(steamID, ESteamRejection.NAME_PLAYER_INVALID);
+                    Provider.reject(transportConnection, ESteamRejection.NAME_PLAYER_INVALID);
                     return false;
                 }
                 if (NameTool.containsRichText(steamPlayerID.characterName))
                 {
-                    Provider.reject(steamID, ESteamRejection.NAME_CHARACTER_INVALID);
+                    Provider.reject(transportConnection, ESteamRejection.NAME_CHARACTER_INVALID);
                     return false;
                 }
-                uint remoteIP;
-                if (SteamGameServerNetworking.GetP2PSessionState(steamID, out P2PSessionState_t p2PSessionState_t))
-                {
-                    remoteIP = p2PSessionState_t.m_nRemoteIP;
-                }
-                else
-                {
-                    remoteIP = 0U;
-                }
+                transportConnection.TryGetIPv4Address(out var remoteIP);
                 Utils.checkBanStatus(steamPlayerID, remoteIP, out bool flag3, out string object_, out uint num5);
                 if (flag3)
                 {
                     byte[] bytes3 = SteamPacker.getBytes(0, out int size4, 9, object_, num5);
-                    Provider.send(steamID, ESteamPacket.BANNED, bytes3, size4, 0);
+                    Provider.sendToClient(transportConnection, ESteamPacket.BANNED, bytes3, size4);
                     return false;
                 }
                 bool flag4 = SteamWhitelist.checkWhitelisted(steamID);
                 if (Provider.isWhitelisted && !flag4)
                 {
-                    Provider.reject(steamID, ESteamRejection.WHITELISTED);
+                    Provider.reject(transportConnection, ESteamRejection.WHITELISTED);
                     return false;
                 }
                 if (Provider.clients.Count - Dummy.Instance.Dummies.Count + 1 > Provider.maxPlayers && Provider.pending.Count + 1 > Provider.queueSize)
                 {
-                    Provider.reject(steamID, ESteamRejection.SERVER_FULL);
+                    Provider.reject(transportConnection, ESteamRejection.SERVER_FULL);
                     return false;
                 }
                 byte[] array4 = (byte[])objects[4];
                 if (array4.Length != 20)
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_PASSWORD);
+                    Provider.reject(transportConnection, ESteamRejection.WRONG_PASSWORD);
                     return false;
                 }
                 byte[] array5 = (byte[])objects[5];
                 if (array5.Length != 20)
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_HASH_LEVEL);
+                    Provider.reject(transportConnection, ESteamRejection.WRONG_HASH_LEVEL);
                     return false;
                 }
                 byte[] array6 = (byte[])objects[6];
                 if (array6.Length != 20)
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_HASH_ASSEMBLY);
+                    Provider.reject(transportConnection, ESteamRejection.WRONG_HASH_ASSEMBLY);
+                    return false;
+                }
+                if (Provider.configData.Server.Validate_EconInfo_Hash && !Hash.verifyHash(hash_, TempSteamworksEconomy.econInfoHash))
+                {
+                    Provider.reject(transportConnection, ESteamRejection.WRONG_HASH_ECON);
                     return false;
                 }
                 string text = (string)objects[29];
@@ -247,7 +248,7 @@ namespace Dummy.Patches
                 }
                 if (!flag5)
                 {
-                    Provider.reject(steamID, ESteamRejection.CLIENT_MODULE_DESYNC);
+                    Provider.reject(transportConnection, ESteamRejection.CLIENT_MODULE_DESYNC);
                     return false;
                 }
                 bool flag7 = true;
@@ -273,31 +274,36 @@ namespace Dummy.Patches
                 }
                 if (!flag7)
                 {
-                    Provider.reject(steamID, ESteamRejection.SERVER_MODULE_DESYNC);
+                    Provider.reject(transportConnection, ESteamRejection.SERVER_MODULE_DESYNC);
                     return false;
                 }
                 if (!string.IsNullOrEmpty(Provider.serverPassword) && !Hash.verifyHash(array4, Provider.serverPasswordHash))
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_PASSWORD);
+                    Provider.reject(transportConnection, ESteamRejection.WRONG_PASSWORD);
                     return false;
                 }
                 if (!Hash.verifyHash(array5, Level.hash))
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_HASH_LEVEL);
+                    Provider.reject(transportConnection, ESteamRejection.WRONG_HASH_LEVEL);
                     return false;
                 }
                 if (!ReadWrite.appIn(array6, (byte)objects[7]))
                 {
-                    Provider.reject(steamID, ESteamRejection.WRONG_HASH_ASSEMBLY);
+                    Provider.reject(transportConnection, ESteamRejection.WRONG_HASH_ASSEMBLY);
                     return false;
                 }
                 if ((float)objects[10] >= Provider.configData.Server.Max_Ping_Milliseconds / 1000f)
                 {
-                    Provider.reject(steamID, ESteamRejection.PING);
+                    Provider.reject(transportConnection, ESteamRejection.PING);
                     return false;
                 }
                 Utils.notifyClientPending(steamID);
-                SteamPending item = new SteamPending(transportConnection, steamPlayerID, (bool)objects[9], (byte)objects[13], (byte)objects[14], (byte)objects[15], (Color)objects[16], (Color)objects[17], (Color)objects[18], (bool)objects[19], (ulong)objects[20], (ulong)objects[21], (ulong)objects[22], (ulong)objects[23], (ulong)objects[24], (ulong)objects[25], (ulong)objects[26], (ulong[])objects[27], (EPlayerSkillset)((byte)objects[28]), (string)objects[30], (CSteamID)objects[31]);
+                SteamPending item = new SteamPending(
+                    transportConnection, steamPlayerID, (bool)objects[9], (byte)objects[13], (byte)objects[14],
+                    (byte)objects[15], (Color)objects[16], (Color)objects[17], (Color)objects[18], (bool)objects[19],
+                    (ulong)objects[20], (ulong)objects[21], (ulong)objects[22], (ulong)objects[23], (ulong)objects[24],
+                    (ulong)objects[25], (ulong)objects[26], (ulong[])objects[27], (EPlayerSkillset)(byte)objects[28],
+                    (string)objects[30], (CSteamID)objects[31]);
                 if (Provider.isWhitelisted || !flag4)
                 {
                     Provider.pending.Add(item);

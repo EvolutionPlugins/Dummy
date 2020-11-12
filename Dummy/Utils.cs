@@ -6,7 +6,8 @@ namespace Dummy
 {
     public static class Utils
     {
-        public static void checkBanStatus(SteamPlayerID playerID, uint remoteIP, out bool isBanned, out string banReason, out uint banRemainingDuration)
+        public static void checkBanStatus(SteamPlayerID playerID, uint remoteIP, out bool isBanned, out string banReason,
+            out uint banRemainingDuration)
         {
             isBanned = false;
             banReason = string.Empty;

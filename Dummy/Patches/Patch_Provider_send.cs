@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Dummy.Patches
 {
-    [HarmonyPatch(typeof(Provider), "send")]
+    [HarmonyPatch(typeof(Provider), nameof(Provider.send))]
     public static class Patch_Provider_send
     {
         // Prevent spam about "Failed send packet to ..."
