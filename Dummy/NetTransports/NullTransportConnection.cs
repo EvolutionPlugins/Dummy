@@ -6,7 +6,7 @@ namespace Dummy.NetTransports
     public sealed class NullTransportConnection : ITransportConnection
     {
         private static NullTransportConnection m_Instance;
-        public static NullTransportConnection Instance => m_Instance ??= new();
+        public static NullTransportConnection Instance => m_Instance ??= new NullTransportConnection();
 
         private NullTransportConnection()
         {
