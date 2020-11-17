@@ -40,7 +40,7 @@ namespace Dummy.NetTransports
 
         public IPAddress GetAddress()
         {
-            return new IPAddress(0);
+            return null;
         }
 
         public string GetAddressString(bool withPort)

@@ -39,8 +39,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="OpenMod.Unturned" Version="2.2.1" />
+    <PackageReference Include="OpenMod.Unturned" Version="2.3.7" />
   </ItemGroup>
+
+
 
 
 </Project>

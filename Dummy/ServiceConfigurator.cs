@@ -12,8 +12,6 @@ namespace Dummy
     {
         public void ConfigureServices(IOpenModServiceConfigurationContext openModStartupContext, IServiceCollection serviceCollection)
         {
-            serviceCollection.AddSingleton<IDummyProvider, DummyProvider>();
-
             serviceCollection.Configure<UserManagerOptions>(options => options.AddUserProvider<DummyProvider>());
             serviceCollection.Configure<PermissionCheckerOptions>(options =>
             {
