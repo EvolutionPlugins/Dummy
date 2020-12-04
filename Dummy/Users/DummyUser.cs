@@ -28,6 +28,7 @@ namespace Dummy.Users
         public DummyUserSimulationThread Simulation { get; }
         public DummyPlayer Player { get; }
         public HashSet<CSteamID> Owners { get; }
+        public HashSet<CSteamID> SubscribersUI { get; }
 
         public CSteamID SteamID => Player.SteamId;
         public SteamPlayer SteamPlayer => Player.SteamPlayer;
@@ -38,6 +39,7 @@ namespace Dummy.Users
             ILoggerFactory loggerFactory, IStringLocalizer stringLocalizer, bool disableSimulation, HashSet<CSteamID> owners = null)
             : base(userProvider, userDataStore)
         {
+            SubscribersUI = new HashSet<CSteamID>();
             Id = steamPlayer.playerID.steamID.ToString();
             DisplayName = steamPlayer.playerID.characterName;
             Type = KnownActorTypes.Player;

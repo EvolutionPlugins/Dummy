@@ -4,7 +4,6 @@ using Steamworks;
 using System;
 using System.Linq;
 using UnityEngine;
-using Types = SDG.Unturned.Types;
 
 namespace Dummy.Patches
 {
@@ -13,17 +12,49 @@ namespace Dummy.Patches
     {
         internal static event NeedDummyProvider OnNeedDummy;
 
-        [HarmonyPatch(nameof(EffectManager.sendUIEffectText))]
-        [HarmonyPostfix]
-        public static void sendUIEffectText(short key, CSteamID steamID, bool reliable, string childName, string text)
+        [HarmonyPatch(nameof(EffectManager.askEffectClearByID))]
+        [HarmonyPrefix]
+        public static bool askEffectClearByID(ushort id, CSteamID steamID)
         {
+            if(OnNeedDummy().Dummies.Any(x => x.SubscribersUI.Contains(steamID)))
+            {
+                return false;
+            }
             var dummy = OnNeedDummy().Dummies.FirstOrDefault(x => x.SteamID == steamID);
             if (dummy == null)
             {
-                return;
+                return true;
             }
 
-            foreach (var owner in dummy.Owners)
+            foreach (var owner in dummy.SubscribersUI)
+            {
+                var player = PlayerTool.getSteamPlayer(owner);
+                if (player == null)
+                {
+                    continue;
+                }
+                ChatManager.serverSendMessage($"Dummy({steamID}) got clear UI (id: {id}). Showing up..", Color.yellow, toPlayer: player);
+                EffectManager.instance.channel.send("tellEffectClearByID", owner, ESteamPacket.UPDATE_RELIABLE_BUFFER, id);
+            }
+            return true;
+        }
+
+        [HarmonyPatch(nameof(EffectManager.sendUIEffectText))]
+        [HarmonyPrefix]
+        public static bool sendUIEffectText(short key, CSteamID steamID, bool reliable, string childName, string text)
+        {
+            if (OnNeedDummy().Dummies.Any(x => x.SubscribersUI.Contains(steamID)))
+            {
+                return false;
+            }
+
+            var dummy = OnNeedDummy().Dummies.FirstOrDefault(x => x.SteamID == steamID);
+            if (dummy == null)
+            {
+                return true;
+            }
+
+            foreach (var owner in dummy.SubscribersUI)
             {
                 var player = PlayerTool.getSteamPlayer(owner);
                 if (player == null)
@@ -31,21 +62,29 @@ namespace Dummy.Patches
                     continue;
                 }
                 ChatManager.serverSendMessage($"Dummy({steamID}) got text UI updating. Showing up..", Color.yellow, toPlayer: player);
-                EffectManager.sendUIEffectText(key, player.playerID.steamID, reliable, childName, text);
+                EffectManager.instance.channel.send("tellUIEffectText", owner,
+                    reliable ? ESteamPacket.UPDATE_RELIABLE_BUFFER : ESteamPacket.UPDATE_UNRELIABLE_BUFFER, key,
+                    childName, text);
             }
+            return true;
         }
 
         [HarmonyPatch(nameof(EffectManager.sendUIEffectVisibility))]
-        [HarmonyPostfix]
-        public static void sendUIEffectVisibility(short key, CSteamID steamID, bool reliable, string childName, bool visible)
+        [HarmonyPrefix]
+        public static bool sendUIEffectVisibility(short key, CSteamID steamID, bool reliable, string childName, bool visible)
         {
+            if (OnNeedDummy().Dummies.Any(x => x.SubscribersUI.Contains(steamID)))
+            {
+                return false;
+            }
+
             var dummy = OnNeedDummy().Dummies.FirstOrDefault(x => x.SteamID == steamID);
             if (dummy == null)
             {
-                return;
+                return true;
             }
 
-            foreach (var owner in dummy.Owners)
+            foreach (var owner in dummy.SubscribersUI)
             {
                 var player = PlayerTool.getSteamPlayer(owner);
                 if (player == null)
@@ -53,22 +92,30 @@ namespace Dummy.Patches
                     continue;
                 }
                 ChatManager.serverSendMessage($"Dummy({steamID}) got visibility UI updating. Showing up..", Color.yellow, toPlayer: player);
-                EffectManager.sendUIEffectVisibility(key, player.playerID.steamID, reliable, childName, visible);
+                EffectManager.instance.channel.send("tellUIEffectVisibility", owner,
+                    reliable ? ESteamPacket.UPDATE_RELIABLE_BUFFER : ESteamPacket.UPDATE_UNRELIABLE_BUFFER, key,
+                    childName, visible);
             }
+            return true;
         }
 
         [HarmonyPatch(nameof(EffectManager.sendUIEffectImageURL),
             argumentTypes: new Type[] { typeof(short), typeof(CSteamID), typeof(bool), typeof(string), typeof(string) })]
-        [HarmonyPostfix]
-        public static void sendUIEffectImageURL(short key, CSteamID steamID, bool reliable, string childName, string url)
+        [HarmonyPrefix]
+        public static bool sendUIEffectImageURL(short key, CSteamID steamID, bool reliable, string childName, string url)
         {
+            if (OnNeedDummy().Dummies.Any(x => x.SubscribersUI.Contains(steamID)))
+            {
+                return false;
+            }
+
             var dummy = OnNeedDummy().Dummies.FirstOrDefault(x => x.SteamID == steamID);
             if (dummy == null)
             {
-                return;
+                return true;
             }
 
-            foreach (var owner in dummy.Owners)
+            foreach (var owner in dummy.SubscribersUI)
             {
                 var player = PlayerTool.getSteamPlayer(owner);
                 if (player == null)
@@ -76,22 +123,30 @@ namespace Dummy.Patches
                     continue;
                 }
                 ChatManager.serverSendMessage($"Dummy({steamID}) got imageURL UI updating. Showing up..", Color.yellow, toPlayer: player);
-                EffectManager.sendUIEffectImageURL(key, player.playerID.steamID, reliable, childName, url);
+                EffectManager.instance.channel.send("tellUIEffectImageURL", owner,
+                    reliable ? ESteamPacket.UPDATE_RELIABLE_BUFFER : ESteamPacket.UPDATE_UNRELIABLE_BUFFER, key,
+                    childName, url, true, false);
             }
+            return true;
         }
 
         [HarmonyPatch(nameof(EffectManager.sendUIEffectImageURL),
             argumentTypes: new Type[] { typeof(short), typeof(CSteamID), typeof(bool), typeof(string), typeof(string), typeof(bool), typeof(bool) })]
-        [HarmonyPostfix]
-        public static void sendUIEffectImageURL2(short key, CSteamID steamID, bool reliable, string childName, string url, bool shouldCache, bool forceRefresh)
+        [HarmonyPrefix]
+        public static bool sendUIEffectImageURL2(short key, CSteamID steamID, bool reliable, string childName, string url, bool shouldCache, bool forceRefresh)
         {
+            if (OnNeedDummy().Dummies.Any(x => x.SubscribersUI.Contains(steamID)))
+            {
+                return false;
+            }
+
             var dummy = OnNeedDummy().Dummies.FirstOrDefault(x => x.SteamID == steamID);
             if (dummy == null)
             {
-                return;
+                return true;
             }
 
-            foreach (var owner in dummy.Owners)
+            foreach (var owner in dummy.SubscribersUI)
             {
                 var player = PlayerTool.getSteamPlayer(owner);
                 if (player == null)
@@ -99,123 +154,165 @@ namespace Dummy.Patches
                     continue;
                 }
                 ChatManager.serverSendMessage($"Dummy({steamID}) got imageURL UI updating. Showing up..", Color.yellow, toPlayer: player);
-                EffectManager.sendUIEffectImageURL(key, player.playerID.steamID, reliable, childName, url, shouldCache, forceRefresh);
+                EffectManager.instance.channel.send("tellUIEffectImageURL", owner,
+                    reliable ? ESteamPacket.UPDATE_RELIABLE_BUFFER : ESteamPacket.UPDATE_UNRELIABLE_BUFFER, key,
+                    childName, url, shouldCache, forceRefresh);
             }
+            return true;
         }
 
         [HarmonyPatch(nameof(EffectManager.sendUIEffect),
             argumentTypes: new Type[] { typeof(ushort), typeof(short), typeof(CSteamID), typeof(bool), typeof(string), typeof(string), typeof(string), typeof(string) })]
-        [HarmonyPostfix]
-        public static void sendUIEffect4Args(ushort id, short key, CSteamID steamID, bool reliable, string arg0, string arg1, string arg2, string arg3)
+        [HarmonyPrefix]
+        public static bool sendUIEffect4Args(ushort id, short key, CSteamID steamID, bool reliable, string arg0, string arg1, string arg2, string arg3)
         {
+            if (OnNeedDummy().Dummies.Any(x => x.SubscribersUI.Contains(steamID)))
+            {
+                return false;
+            }
+
             var dummy = OnNeedDummy().Dummies.FirstOrDefault(x => x.SteamID == steamID);
             if (dummy == null)
             {
-                return;
+                return true;
             }
 
-            foreach (var owner in dummy.Owners)
+            foreach (var owner in dummy.SubscribersUI)
             {
                 var player = PlayerTool.getSteamPlayer(owner);
                 if (player == null)
                 {
                     continue;
                 }
-                ChatManager.serverSendMessage($"Dummy({steamID}) got UI (4 args) updating. Showing up..", Color.yellow, toPlayer: player);
-                EffectManager.sendUIEffect(id, key, player.playerID.steamID, reliable, arg0, arg1, arg2, arg3);
+                ChatManager.serverSendMessage($"Dummy({steamID}) got UI (4 args). Showing up..", Color.yellow, toPlayer: player);
+                EffectManager.instance.channel.send("tellUIEffect4Args", owner,
+                    reliable ? ESteamPacket.UPDATE_RELIABLE_BUFFER : ESteamPacket.UPDATE_UNRELIABLE_BUFFER, id, key,
+                    arg0, arg1, arg2, arg3);
             }
+            return true;
         }
 
         [HarmonyPatch(nameof(EffectManager.sendUIEffect),
             argumentTypes: new Type[] { typeof(ushort), typeof(short), typeof(CSteamID), typeof(bool), typeof(string), typeof(string), typeof(string) })]
-        [HarmonyPostfix]
-        public static void sendUIEffect3Args(ushort id, short key, CSteamID steamID, bool reliable, string arg0, string arg1, string arg2)
+        [HarmonyPrefix]
+        public static bool sendUIEffect3Args(ushort id, short key, CSteamID steamID, bool reliable, string arg0, string arg1, string arg2)
         {
+            if (OnNeedDummy().Dummies.Any(x => x.SubscribersUI.Contains(steamID)))
+            {
+                return false;
+            }
+
             var dummy = OnNeedDummy().Dummies.FirstOrDefault(x => x.SteamID == steamID);
             if (dummy == null)
             {
-                return;
+                return true;
             }
 
-            foreach (var owner in dummy.Owners)
+            foreach (var owner in dummy.SubscribersUI)
             {
                 var player = PlayerTool.getSteamPlayer(owner);
                 if (player == null)
                 {
                     continue;
                 }
-                ChatManager.serverSendMessage($"Dummy({steamID}) got UI (3 args) updating. Showing up..", Color.yellow, toPlayer: player);
-                EffectManager.sendUIEffect(id, key, player.playerID.steamID, reliable, arg0, arg1, arg2);
+                ChatManager.serverSendMessage($"Dummy({steamID}) got UI (3 args). Showing up..", Color.yellow, toPlayer: player);
+                EffectManager.instance.channel.send("tellUIEffect3Args", owner,
+                    reliable ? ESteamPacket.UPDATE_RELIABLE_BUFFER : ESteamPacket.UPDATE_UNRELIABLE_BUFFER, id, key,
+                    arg0, arg1, arg2);
             }
+            return true;
         }
 
         [HarmonyPatch(nameof(EffectManager.sendUIEffect),
             argumentTypes: new Type[] { typeof(ushort), typeof(short), typeof(CSteamID), typeof(bool), typeof(string), typeof(string) })]
-        [HarmonyPostfix]
-        public static void sendUIEffect2Args(ushort id, short key, CSteamID steamID, bool reliable, string arg0, string arg1)
+        [HarmonyPrefix]
+        public static bool sendUIEffect2Args(ushort id, short key, CSteamID steamID, bool reliable, string arg0, string arg1)
         {
+            if (OnNeedDummy().Dummies.Any(x => x.SubscribersUI.Contains(steamID)))
+            {
+                return false;
+            }
+
             var dummy = OnNeedDummy().Dummies.FirstOrDefault(x => x.SteamID == steamID);
             if (dummy == null)
             {
-                return;
+                return true;
             }
 
-            foreach (var owner in dummy.Owners)
+            foreach (var owner in dummy.SubscribersUI)
             {
                 var player = PlayerTool.getSteamPlayer(owner);
                 if (player == null)
                 {
                     continue;
                 }
-                ChatManager.serverSendMessage($"Dummy({steamID}) got UI (2 args) updating. Showing up..", Color.yellow, toPlayer: player);
-                EffectManager.sendUIEffect(id, key, player.playerID.steamID, reliable, arg0, arg1);
+                ChatManager.serverSendMessage($"Dummy({steamID}) got UI (2 args). Showing up..", Color.yellow, toPlayer: player);
+                EffectManager.instance.channel.send("tellUIEffect2Args", owner,
+                    reliable ? ESteamPacket.UPDATE_RELIABLE_BUFFER : ESteamPacket.UPDATE_UNRELIABLE_BUFFER, id, key,
+                    arg0, arg1);
             }
+            return true;
         }
 
         [HarmonyPatch(nameof(EffectManager.sendUIEffect),
             argumentTypes: new Type[] { typeof(ushort), typeof(short), typeof(CSteamID), typeof(bool), typeof(string) })]
-        [HarmonyPostfix]
-        public static void sendUIEffect1Arg(ushort id, short key, CSteamID steamID, bool reliable, string arg0)
+        [HarmonyPrefix]
+        public static bool sendUIEffect1Arg(ushort id, short key, CSteamID steamID, bool reliable, string arg0)
         {
+            if (OnNeedDummy().Dummies.Any(x => x.SubscribersUI.Contains(steamID)))
+            {
+                return false;
+            }
+
             var dummy = OnNeedDummy().Dummies.FirstOrDefault(x => x.SteamID == steamID);
             if (dummy == null)
             {
-                return;
+                return true;
             }
 
-            foreach (var owner in dummy.Owners)
+            foreach (var owner in dummy.SubscribersUI)
             {
                 var player = PlayerTool.getSteamPlayer(owner);
                 if (player == null)
                 {
                     continue;
                 }
-                ChatManager.serverSendMessage($"Dummy({steamID}) got UI (1 arg) updating. Showing up..", Color.yellow, toPlayer: player);
-                EffectManager.sendUIEffect(id, key, player.playerID.steamID, reliable, arg0);
+                ChatManager.serverSendMessage($"Dummy({steamID}) got UI (1 arg). Showing up..", Color.yellow, toPlayer: player);
+                EffectManager.instance.channel.send("tellUIEffect1Arg", owner,
+                    reliable ? ESteamPacket.UPDATE_RELIABLE_BUFFER : ESteamPacket.UPDATE_UNRELIABLE_BUFFER, id, key,
+                    arg0);
             }
+            return true;
         }
 
         [HarmonyPatch(nameof(EffectManager.sendUIEffect),
             argumentTypes: new Type[] { typeof(ushort), typeof(short), typeof(CSteamID), typeof(bool) })]
-        [HarmonyPostfix]
-        public static void sendUIEffect0Arg(ushort id, short key, CSteamID steamID, bool reliable)
+        [HarmonyPrefix]
+        public static bool sendUIEffect0Arg(ushort id, short key, CSteamID steamID, bool reliable)
         {
+            if (OnNeedDummy().Dummies.Any(x => x.SubscribersUI.Contains(steamID)))
+            {
+                return false;
+            }
+
             var dummy = OnNeedDummy().Dummies.FirstOrDefault(x => x.SteamID == steamID);
             if (dummy == null)
             {
-                return;
+                return true;
             }
 
-            foreach (var owner in dummy.Owners)
+            foreach (var owner in dummy.SubscribersUI)
             {
                 var player = PlayerTool.getSteamPlayer(owner);
                 if (player == null)
                 {
                     continue;
                 }
-                ChatManager.serverSendMessage($"Dummy({steamID}) got UI (0 arg) updating. Showing up..", Color.yellow, toPlayer: player);
-                EffectManager.sendUIEffect(id, key, player.playerID.steamID, reliable);
+                ChatManager.serverSendMessage($"Dummy({steamID}) got UI (0 arg). Showing up..", Color.yellow, toPlayer: player);
+                EffectManager.instance.channel.send("tellUIEffect", owner,
+                     reliable ? ESteamPacket.UPDATE_RELIABLE_BUFFER : ESteamPacket.UPDATE_UNRELIABLE_BUFFER, id, key);
             }
+            return true;
         }
     }
 }
