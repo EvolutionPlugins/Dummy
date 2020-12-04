@@ -2,7 +2,6 @@
 
 using Cysharp.Threading.Tasks;
 using Dummy.Players;
-using Dummy.Providers;
 using Dummy.Threads;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
@@ -11,6 +10,7 @@ using OpenMod.Core.Helpers;
 using OpenMod.Core.Users;
 using OpenMod.Extensions.Games.Abstractions.Players;
 using OpenMod.UnityEngine.Extensions;
+using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
 using System;
@@ -34,9 +34,9 @@ namespace Dummy.Users
 
         IPlayer IPlayerUser.Player => Player;
 
-        protected internal DummyUser(DummyProvider dummyProvider, IUserDataStore userDataStore, SteamPlayer steamPlayer,
+        protected internal DummyUser(UnturnedUserProvider userProvider, IUserDataStore userDataStore, SteamPlayer steamPlayer,
             ILoggerFactory loggerFactory, IStringLocalizer stringLocalizer, HashSet<CSteamID> owners = null)
-            : base(null /* <- todo */, userDataStore)
+            : base(userProvider, userDataStore)
         {
             Id = steamPlayer.playerID.steamID.ToString();
             DisplayName = steamPlayer.playerID.characterName;
@@ -79,7 +79,7 @@ namespace Dummy.Users
                     {
                         continue;
                     }
-                    ChatManager.serverSendMessage(m_StringLocalizer["events:chatted", new[] { Id, message }], color.ToUnityColor(),
+                    ChatManager.serverSendMessage(m_StringLocalizer["events:chatted", new { Id, Text = message }], color.ToUnityColor(),
                         toPlayer: player.channel.owner, iconURL: iconUrl, useRichTextFormatting: isRich);
                 }
             }

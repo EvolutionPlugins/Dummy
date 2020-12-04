@@ -40,11 +40,11 @@ namespace Dummy.Commands.Actions
             await UniTask.WaitUntil(() => wait);
             if (exception != null)
             {
-                await PrintAsync(m_StringLocalizer["commands:actions:execute:fail", new { playerDummy.Id, command }]);
+                await PrintAsync(m_StringLocalizer["commands:actions:execute:fail", new { playerDummy.Id, Command = string.Join(" ", command) }]);
             }
             else
             {
-                await PrintAsync(m_StringLocalizer["commands:actions:execute:success", new { playerDummy.Id, command }]);
+                await PrintAsync(m_StringLocalizer["commands:actions:execute:success", new { playerDummy.Id, Command = string.Join(" ", command) }]);
             }
         }
     }

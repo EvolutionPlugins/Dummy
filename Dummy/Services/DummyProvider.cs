@@ -29,6 +29,7 @@ namespace Dummy.Providers
     {
         private readonly HashSet<DummyUser> m_Dummies;
         private readonly IPluginAccessor<Dummy> m_PluginAccessor;
+        private readonly IUserManager m_UserManager;
         private readonly IUserDataStore m_UserDataStore;
         private readonly ILogger<DummyProvider> m_Logger;
         private readonly ILoggerFactory m_LoggerFactory;
@@ -38,10 +39,12 @@ namespace Dummy.Providers
 
         public IReadOnlyCollection<DummyUser> Dummies => m_Dummies;
 
-        public DummyProvider(IPluginAccessor<Dummy> pluginAccessor, IUserDataStore userDataStore, ILogger<DummyProvider> logger, ILoggerFactory loggerFactory)
+        public DummyProvider(IPluginAccessor<Dummy> pluginAccessor, IUserManager userManager,
+            IUserDataStore userDataStore, ILogger<DummyProvider> logger, ILoggerFactory loggerFactory)
         {
             m_Dummies = new HashSet<DummyUser>();
             m_PluginAccessor = pluginAccessor;
+            m_UserManager = userManager;
             m_UserDataStore = userDataStore;
             m_Logger = logger;
             m_LoggerFactory = loggerFactory;
@@ -73,8 +76,8 @@ namespace Dummy.Providers
             {
                 return;
             }
-            m_Logger.LogDebug($"Start kick timer, will kicked after {timer * 1000} sec");
-            await Task.Delay((int)(timer * 1000));
+            m_Logger.LogDebug($"Start kick timer, will kicked after {timer} sec");
+            await Task.Delay(TimeSpan.FromSeconds(timer));
 
             var user = await GetPlayerDummyAsync(id);
             if (user == null)
@@ -119,6 +122,7 @@ namespace Dummy.Providers
             AsyncHelper.RunSync(() => RemoveDummyAsync(steamID));
         }
 
+        // todo: rewrite to use openmod event (Monitor)
         protected virtual void DamageTool_damagePlayerRequested(ref DamagePlayerParameters parameters, ref bool shouldAllow)
         {
             var steamId = parameters.player.channel.owner.playerID.steamID;
@@ -177,7 +181,8 @@ namespace Dummy.Providers
                 0, 0, Color.white, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0, 0, Array.Empty<int>(), Array.Empty<string>(),
                 Array.Empty<string>(), EPlayerSkillset.NONE, "english", CSteamID.Nil);
 
-            var playerDummy = new DummyUser(this, m_UserDataStore, Provider.clients.Last(), m_LoggerFactory, m_StringLocalizer, owners);
+            var playerDummy = new DummyUser((UnturnedUserProvider)m_UserManager.UserProviders.FirstOrDefault(c => c is UnturnedUserProvider),
+                m_UserDataStore, Provider.clients.Last(), m_LoggerFactory, m_StringLocalizer, owners);
             PostAddDummy(playerDummy);
 
             return playerDummy;
@@ -206,7 +211,8 @@ namespace Dummy.Providers
                 userSteamPlayer.skinDynamicProps, userSteamPlayer.skillset, userSteamPlayer.language,
                 userSteamPlayer.lobbyID);
 
-            var playerDummy = new DummyUser(this, m_UserDataStore, Provider.clients.Last(), m_LoggerFactory, m_StringLocalizer, owners);
+            var playerDummy = new DummyUser((UnturnedUserProvider)m_UserManager.UserProviders.FirstOrDefault(c => c is UnturnedUserProvider),
+                m_UserDataStore, Provider.clients.Last(), m_LoggerFactory, m_StringLocalizer, owners);
             PostAddDummy(playerDummy);
 
             return playerDummy;
