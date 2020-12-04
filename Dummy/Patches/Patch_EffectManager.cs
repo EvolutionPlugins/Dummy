@@ -314,5 +314,18 @@ namespace Dummy.Patches
             }
             return true;
         }
+
+        [HarmonyPatch(nameof(EffectManager.tellEffectTextCommitted))]
+        [HarmonyPatch(nameof(EffectManager.tellEffectClicked))]
+        [HarmonyPrefix]
+        public static void InteractingUI(ref CSteamID steamID)
+        {
+            var altSteamId = steamID;
+            var dummy = OnNeedDummy().Dummies.FirstOrDefault(x => x.SubscribersUI.Contains(altSteamId));
+            if(dummy != null)
+            {
+                steamID = dummy.SteamID;
+            }
+        }
     }
 }
