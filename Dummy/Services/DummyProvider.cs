@@ -2,6 +2,7 @@
 using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.NetTransports;
+using Dummy.Services;
 using Dummy.Users;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,6 +36,7 @@ namespace Dummy.Providers
         private readonly ILoggerFactory m_LoggerFactory;
 
         private IStringLocalizer m_StringLocalizer;
+        private IConfiguration m_Configuration;
         private bool m_IsDisposing;
 
         public IReadOnlyCollection<DummyUser> Dummies => m_Dummies;
@@ -177,6 +179,31 @@ namespace Dummy.Providers
                 true, 0, 0, 0, Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
                 Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
 
+            m_Configuration ??= m_PluginAccessor.Instance.Configuration;
+            if (m_Configuration.GetSection("events:callOnCheckValidWithExplanation").Get<bool>())
+            {
+                var isValid = true;
+                var explanation = string.Empty;
+                try
+                {
+                    Provider.onCheckValidWithExplanation(new ValidateAuthTicketResponse_t
+                    {
+                        m_SteamID = id,
+                        m_eAuthSessionResponse = EAuthSessionResponse.k_EAuthSessionResponseOK,
+                        m_OwnerSteamID = id
+                    }, ref isValid, ref explanation);
+                }
+                catch (Exception e)
+                {
+                    m_Logger.LogError(e, "Plugin raised an exception from onCheckValidWithExplanation: ");
+                }
+                if (!isValid)
+                {
+                    Provider.pending.RemoveAt(Provider.pending.Count - 1);
+                    throw new DummyCanceledSpawnException($"Plugin reject connection a dummy({id}). Reason: {explanation}");
+                }
+            }
+
             Provider.accept(dummyPlayerID, true, false, 0,
                 0, 0, Color.white, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0, 0, Array.Empty<int>(), Array.Empty<string>(),
                 Array.Empty<string>(), EPlayerSkillset.NONE, "english", CSteamID.Nil);
@@ -202,6 +229,31 @@ namespace Dummy.Providers
                 userSteamPlayer.face, userSteamPlayer.hair, userSteamPlayer.beard, userSteamPlayer.skin,
                 userSteamPlayer.color, Color.white, userSteamPlayer.hand, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
                 Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
+
+            m_Configuration ??= m_PluginAccessor.Instance.Configuration;
+            if (m_Configuration.GetSection("events:callOnCheckValidWithExplanation").Get<bool>())
+            {
+                var isValid = true;
+                var explanation = string.Empty;
+                try
+                {
+                    Provider.onCheckValidWithExplanation(new ValidateAuthTicketResponse_t
+                    {
+                        m_SteamID = id,
+                        m_eAuthSessionResponse = EAuthSessionResponse.k_EAuthSessionResponseOK,
+                        m_OwnerSteamID = id
+                    }, ref isValid, ref explanation);
+                }
+                catch (Exception e)
+                {
+                    m_Logger.LogError(e, "Plugin raised an exception from onCheckValidWithExplanation: ");
+                }
+                if (!isValid)
+                {
+                    Provider.pending.RemoveAt(Provider.pending.Count - 1);
+                    throw new DummyCanceledSpawnException($"Plugin reject connection a dummy({id}). Reason: {explanation}");
+                }
+            }
 
             Provider.accept(dummyPlayerID, userSteamPlayer.isPro, false, userSteamPlayer.face, userSteamPlayer.hair,
                 userSteamPlayer.beard, userSteamPlayer.skin, userSteamPlayer.color, userSteamPlayer.markerColor,
