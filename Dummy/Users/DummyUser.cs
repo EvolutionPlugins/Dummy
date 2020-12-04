@@ -35,7 +35,7 @@ namespace Dummy.Users
         IPlayer IPlayerUser.Player => Player;
 
         protected internal DummyUser(UnturnedUserProvider userProvider, IUserDataStore userDataStore, SteamPlayer steamPlayer,
-            ILoggerFactory loggerFactory, IStringLocalizer stringLocalizer, HashSet<CSteamID> owners = null)
+            ILoggerFactory loggerFactory, IStringLocalizer stringLocalizer, bool disableSimulation, HashSet<CSteamID> owners = null)
             : base(userProvider, userDataStore)
         {
             Id = steamPlayer.playerID.steamID.ToString();
@@ -50,7 +50,7 @@ namespace Dummy.Users
             Simulation = new DummyUserSimulationThread(this, loggerFactory.CreateLogger($"Dummy.{Id}.Simulation"));
 
             Actions.Enabled = true;
-            Simulation.Enabled = true;
+            Simulation.Enabled = !disableSimulation;
 
             AsyncHelper.Schedule($"Action a dummy {Id}", () => Actions.Start().AsTask());
             AsyncHelper.Schedule($"Simulation a dummy {Id}", () => Simulation.Start().AsTask());

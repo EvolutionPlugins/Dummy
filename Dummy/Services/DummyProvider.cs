@@ -1,7 +1,8 @@
 ﻿using Autofac;
 using Cysharp.Threading.Tasks;
 using Dummy.API;
-using Dummy.NetTransports;
+using Dummy.Extensions;
+using Dummy.Models;
 using Dummy.Services;
 using Dummy.Users;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +15,7 @@ using OpenMod.API.Prioritization;
 using OpenMod.API.Users;
 using OpenMod.Core.Helpers;
 using OpenMod.Unturned.Users;
+using SDG.NetTransport;
 using SDG.Unturned;
 using Steamworks;
 using System;
@@ -34,15 +36,17 @@ namespace Dummy.Providers
         private readonly IUserDataStore m_UserDataStore;
         private readonly ILogger<DummyProvider> m_Logger;
         private readonly ILoggerFactory m_LoggerFactory;
+        private readonly ITransportConnection m_TransportConnection;
 
-        private IStringLocalizer m_StringLocalizer;
-        private IConfiguration m_Configuration;
+        private IStringLocalizer m_StringLocalizer => m_PluginAccessor.Instance.LifetimeScope.Resolve<IStringLocalizer>();
+        private IConfiguration m_Configuration => m_PluginAccessor.Instance.Configuration;
         private bool m_IsDisposing;
 
         public IReadOnlyCollection<DummyUser> Dummies => m_Dummies;
 
         public DummyProvider(IPluginAccessor<Dummy> pluginAccessor, IUserManager userManager,
-            IUserDataStore userDataStore, ILogger<DummyProvider> logger, ILoggerFactory loggerFactory)
+            IUserDataStore userDataStore, ILogger<DummyProvider> logger, ILoggerFactory loggerFactory,
+            ITransportConnection transportConnection)
         {
             m_Dummies = new HashSet<DummyUser>();
             m_PluginAccessor = pluginAccessor;
@@ -50,7 +54,7 @@ namespace Dummy.Providers
             m_UserDataStore = userDataStore;
             m_Logger = logger;
             m_LoggerFactory = loggerFactory;
-
+            m_TransportConnection = transportConnection;
             Provider.onServerDisconnected += OnServerDisconnected;
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
@@ -113,7 +117,7 @@ namespace Dummy.Providers
                 {
                     continue;
                 }
-                m_StringLocalizer ??= m_PluginAccessor.Instance.LifetimeScope.Resolve<IStringLocalizer>();
+
                 ChatManager.serverSendMessage(m_StringLocalizer["events:chatted", new { Text = text, dummy.Id }], color,
                     toPlayer: steamPlayerOwner, iconURL: iconURL, useRichTextFormatting: true);
             }
@@ -132,7 +136,7 @@ namespace Dummy.Providers
             {
                 return;
             }
-            shouldAllow = m_PluginAccessor.Instance.Configuration.GetSection("events:allowDamage").Get<bool>();
+            shouldAllow = m_Configuration.Get<Configuration>().Events.AllowDamage;
             var totalTimes = parameters.times;
 
             if (parameters.respectArmor)
@@ -146,7 +150,6 @@ namespace Dummy.Providers
             var totalDamage = (byte)Mathf.Min(255, parameters.damage * totalTimes);
 
             var killerId = parameters.killer;
-            m_StringLocalizer ??= m_PluginAccessor.Instance.LifetimeScope.Resolve<IStringLocalizer>();
             ChatManager.say(killerId, m_StringLocalizer["events:damaged", new { DamageAmount = totalDamage, Id = steamId }], Color.green, true);
         }
 
@@ -154,13 +157,12 @@ namespace Dummy.Providers
 
         private void CheckSpawn(CSteamID id)
         {
-            m_StringLocalizer ??= m_PluginAccessor.Instance.LifetimeScope.Resolve<IStringLocalizer>();
             if (m_Dummies.Any(x => x.SteamID == id))
             {
                 throw new DummyContainsException(m_StringLocalizer, id.m_SteamID);
             }
 
-            var amountDummiesConfig = m_PluginAccessor.Instance.Configuration.GetSection("options:amountDummies").Get<byte>();
+            var amountDummiesConfig = m_Configuration.Get<Configuration>().Options.AmountDummies;
             if (amountDummiesConfig != 0 && Dummies.Count + 1 > amountDummiesConfig)
             {
                 throw new DummyOverflowsException(m_StringLocalizer, (byte)Dummies.Count, amountDummiesConfig);
@@ -173,14 +175,17 @@ namespace Dummy.Providers
 
             await UniTask.SwitchToMainThread();
 
-            var dummyPlayerID = new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil);
+            var config = m_Configuration.Get<Configuration>();
+            var @default = config.Default;
+            var skins = config.Default.Skins;
+            var dummyPlayerID = new SteamPlayerID(id, @default.CharacterId, @default.PlayerName,
+                @default.CharacterName, @default.NickName, @default.SteamGroupId, @default.HWID.GetBytes());
 
-            Provider.pending.Add(new SteamPending(NullTransportConnection.Instance, dummyPlayerID,
-                true, 0, 0, 0, Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
-                Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
+            Provider.pending.Add(new SteamPending(m_TransportConnection, dummyPlayerID,
+                    @default.IsPro, @default.FaceId, @default.HairId, @default.BeardId, @default.SkinColor.ToColor(), @default.Color.ToColor(), @default.MarkerColor.ToColor(), @default.IsLeftHanded, skins.Shirt, skins.Pants, skins.Hat, skins.Backpack, skins.Vest, skins.Mask, skins.Glasses,
+                Array.Empty<ulong>(), @default.PlayerSkillset, @default.Language, @default.LobbyId));
 
-            m_Configuration ??= m_PluginAccessor.Instance.Configuration;
-            if (m_Configuration.GetSection("events:callOnCheckValidWithExplanation").Get<bool>())
+            if (config.Events.CallOnCheckValidWithExplanation)
             {
                 var isValid = true;
                 var explanation = string.Empty;
@@ -204,12 +209,12 @@ namespace Dummy.Providers
                 }
             }
 
-            Provider.accept(dummyPlayerID, true, false, 0,
-                0, 0, Color.white, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0, 0, Array.Empty<int>(), Array.Empty<string>(),
-                Array.Empty<string>(), EPlayerSkillset.NONE, "english", CSteamID.Nil);
+            Provider.accept(dummyPlayerID, @default.IsPro, false, @default.FaceId,
+                @default.HairId, @default.BeardId, @default.SkinColor.ToColor(), @default.Color.ToColor(), @default.MarkerColor.ToColor(), @default.IsLeftHanded, skins.Shirt, skins.Pants, skins.Hat, skins.Backpack, skins.Vest, skins.Mask, skins.Glasses, Array.Empty<int>(), Array.Empty<string>(),
+                Array.Empty<string>(), @default.PlayerSkillset, @default.Language, @default.LobbyId);
 
             var playerDummy = new DummyUser((UnturnedUserProvider)m_UserManager.UserProviders.FirstOrDefault(c => c is UnturnedUserProvider),
-                m_UserDataStore, Provider.clients.Last(), m_LoggerFactory, m_StringLocalizer, owners);
+                m_UserDataStore, Provider.clients.Last(), m_LoggerFactory, m_StringLocalizer, config.Options.DisableSimulations, owners);
             PostAddDummy(playerDummy);
 
             return playerDummy;
@@ -221,17 +226,21 @@ namespace Dummy.Providers
 
             await UniTask.SwitchToMainThread();
 
+            var config = m_Configuration.Get<Configuration>();
+
             var userSteamPlayer = userCopy.Player.SteamPlayer;
             var dummyPlayerID = new SteamPlayerID(id, userSteamPlayer.playerID.characterID, "dummy", "dummy", "dummy",
-                userSteamPlayer.playerID.group);
+                userSteamPlayer.playerID.group, userSteamPlayer.playerID.hwid);
 
-            Provider.pending.Add(new SteamPending(NullTransportConnection.Instance, dummyPlayerID, true,
+            Provider.pending.Add(new SteamPending(m_TransportConnection, dummyPlayerID, userSteamPlayer.isPro,
                 userSteamPlayer.face, userSteamPlayer.hair, userSteamPlayer.beard, userSteamPlayer.skin,
-                userSteamPlayer.color, Color.white, userSteamPlayer.hand, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
-                Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
+                userSteamPlayer.color, userSteamPlayer.markerColor, userSteamPlayer.hand,
+                (ulong)userSteamPlayer.shirtItem, (ulong)userSteamPlayer.pantsItem, (ulong)userSteamPlayer.hatItem,
+                (ulong)userSteamPlayer.backpackItem, (ulong)userSteamPlayer.vestItem, (ulong)userSteamPlayer.maskItem,
+                (ulong)userSteamPlayer.glassesItem, Array.Empty<ulong>(), userSteamPlayer.skillset,
+                userSteamPlayer.language, userSteamPlayer.lobbyID));
 
-            m_Configuration ??= m_PluginAccessor.Instance.Configuration;
-            if (m_Configuration.GetSection("events:callOnCheckValidWithExplanation").Get<bool>())
+            if (config.Events.CallOnCheckValidWithExplanation)
             {
                 var isValid = true;
                 var explanation = string.Empty;
@@ -264,7 +273,7 @@ namespace Dummy.Providers
                 userSteamPlayer.lobbyID);
 
             var playerDummy = new DummyUser((UnturnedUserProvider)m_UserManager.UserProviders.FirstOrDefault(c => c is UnturnedUserProvider),
-                m_UserDataStore, Provider.clients.Last(), m_LoggerFactory, m_StringLocalizer, owners);
+                m_UserDataStore, Provider.clients.Last(), m_LoggerFactory, m_StringLocalizer, config.Options.DisableSimulations, owners);
             PostAddDummy(playerDummy);
 
             return playerDummy;

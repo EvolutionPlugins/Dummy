@@ -3,7 +3,39 @@
   kickDummyAfterSeconds: 600 # A timer to kick a dummy after the amount of time. Set to 0 to disable timer kick
   isAdmin: false # On spawning, a dummy will be an admin
   canExecuteCommands: true # Enabling this a dummy can execute commands without admin or permission.
+  disableSimulations: false # [WARNING] Disabling this option can break plugin but if your host-server is slow then disable (takes about ~2-5% of CPU each a dummy)
 
 events:
   allowDamage: true # Enabling this dummy can be damaged.
   callOnCheckValidWithExplanation: true # Before entering the server will be called event Provider.OnCheckValidWithExplanation
+
+default:
+  isPro: true
+  characterId: 0
+  playerName: dummy
+  characterName: dummy
+  nickName: dummy
+  ip: 192.168.0.1
+  port: 25565
+  hwid: 13FA0C5BD7554B2CBDB2AEAC8D9B06B8
+  steamGroupId: 0
+  skinColor: "#94764B"
+  color: "#ffffff"
+  beardId: 5
+  beardColor: "#FFFFFF"
+  hairId: 9
+  hairColor: "#FFFFFF"
+  faceId: 31
+  markerColor: "Orange"
+  isLeftHanded: false
+  skins:
+    shirt: 901
+    pants: 902
+    hat: 896
+    backpack: 895
+    vest: 898
+    mask: 737
+    glasses: 909
+  playerSkillset: POLICE
+  language: English
+  lobbyId: 0
