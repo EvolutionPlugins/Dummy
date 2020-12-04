@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Cysharp.Threading.Tasks;
 using Dummy.API;
+using Dummy.NetTransports;
 using Dummy.Users;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,8 +12,6 @@ using OpenMod.API.Plugins;
 using OpenMod.API.Prioritization;
 using OpenMod.API.Users;
 using OpenMod.Core.Helpers;
-using OpenMod.Core.Users;
-using OpenMod.UnityEngine.Extensions;
 using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
@@ -26,30 +25,31 @@ using Color = UnityEngine.Color;
 namespace Dummy.Providers
 {
     [ServiceImplementation(Lifetime = ServiceLifetime.Singleton, Priority = Priority.Lowest)]
-    public class DummyProvider : IDummyProvider, IUserProvider, IAsyncDisposable
+    public class DummyProvider : IDummyProvider, IAsyncDisposable
     {
         private readonly HashSet<DummyUser> m_Dummies;
         private readonly IPluginAccessor<Dummy> m_PluginAccessor;
         private readonly IUserDataStore m_UserDataStore;
         private readonly ILogger<DummyProvider> m_Logger;
+        private readonly ILoggerFactory m_LoggerFactory;
 
-        private IReadOnlyCollection<IUser> Users => m_Dummies.OfType<IUser>().ToList().AsReadOnly();
         private IStringLocalizer m_StringLocalizer;
         private bool m_IsDisposing;
 
         public IReadOnlyCollection<DummyUser> Dummies => m_Dummies;
 
-        public DummyProvider(IPluginAccessor<Dummy> pluginAccessor, IUserDataStore userDataStore, ILogger<DummyProvider> logger)
+        public DummyProvider(IPluginAccessor<Dummy> pluginAccessor, IUserDataStore userDataStore, ILogger<DummyProvider> logger, ILoggerFactory loggerFactory)
         {
             m_Dummies = new HashSet<DummyUser>();
             m_PluginAccessor = pluginAccessor;
             m_UserDataStore = userDataStore;
             m_Logger = logger;
+            m_LoggerFactory = loggerFactory;
 
             Provider.onServerDisconnected += OnServerDisconnected;
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
-            // TODo: called twice
+
             AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
         }
 
@@ -57,7 +57,7 @@ namespace Dummy.Providers
         {
             while (!m_IsDisposing)
             {
-                m_Logger.LogTrace("Heartbeat dummies");
+                //m_Logger.LogTrace("Heartbeat dummies");
                 foreach (var dummy in Dummies)
                 {
                     var client = dummy.SteamPlayer;
@@ -73,7 +73,7 @@ namespace Dummy.Providers
             {
                 return;
             }
-            m_Logger.LogTrace($"Start kick timer, will kicked after {timer * 1000} sec");
+            m_Logger.LogDebug($"Start kick timer, will kicked after {timer * 1000} sec");
             await Task.Delay((int)(timer * 1000));
 
             var user = await GetPlayerDummyAsync(id);
@@ -167,25 +167,17 @@ namespace Dummy.Providers
 
             await UniTask.SwitchToMainThread();
 
-            var index = Provider.clients.Count;
             var dummyPlayerID = new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil);
 
-            string characterName = dummyPlayerID.characterName;
-            const uint uScore = 1;
-            SteamGameServer.BUpdateUserData(id, characterName, uScore);
+            Provider.pending.Add(new SteamPending(NullTransportConnection.Instance, dummyPlayerID,
+                true, 0, 0, 0, Color.white, Color.white, Color.white, false, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
+                Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
 
-            Utils.loadPlayerSpawn(dummyPlayerID, out var point, out var angle, out var initialStance);
-            int channel = Utils.allocPlayerChannelId();
-            var shouldCallOriginalEvent = m_PluginAccessor.Instance.Configuration.GetSection("events:callOriginalConnectEvent").Get<bool>();
-            var dummySteamPlayer = Utils.addPlayer(dummyPlayerID, point, angle, true, false, channel, 0, 0, 0,
-                Color.white, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0, 0, Array.Empty<int>(),
-                Array.Empty<string>(), Array.Empty<string>(), EPlayerSkillset.NONE, "english", CSteamID.Nil, shouldCallOriginalEvent);
+            Provider.accept(dummyPlayerID, true, false, 0,
+                0, 0, Color.white, Color.white, Color.white, false, 0, 0, 0, 0, 0, 0, 0, Array.Empty<int>(), Array.Empty<string>(),
+                Array.Empty<string>(), EPlayerSkillset.NONE, "english", CSteamID.Nil);
 
-            PreAddDummy(index, initialStance, dummySteamPlayer);
-
-            await UniTask.SwitchToTaskPool();
-
-            var playerDummy = new DummyUser(this, m_UserDataStore, dummySteamPlayer, index, owners);
+            var playerDummy = new DummyUser(this, m_UserDataStore, Provider.clients.Last(), m_LoggerFactory, m_StringLocalizer, owners);
             PostAddDummy(playerDummy);
 
             return playerDummy;
@@ -197,74 +189,27 @@ namespace Dummy.Providers
 
             await UniTask.SwitchToMainThread();
 
-            var index = Provider.clients.Count;
             var userSteamPlayer = userCopy.Player.SteamPlayer;
-            var dummyPlayerID = new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil);
+            var dummyPlayerID = new SteamPlayerID(id, userSteamPlayer.playerID.characterID, "dummy", "dummy", "dummy",
+                userSteamPlayer.playerID.group);
 
-            string characterName = dummyPlayerID.characterName;
-            const uint uScore = 1;
-            SteamGameServer.BUpdateUserData(id, characterName, uScore);
+            Provider.pending.Add(new SteamPending(NullTransportConnection.Instance, dummyPlayerID, true,
+                userSteamPlayer.face, userSteamPlayer.hair, userSteamPlayer.beard, userSteamPlayer.skin,
+                userSteamPlayer.color, Color.white, userSteamPlayer.hand, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL,
+                Array.Empty<ulong>(), EPlayerSkillset.NONE, "english", CSteamID.Nil));
 
-            Utils.loadPlayerSpawn(dummyPlayerID, out var point, out var angle, out var initialStance);
-            int channel = Utils.allocPlayerChannelId();
-            var shouldCallOriginalEvent = m_PluginAccessor.Instance.Configuration.GetSection("events:callOriginalConnectEvent").Get<bool>();
-            var dummySteamPlayer = Utils.addPlayer(dummyPlayerID, point, angle, true, false, channel,
-                userSteamPlayer.face, userSteamPlayer.hair, userSteamPlayer.beard, userSteamPlayer.skin, userSteamPlayer.color, Color.white,
+            Provider.accept(dummyPlayerID, userSteamPlayer.isPro, false, userSteamPlayer.face, userSteamPlayer.hair,
+                userSteamPlayer.beard, userSteamPlayer.skin, userSteamPlayer.color, userSteamPlayer.markerColor,
                 userSteamPlayer.hand, userSteamPlayer.shirtItem, userSteamPlayer.pantsItem, userSteamPlayer.hatItem,
-                userSteamPlayer.backpackItem, userSteamPlayer.vestItem, userSteamPlayer.maskItem, userSteamPlayer.glassesItem,
-                userSteamPlayer.skinItems, userSteamPlayer.skinTags, userSteamPlayer.skinDynamicProps, EPlayerSkillset.NONE,
-                "english", CSteamID.Nil, shouldCallOriginalEvent);
+                userSteamPlayer.backpackItem, userSteamPlayer.vestItem, userSteamPlayer.maskItem,
+                userSteamPlayer.glassesItem, userSteamPlayer.skinItems, userSteamPlayer.skinTags,
+                userSteamPlayer.skinDynamicProps, userSteamPlayer.skillset, userSteamPlayer.language,
+                userSteamPlayer.lobbyID);
 
-            PreAddDummy(index, initialStance, dummySteamPlayer);
-
-            await UniTask.SwitchToTaskPool();
-
-            var playerDummy = new DummyUser(this, m_UserDataStore, dummySteamPlayer, index, owners);
+            var playerDummy = new DummyUser(this, m_UserDataStore, Provider.clients.Last(), m_LoggerFactory, m_StringLocalizer, owners);
             PostAddDummy(playerDummy);
 
             return playerDummy;
-        }
-
-        private void PreAddDummy(int index, EPlayerStance stance, SteamPlayer steamPlayer)
-        {
-            var component = steamPlayer.player.stance;
-            if (component != null)
-            {
-                component.initialStance = stance;
-            }
-            else
-            {
-                m_Logger.LogWarning("Was unable to get PlayerStance for new connection!");
-            }
-            steamPlayer.isAdmin = m_PluginAccessor.Instance.Configuration.GetSection("options:isAdmin").Get<bool>();
-            // sending to players a dummy connected
-            var packet = Utils.buildConnectionPacket(steamPlayer, null, out var size);
-            foreach (var client in Provider.clients)
-            {
-                Provider.sendToClient(client.transportConnection, ESteamPacket.CONNECTED, packet, size);
-            }
-
-            if (m_PluginAccessor.Instance.Configuration.GetSection("events:callOriginalConnectEvent").Get<bool>())
-            {
-                try
-                {
-                    Provider.onServerConnected?.Invoke(steamPlayer.playerID.steamID);
-                }
-                catch (Exception e)
-                {
-                    m_Logger.LogError("Plugin raised an exception from onServerConnected: ", e);
-                }
-            }
-
-            if (CommandWindow.shouldLogJoinLeave)
-            {
-                CommandWindow.Log(Provider.localization.format("PlayerConnectedText", new object[]
-                {
-                    steamPlayer.playerID.steamID,
-                    steamPlayer.playerID.playerName,
-                    steamPlayer.playerID.characterName
-                }));
-            }
         }
 
         private void PostAddDummy(DummyUser playerDummy)
@@ -292,9 +237,10 @@ namespace Dummy.Providers
             return true;
         }
 
-        public Task ClearDummiesAsync()
+        public async Task ClearDummiesAsync()
         {
-            return m_Dummies.DisposeAllAsync();
+            await m_Dummies.DisposeAllAsync();
+            m_Dummies.Clear();
         }
 
         public Task<CSteamID> GetAvailableIdAsync()
@@ -311,104 +257,6 @@ namespace Dummy.Providers
         public Task<DummyUser> GetPlayerDummyAsync(ulong id)
         {
             return Task.FromResult(Dummies.FirstOrDefault(p => p.SteamID.m_SteamID == id));
-        }
-
-        public bool SupportsUserType(string userType)
-        {
-            return userType.Equals(KnownActorTypes.Player, StringComparison.OrdinalIgnoreCase);
-        }
-
-        public Task<IUser> FindUserAsync(string userType, string searchString, UserSearchMode searchMode)
-        {
-            var confidence = 0;
-            var unturnedUser = (IUser)null;
-
-            foreach (var user in m_Dummies)
-            {
-                switch (searchMode)
-                {
-                    case UserSearchMode.FindByNameOrId:
-                    case UserSearchMode.FindById:
-                        if (user.Id.Equals(searchString, StringComparison.OrdinalIgnoreCase))
-                            return Task.FromResult((IUser)user);
-
-                        if (searchMode == UserSearchMode.FindByNameOrId)
-                            goto case UserSearchMode.FindByName;
-                        break;
-
-                    case UserSearchMode.FindByName:
-                        var currentConfidence = NameConfidence(user.DisplayName, searchString, confidence);
-                        if (currentConfidence > confidence)
-                        {
-                            unturnedUser = user;
-                            confidence = currentConfidence;
-                        }
-                        break;
-
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(searchMode), searchMode, null);
-                }
-            }
-
-            return Task.FromResult(unturnedUser);
-        }
-
-        private int NameConfidence(string userName, string searchName, int currentConfidence = -1)
-        {
-            switch (currentConfidence)
-            {
-                case 2:
-                    if (userName.Equals(searchName, StringComparison.OrdinalIgnoreCase))
-                        return 3;
-                    goto case 1;
-
-                case 1:
-                    if (userName.StartsWith(searchName, StringComparison.OrdinalIgnoreCase))
-                        return 2;
-                    goto case 0;
-
-                case 0:
-                    if (userName.IndexOf(searchName, StringComparison.OrdinalIgnoreCase) != -1)
-                        return 1;
-                    break;
-
-                default:
-                    goto case 2;
-            }
-
-            return -1;
-        }
-
-        public Task<IReadOnlyCollection<IUser>> GetUsersAsync(string userType)
-        {
-            return Task.FromResult(Users);
-        }
-
-        public Task BroadcastAsync(string userType, string message, System.Drawing.Color? color = null)
-        {
-            if (!KnownActorTypes.Player.Equals(userType, StringComparison.OrdinalIgnoreCase))
-            {
-                return Task.CompletedTask;
-            }
-
-            return BroadcastAsync(message, color);
-        }
-
-        public Task BroadcastAsync(string message, System.Drawing.Color? color = null)
-        {
-            return BroadcastAsync(message, color, true, null);
-        }
-
-        private Task BroadcastAsync(string message, System.Drawing.Color? color, bool isRich, string iconUrl)
-        {
-            async UniTask BroadcastTask()
-            {
-                await UniTask.SwitchToMainThread();
-                color ??= System.Drawing.Color.White;
-                ChatManager.serverSendMessage(text: message, color: color.Value.ToUnityColor(), useRichTextFormatting: isRich, iconURL: iconUrl);
-            }
-
-            return BroadcastTask().AsTask();
         }
 
         public ValueTask DisposeAsync()

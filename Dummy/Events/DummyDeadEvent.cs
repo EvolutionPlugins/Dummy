@@ -23,7 +23,7 @@ namespace EvolutionPlugins.Dummy.Events
             m_DummyProvider = dummyProvider;
             m_UserManager = userManager;
         }
-        // todo: rewrite
+
         [EventListener(Priority = EventListenerPriority.Monitor)]
         public async Task HandleEventAsync(object sender, UnturnedPlayerDeathEvent @event)
         {
@@ -49,8 +49,8 @@ namespace EvolutionPlugins.Dummy.Events
         private async UniTask Revive(UnturnedPlayer player)
         {
             await UniTask.Delay(1500);
-            if (player.IsAlive) return; // double-check
             await UniTask.SwitchToMainThread();
+            if (player.IsAlive) return;
             player.Player.life.sendRevive();
             player.Player.life.channel.send("tellRevive", ESteamCall.ALL, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
             {

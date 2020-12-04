@@ -6,8 +6,8 @@ using OpenMod.API.Plugins;
 using OpenMod.Unturned.Plugins;
 using System;
 
-[assembly: PluginMetadata("Dummy", Author = "DiFFoZ", DisplayName = "Dummy",
-    Website = "https://github.com/EvolutionPlugins/Dummy")]
+[assembly: PluginMetadata("Dummy", Author = "EvolutionPlugins", DisplayName = "Dummy",
+    Website = "https://discord.gg/6KymqGv")]
 
 namespace Dummy
 {
@@ -26,17 +26,19 @@ namespace Dummy
 
         protected override UniTask OnLoadAsync()
         {
-            Patch_PlayerTool.OnNeedDummyProvider += GiveProvider;
+            Patch_Provider.OnNeedProvider += GiveProvider;
 
             m_Logger.LogInformation("Made with <3 by Evolution Plugins");
+            m_Logger.LogInformation("Owner of EvolutionPlugins: DiFFoZ");
             m_Logger.LogInformation("https://github.com/evolutionplugins \\ https://github.com/diffoz");
-            m_Logger.LogInformation("Discord: DiFFoZ#6745 \\ https://discord.gg/6KymqGv");
+            m_Logger.LogInformation("Discord Support: https://discord.gg/6KymqGv");
+
             return UniTask.CompletedTask;
         }
 
         protected override UniTask OnUnloadAsync()
         {
-            Patch_PlayerTool.OnNeedDummyProvider -= GiveProvider;
+            Patch_Provider.OnNeedProvider -= GiveProvider;
             return UniTask.CompletedTask;
         }
 

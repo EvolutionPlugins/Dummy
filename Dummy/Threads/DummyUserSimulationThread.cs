@@ -4,6 +4,7 @@ using SDG.Unturned;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Dummy.Threads
 {
@@ -30,11 +31,14 @@ namespace Dummy.Threads
         public bool Enabled { get; set; }
 
         private readonly DummyUser m_PlayerDummy;
+        private readonly ILogger m_Logger;
+
         private Player Player => m_PlayerDummy.Player.Player;
 
-        public DummyUserSimulationThread(DummyUser playerDummy)
+        public DummyUserSimulationThread(DummyUser playerDummy, ILogger logger)
         {
             m_PlayerDummy = playerDummy;
+            m_Logger = logger;
             Analog = 0;
             Count = 0;
             Tick = Time.realtimeSinceStartup;
@@ -54,11 +58,13 @@ namespace Dummy.Threads
             }
         }
 
-        public async UniTask StartSimulation()
+        public async UniTask Start()
         {
             await UniTask.Delay(1000); // waiting
+            var queue = (Queue<PlayerInputPacket>)s_ServerSidePacketsField.GetValue(Player.input);
             while (Enabled)
             {
+                await UniTask.WaitForFixedUpdate();
                 if (Count % PlayerInput.SAMPLES == 0)
                 {
                     Tick = Time.realtimeSinceStartup;
@@ -151,7 +157,6 @@ namespace Dummy.Threads
                         walkingPlayerInputPacket.pitch = Pitch;
                     }
 
-                    await UniTask.SwitchToMainThread();
                     //_playerDummy.Data.UnturnedUser.Player.Player.input.channel.openWrite();
                     if (PlayerInputPackets.Count > 24)
                     {
@@ -162,13 +167,11 @@ namespace Dummy.Threads
                     }
                     //_playerDummy.Data.UnturnedUser.Player.Player.input.channel.write((byte)playerInputPackets.Count);
                     // todo: remake
-                    var queue = (Queue<PlayerInputPacket>)s_ServerSidePacketsField.GetValue(Player.input);
                     foreach (var playerInputPacket3 in PlayerInputPackets)
                     {
                         queue.Enqueue(playerInputPacket3);
                     }
-                    s_ServerSidePacketsField.SetValue(Player.input, queue);
-                    await UniTask.SwitchToTaskPool();
+                    //s_ServerSidePacketsField.SetValue(Player.input, queue);
                 }
                 Count++;
             }

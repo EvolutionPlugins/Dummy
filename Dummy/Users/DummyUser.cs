@@ -4,6 +4,8 @@ using Cysharp.Threading.Tasks;
 using Dummy.Players;
 using Dummy.Providers;
 using Dummy.Threads;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using OpenMod.API.Users;
 using OpenMod.Core.Helpers;
 using OpenMod.Core.Users;
@@ -20,37 +22,38 @@ namespace Dummy.Users
 {
     public class DummyUser : UserBase, IAsyncDisposable, IEquatable<DummyUser>, IPlayerUser<DummyPlayer>
     {
+        private readonly IStringLocalizer m_StringLocalizer;
+
         public DummyUserActionThread Actions { get; }
         public DummyUserSimulationThread Simulation { get; }
         public DummyPlayer Player { get; }
         public HashSet<CSteamID> Owners { get; }
-        public int InternalIndex { get; }
 
-        public CSteamID SteamID => Player.SteamID;
+        public CSteamID SteamID => Player.SteamId;
         public SteamPlayer SteamPlayer => Player.SteamPlayer;
 
         IPlayer IPlayerUser.Player => Player;
 
         protected internal DummyUser(DummyProvider dummyProvider, IUserDataStore userDataStore, SteamPlayer steamPlayer,
-            int internalIndex, HashSet<CSteamID> owners = null)
-            : base(dummyProvider, userDataStore)
+            ILoggerFactory loggerFactory, IStringLocalizer stringLocalizer, HashSet<CSteamID> owners = null)
+            : base(null /* <- todo */, userDataStore)
         {
             Id = steamPlayer.playerID.steamID.ToString();
             DisplayName = steamPlayer.playerID.characterName;
             Type = KnownActorTypes.Player;
-            InternalIndex = internalIndex;
             Session = new DummyUserSession(this);
 
             Player = new DummyPlayer(steamPlayer);
+            m_StringLocalizer = stringLocalizer;
             Owners = owners ?? new HashSet<CSteamID>();
-            Actions = new DummyUserActionThread(this);
-            Simulation = new DummyUserSimulationThread(this);
+            Actions = new DummyUserActionThread(this, loggerFactory.CreateLogger($"Dummy.{Id}.Action"));
+            Simulation = new DummyUserSimulationThread(this, loggerFactory.CreateLogger($"Dummy.{Id}.Simulation"));
 
             Actions.Enabled = true;
             Simulation.Enabled = true;
 
-            AsyncHelper.Schedule($"Action a dummy {Id}", () => Actions.Start());
-            AsyncHelper.Schedule($"Simulation a dummy {Id}", () => Simulation.StartSimulation().AsTask());
+            AsyncHelper.Schedule($"Action a dummy {Id}", () => Actions.Start().AsTask());
+            AsyncHelper.Schedule($"Simulation a dummy {Id}", () => Simulation.Start().AsTask());
         }
 
         public override Task PrintMessageAsync(string message)
@@ -67,65 +70,21 @@ namespace Dummy.Users
         {
             async UniTask PrintMessageTask()
             {
-                var lines = message.Replace(Environment.NewLine, "\n").Split('\n');
-                if (lines.Length == 0)
-                {
-                    return;
-                }
-
                 await UniTask.SwitchToMainThread();
 
-                foreach (var line in lines)
+                foreach (var owner in Owners)
                 {
-                    var lineToDisplay = line.Trim();
-                    if (lineToDisplay.Length == 0)
+                    var player = PlayerTool.getPlayer(owner);
+                    if (player == null)
                     {
                         continue;
                     }
-
-                    foreach (var lline in WrapLine(line))
-                    {
-                        ChatManager.serverSendMessage(text: lline, color: color.ToUnityColor(), toPlayer: Player.SteamPlayer,
-                            iconURL: iconUrl, useRichTextFormatting: isRich);
-                    }
+                    ChatManager.serverSendMessage(m_StringLocalizer["events:chatted", new[] { Id, message }], color.ToUnityColor(),
+                        toPlayer: player.channel.owner, iconURL: iconUrl, useRichTextFormatting: isRich);
                 }
             }
 
             return PrintMessageTask().AsTask();
-        }
-
-        private IEnumerable<string> WrapLine(string line)
-        {
-            var words = line.Split(' ');
-            var lines = new List<string>();
-            var currentLine = "";
-            const int maxLength = 90;
-
-            foreach (var currentWord in words)
-            {
-                if (currentLine.Length > maxLength ||
-                    currentLine.Length + currentWord.Length > maxLength)
-                {
-                    lines.Add(currentLine);
-                    currentLine = "";
-                }
-
-                if (currentLine.Length > 0)
-                {
-                    currentLine += " " + currentWord;
-                }
-                else
-                {
-                    currentLine += currentWord;
-                }
-            }
-
-            if (currentLine.Length > 0)
-            {
-                lines.Add(currentLine);
-            }
-
-            return lines;
         }
 
         public ValueTask DisposeAsync()

@@ -18,7 +18,7 @@ namespace Dummy.NetTransports
 
         public bool Equals(ITransportConnection other)
         {
-            return this == other;
+            return m_Instance == other;
         }
 
         public void Send(byte[] buffer, long size, ESendType sendType)

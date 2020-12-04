@@ -1,9 +1,9 @@
+using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Dummy.Threads
 {
@@ -13,23 +13,26 @@ namespace Dummy.Threads
         public List<IAction> ContinuousActions { get; }
 
         private readonly DummyUser m_Dummy;
+        private readonly ILogger m_Logger;
 
-        public DummyUserActionThread(DummyUser dummy)
+        public DummyUserActionThread(DummyUser dummy, ILogger logger)
         {
             Actions = new Queue<IAction>();
             ContinuousActions = new List<IAction>();
             m_Dummy = dummy;
+            m_Logger = logger;
         }
 
         public bool Enabled { get; set; }
 
-        public async Task Start()
+        public async UniTask Start()
         {
             while (Enabled)
             {
+                await UniTask.WaitForFixedUpdate();
                 try
                 {
-                    foreach (IAction action in ContinuousActions)
+                    foreach (var action in ContinuousActions)
                     {
                         await action?.Do(m_Dummy);
                     }
@@ -41,7 +44,7 @@ namespace Dummy.Threads
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e.ToString());
+                    m_Logger.LogError("Something goes wrong when do action: " + e.ToString());
                 }
             }
         }

@@ -6,4 +6,3 @@
 
 events:
   allowDamage: true # Enabling this dummy can be damaged.
-  callOriginalConnectEvent: false # Enabling this will call event Provider.onServerConnected and Provider.onEnemyConnected so it will catch OpenMod and create an instance of UnturnedUser

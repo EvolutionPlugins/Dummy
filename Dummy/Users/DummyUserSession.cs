@@ -1,7 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using OpenMod.Core.Users;
 using SDG.Unturned;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -10,6 +9,18 @@ namespace Dummy.Users
 {
     public class DummyUserSession : UserSessionBase
     {
+        private static bool s_IsShuttingDown;
+
+        static DummyUserSession()
+        {
+            Provider.onCommenceShutdown += Provider_onCommenceShutdown;
+        }
+
+        private static void Provider_onCommenceShutdown()
+        {
+            s_IsShuttingDown = true;
+        }
+
         public DummyUserSession(DummyUser user) : base(user)
         {
             SessionData = new Dictionary<string, object>();
@@ -22,27 +33,13 @@ namespace Dummy.Users
             {
                 await UniTask.SwitchToMainThread();
                 SessionEndTime = DateTime.Now;
-                RemoveDummy();
-                foreach (SteamPlayer steamPlayer in Provider.clients)
+                if (!s_IsShuttingDown)
                 {
-                    Provider.sendToClient(steamPlayer.transportConnection, ESteamPacket.DISCONNECTED, new byte[]
-                    {
-                        12,
-                        (byte)((DummyUser)User).InternalIndex
-                    }, 2);
+                    Provider.kick(((DummyUser)User).SteamID, reason ?? string.Empty);
                 }
             }
 
             return Task().AsTask();
-        }
-
-        private void RemoveDummy()
-        {
-            var user = (DummyUser)User;
-            if (user.SteamPlayer.model != null)
-            {
-                UnityEngine.Object.Destroy(user.SteamPlayer.model.gameObject);
-            }
         }
 
         public void OnSessionEnd()

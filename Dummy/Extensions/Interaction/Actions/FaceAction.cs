@@ -10,7 +10,8 @@ namespace Dummy.Extensions.Interaction.Actions
     {
         public FaceAction(byte index)
         {
-            if (index >= Customization.FACES_FREE + Customization.FACES_PRO)
+            // 32 index face is an empty face (very scary)
+            if (index > Customization.FACES_FREE + Customization.FACES_PRO)
             {
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
