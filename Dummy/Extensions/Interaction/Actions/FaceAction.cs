@@ -23,7 +23,7 @@ namespace Dummy.Extensions.Interaction.Actions
         public async Task Do(DummyUser dummy)
         {
             await UniTask.SwitchToMainThread();
-            dummy.Player.Player.equipment.channel.send("tellSwapFace", ESteamCall.ALL, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
+            dummy.Player.Player.equipment.channel.send("tellSwapFace", ESteamCall.NOT_OWNER, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
             {
                 Index
             });

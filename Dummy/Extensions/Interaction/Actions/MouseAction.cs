@@ -17,6 +17,7 @@ namespace Dummy.Extensions.Interaction.Actions
         {
             var player = dummy.Player.Player;
 
+            // rewrite to use DummyUserSimulationThread
             async UniTask ClickMouse()
             {
                 await UniTask.SwitchToMainThread();
