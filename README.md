@@ -1,11 +1,12 @@
 # Dummy
-Dummy is a plugin for Unturned / OpenMod. It spawns a dummy and shows the amount of damage when damaged. Also very helpful with debugging plugins.
+Dummy is a plugin for Unturned / OpenMod. It spawns a dummy and shows the amount of damage when damaged. Also, very helpful with debugging plugins.
 
-[NuGet package](https://www.nuget.org/packages/EvolutionPlugins.Dummy/)
-
-![Build & Push NuGet](https://github.com/EvolutionPlugins/Dummy/workflows/Build%20&%20Push%20NuGet/badge.svg)
+[![Nuget](https://img.shields.io/nuget/v/EvolutionPlugins.Dummy)](https://www.nuget.org/packages/EvolutionPlugins.Dummy/)
+[![Nuget](https://img.shields.io/nuget/dt/EvolutionPlugins.Dummy?label=nuget%20downloads)](https://www.nuget.org/packages/EvolutionPlugins.Dummy/)
+[![Discord](https://img.shields.io/discord/764502843906064434?label=Discord%20chat)](https://discord.gg/5MT2yke)
 
 # Commands
+_Maybe outdated so check help.md to get all commands_
 - /dummy create - Creates a dummy with unique ID.
 
 - /dummy copy - Creates a dummy with unique ID and copy skin, clothes, beard, hair, face from an owner.
@@ -29,6 +30,7 @@ Dummy is a plugin for Unturned / OpenMod. It spawns a dummy and shows the amount
 - /dummy inputfield &lt;id&gt; &lt;inputFieldName&gt; &lt;Text&gt; - Input text in *InputField*
 
 # Permissions
+_Maybe outdated so check help.md to get all permissions
   - EvolutionPlugins.Dummy:commands.dummy
   - EvolutionPlugins.Dummy:commands.dummy.clear
   - EvolutionPlugins.Dummy:commands.dummy.copy
@@ -44,6 +46,7 @@ Dummy is a plugin for Unturned / OpenMod. It spawns a dummy and shows the amount
   - EvolutionPlugins.Dummy:commands.dummy.stance
 
 # Configuration
+_Outdated_
 - amountDummies _( default: 1 )_ - Max dummies in same time.
 
 - kickDummyAfterSeconds _( default: 300 )_ - Kick automatically dummy after amount of seconds.
@@ -92,3 +95,6 @@ Dummy is a plugin for Unturned / OpenMod. It spawns a dummy and shows the amount
 ## Index of beards/hairs
 
 ![image1](https://i.redd.it/t9qh0q76l16z.jpg)
+
+# Where I can get support
+You can get support in my [discord server](https://discord.gg/5MT2yke)
