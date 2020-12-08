@@ -1,4 +1,4 @@
-﻿using Dummy.Extensions.Interaction.Actions;
+﻿using Dummy.Actions.Interaction.Actions;
 using Dummy.Users;
 
 namespace Dummy.Actions
