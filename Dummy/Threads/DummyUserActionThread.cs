@@ -44,7 +44,7 @@ namespace Dummy.Threads
                 }
                 catch (Exception e)
                 {
-                    m_Logger.LogError("Something goes wrong when do action: " + e.ToString());
+                    m_Logger.LogError("Something goes wrong when doing action: " + e.ToString());
                 }
             }
         }

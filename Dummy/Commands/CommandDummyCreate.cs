@@ -20,7 +20,8 @@ namespace Dummy.Commands
         private readonly IDummyProvider m_DummyProvider;
         private readonly IStringLocalizer m_StringLocalizer;
 
-        public CommandDummyCreate(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IStringLocalizer stringLocalizer) : base(serviceProvider)
+        public CommandDummyCreate(IServiceProvider serviceProvider, IDummyProvider dummyProvider,
+            IStringLocalizer stringLocalizer) : base(serviceProvider)
         {
             m_DummyProvider = dummyProvider;
             m_StringLocalizer = stringLocalizer;

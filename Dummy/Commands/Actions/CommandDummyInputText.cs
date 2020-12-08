@@ -16,7 +16,8 @@ namespace Dummy.Commands.Actions
     {
         private readonly IStringLocalizer m_StringLocalizer;
 
-        public CommandDummyInputText(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IStringLocalizer stringLocalizer) : base(serviceProvider, dummyProvider, stringLocalizer)
+        public CommandDummyInputText(IServiceProvider serviceProvider, IDummyProvider dummyProvider,
+            IStringLocalizer stringLocalizer) : base(serviceProvider, dummyProvider, stringLocalizer)
         {
             m_StringLocalizer = stringLocalizer;
         }

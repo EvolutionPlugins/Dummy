@@ -1,10 +1,9 @@
 ﻿using Cysharp.Threading.Tasks;
+using Dummy.Actions.Interaction.Actions;
 using Dummy.API;
-using Dummy.Extensions.Interaction.Actions;
 using Dummy.Users;
 using Microsoft.Extensions.Localization;
 using OpenMod.Core.Commands;
-using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using System;
 using Command = OpenMod.Core.Commands.Command;
@@ -19,7 +18,8 @@ namespace Dummy.Commands.Actions
     {
         private readonly IStringLocalizer m_StringLocalizer;
 
-        public CommandDummyGesture(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IStringLocalizer stringLocalizer) : base(serviceProvider, dummyProvider, stringLocalizer)
+        public CommandDummyGesture(IServiceProvider serviceProvider, IDummyProvider dummyProvider,
+            IStringLocalizer stringLocalizer) : base(serviceProvider, dummyProvider, stringLocalizer)
         {
             m_StringLocalizer = stringLocalizer;
         }

@@ -4,6 +4,7 @@ using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
 using OpenMod.Unturned.Commands;
 using OpenMod.Unturned.Users;
+using SDG.Unturned;
 using System;
 
 namespace Dummy.Commands
@@ -31,6 +32,8 @@ namespace Dummy.Commands
             if (removed)
             {
                 await PrintAsync("Succefully unsubscribe from all dummies", System.Drawing.Color.Green);
+                await UniTask.SwitchToMainThread();
+                EffectManager.instance.channel.send("askEffectClearAll", user.SteamId, ESteamPacket.UPDATE_RELIABLE_BUFFER);
                 return;
             }
             throw new UserFriendlyException("You're not subscribed to any of dummies");

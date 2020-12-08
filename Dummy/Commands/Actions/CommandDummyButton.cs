@@ -1,6 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
+using Dummy.Actions.Interaction.Actions.UI;
 using Dummy.API;
-using Dummy.Extensions.Interaction.Actions;
 using Dummy.Users;
 using Microsoft.Extensions.Localization;
 using OpenMod.Core.Commands;
@@ -24,7 +24,7 @@ namespace Dummy.Commands.Actions
         protected override UniTask ExecuteDummyAsync(DummyUser playerDummy)
         {
             var buttonName = Context.Parameters[1];
-            playerDummy.Actions.Actions.Enqueue(new ButtonAction(buttonName));
+            playerDummy.Actions.Actions.Enqueue(new ClickButtonAction(buttonName));
             return PrintAsync(m_StringLocalizer["commands:actions:button:success", new { ButtonName = buttonName }]).AsUniTask();
         }
     }

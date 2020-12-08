@@ -18,7 +18,8 @@ namespace Dummy.Commands
         private readonly IDummyProvider m_DummyProvider;
         private readonly IStringLocalizer m_StringLocalizer;
 
-        public CommandDummyRemove(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IStringLocalizer stringLocalizer) : base(serviceProvider)
+        public CommandDummyRemove(IServiceProvider serviceProvider, IDummyProvider dummyProvider,
+            IStringLocalizer stringLocalizer) : base(serviceProvider)
         {
             m_DummyProvider = dummyProvider;
             m_StringLocalizer = stringLocalizer;
@@ -35,11 +36,9 @@ namespace Dummy.Commands
             if (await m_DummyProvider.RemoveDummyAsync(id))
             {
                 await PrintAsync(m_StringLocalizer["commands:general:remove:success", new { Id = id }]);
+                return;
             }
-            else
-            {
-                await PrintAsync(m_StringLocalizer["commands:general:remove:fail", new { Id = id }]);
-            }
+            await PrintAsync(m_StringLocalizer["commands:general:remove:fail", new { Id = id }]);
         }
     }
 }

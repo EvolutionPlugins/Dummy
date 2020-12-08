@@ -3,7 +3,6 @@ using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Extensions;
 using Dummy.Models;
-using Dummy.Services;
 using Dummy.Users;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,7 +24,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using Color = UnityEngine.Color;
 
-namespace Dummy.Providers
+namespace Dummy.Services
 {
     [ServiceImplementation(Lifetime = ServiceLifetime.Singleton, Priority = Priority.Lowest)]
     public class DummyProvider : IDummyProvider, IAsyncDisposable
@@ -277,6 +276,11 @@ namespace Dummy.Providers
             PostAddDummy(playerDummy);
 
             return playerDummy;
+        }
+
+        public Task<DummyUser> AddDummyByParameters(CSteamID id, HashSet<CSteamID> owners, ConfigurationSettings settings)
+        {
+            throw new NotImplementedException();
         }
 
         private void PostAddDummy(DummyUser playerDummy)

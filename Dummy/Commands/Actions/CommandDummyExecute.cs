@@ -1,6 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
+using Dummy.Actions.Interaction.Actions;
 using Dummy.API;
-using Dummy.Extensions.Interaction.Actions;
 using Dummy.Users;
 using Microsoft.Extensions.Localization;
 using OpenMod.API.Commands;
@@ -32,7 +32,7 @@ namespace Dummy.Commands.Actions
             var wait = false;
             Exception exception = null;
             var command = Context.Parameters.Skip(1);
-            playerDummy.Actions.Actions.Enqueue(new ExecuteAction(m_CommandExecutor, command.ToArray(), e =>
+            playerDummy.Actions.Actions.Enqueue(new ExecuteCommandAction(m_CommandExecutor, command.ToArray(), e =>
             {
                 exception = e;
                 wait = true;

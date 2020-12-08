@@ -1,6 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
+using Dummy.Actions.Movement.Actions;
 using Dummy.API;
-using Dummy.Extensions.Movement.Actions;
 using Dummy.Users;
 using Microsoft.Extensions.Localization;
 using OpenMod.Core.Commands;

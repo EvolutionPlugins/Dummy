@@ -1,4 +1,5 @@
-﻿using Dummy.Providers;
+﻿using Dummy.Models;
+using Dummy.Services;
 using Dummy.Users;
 using OpenMod.API.Ioc;
 using OpenMod.Unturned.Users;
@@ -30,6 +31,8 @@ namespace Dummy.API
         /// <exception cref="DummyContainsException">Dummy with id already created. Use GetAvailableIdAsync to get available ID</exception>
         /// <exception cref="DummyOverflowsException">Dummies limit reached</exception>
         Task<DummyUser> AddCopiedDummyAsync(CSteamID id, HashSet<CSteamID> owners, UnturnedUser userCopy);
+
+        Task<DummyUser> AddDummyByParameters(CSteamID id, HashSet<CSteamID> owners, ConfigurationSettings settings);
 
         Task<bool> RemoveDummyAsync(CSteamID id);
 
