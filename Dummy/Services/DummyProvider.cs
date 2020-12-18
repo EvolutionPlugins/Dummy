@@ -170,19 +170,28 @@ namespace Dummy.Services
 
         public async Task<DummyUser> AddDummyAsync(CSteamID id, HashSet<CSteamID> owners)
         {
-            CheckSpawn(id);
-
             await UniTask.SwitchToMainThread();
+
+            CheckSpawn(id);
 
             var config = m_Configuration.Get<Configuration>();
             var @default = config.Default;
             var skins = config.Default.Skins;
+
             var dummyPlayerID = new SteamPlayerID(id, @default.CharacterId, @default.PlayerName,
                 @default.CharacterName, @default.NickName, @default.SteamGroupId, @default.HWID.GetBytes());
 
-            Provider.pending.Add(new SteamPending(m_TransportConnection, dummyPlayerID,
-                    @default.IsPro, @default.FaceId, @default.HairId, @default.BeardId, @default.SkinColor.ToColor(), @default.Color.ToColor(), @default.MarkerColor.ToColor(), @default.IsLeftHanded, skins.Shirt, skins.Pants, skins.Hat, skins.Backpack, skins.Vest, skins.Mask, skins.Glasses,
-                Array.Empty<ulong>(), @default.PlayerSkillset, @default.Language, @default.LobbyId));
+            // todo: skins are VERY HARD to implement ;(
+            var pending = new SteamPending(m_TransportConnection, dummyPlayerID, @default.IsPro, @default.FaceId,
+                @default.HairId, @default.BeardId, @default.SkinColor.ToColor(), @default.Color.ToColor(),
+                @default.MarkerColor.ToColor(), @default.IsLeftHanded, skins.Shirt, skins.Pants, skins.Hat,
+                skins.Backpack, skins.Vest, skins.Mask, skins.Glasses, Array.Empty<ulong>(), @default.PlayerSkillset,
+                @default.Language, @default.LobbyId)
+            {
+                hasAuthentication = true,
+                hasGroup = true,
+                hasProof = true
+            };
 
             if (config.Events.CallOnCheckValidWithExplanation)
             {
@@ -208,12 +217,15 @@ namespace Dummy.Services
                 }
             }
 
-            Provider.accept(dummyPlayerID, @default.IsPro, false, @default.FaceId,
-                @default.HairId, @default.BeardId, @default.SkinColor.ToColor(), @default.Color.ToColor(), @default.MarkerColor.ToColor(), @default.IsLeftHanded, skins.Shirt, skins.Pants, skins.Hat, skins.Backpack, skins.Vest, skins.Mask, skins.Glasses, Array.Empty<int>(), Array.Empty<string>(),
-                Array.Empty<string>(), @default.PlayerSkillset, @default.Language, @default.LobbyId);
+            Provider.accept(dummyPlayerID, @default.IsPro, false, @default.FaceId, @default.HairId, @default.BeardId,
+                @default.SkinColor.ToColor(), @default.Color.ToColor(), @default.MarkerColor.ToColor(),
+                @default.IsLeftHanded, skins.Shirt, skins.Pants, skins.Hat, skins.Backpack, skins.Vest, skins.Mask,
+                skins.Glasses, Array.Empty<int>(), Array.Empty<string>(), Array.Empty<string>(), @default.PlayerSkillset,
+                @default.Language, @default.LobbyId);
 
             var playerDummy = new DummyUser((UnturnedUserProvider)m_UserManager.UserProviders.FirstOrDefault(c => c is UnturnedUserProvider),
                 m_UserDataStore, Provider.clients.Last(), m_LoggerFactory, m_StringLocalizer, config.Options.DisableSimulations, owners);
+
             PostAddDummy(playerDummy);
 
             return playerDummy;
@@ -221,23 +233,31 @@ namespace Dummy.Services
 
         public async Task<DummyUser> AddCopiedDummyAsync(CSteamID id, HashSet<CSteamID> owners, UnturnedUser userCopy)
         {
-            CheckSpawn(id);
-
             await UniTask.SwitchToMainThread();
 
-            var config = m_Configuration.Get<Configuration>();
+            CheckSpawn(id);
 
+            var config = m_Configuration.Get<Configuration>();
             var userSteamPlayer = userCopy.Player.SteamPlayer;
+
+            // todo: maybe, also copy nickname?
             var dummyPlayerID = new SteamPlayerID(id, userSteamPlayer.playerID.characterID, "dummy", "dummy", "dummy",
                 userSteamPlayer.playerID.group, userSteamPlayer.playerID.hwid);
 
-            Provider.pending.Add(new SteamPending(m_TransportConnection, dummyPlayerID, userSteamPlayer.isPro,
+            var pending = new SteamPending(m_TransportConnection, dummyPlayerID, userSteamPlayer.isPro,
                 userSteamPlayer.face, userSteamPlayer.hair, userSteamPlayer.beard, userSteamPlayer.skin,
                 userSteamPlayer.color, userSteamPlayer.markerColor, userSteamPlayer.hand,
                 (ulong)userSteamPlayer.shirtItem, (ulong)userSteamPlayer.pantsItem, (ulong)userSteamPlayer.hatItem,
                 (ulong)userSteamPlayer.backpackItem, (ulong)userSteamPlayer.vestItem, (ulong)userSteamPlayer.maskItem,
                 (ulong)userSteamPlayer.glassesItem, Array.Empty<ulong>(), userSteamPlayer.skillset,
-                userSteamPlayer.language, userSteamPlayer.lobbyID));
+                userSteamPlayer.language, userSteamPlayer.lobbyID)
+            {
+                hasProof = true,
+                hasGroup = true,
+                hasAuthentication = true
+            };
+
+            Provider.pending.Add(pending);
 
             if (config.Events.CallOnCheckValidWithExplanation)
             {
@@ -273,6 +293,7 @@ namespace Dummy.Services
 
             var playerDummy = new DummyUser((UnturnedUserProvider)m_UserManager.UserProviders.FirstOrDefault(c => c is UnturnedUserProvider),
                 m_UserDataStore, Provider.clients.Last(), m_LoggerFactory, m_StringLocalizer, config.Options.DisableSimulations, owners);
+
             PostAddDummy(playerDummy);
 
             return playerDummy;
