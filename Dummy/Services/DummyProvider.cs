@@ -193,6 +193,8 @@ namespace Dummy.Services
                 hasProof = true
             };
 
+            Provider.pending.Add(pending);
+
             if (config.Events.CallOnCheckValidWithExplanation)
             {
                 var isValid = true;
