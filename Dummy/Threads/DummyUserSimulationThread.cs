@@ -25,8 +25,8 @@ namespace Dummy.Threads
 #pragma warning disable CA1819 // Properties should not return arrays
         public ushort[] Flags { get; }
 #pragma warning restore CA1819 // Properties should not return arrays
-        public float Yaw { get; private set; }
-        public float Pitch { get; private set; }
+        public float Yaw { get; set; }
+        public float Pitch { get; set; }
         public List<PlayerInputPacket> PlayerInputPackets { get; }
         public bool Enabled { get; set; }
 
@@ -158,19 +158,13 @@ namespace Dummy.Threads
                     }
 
                     //_playerDummy.Data.UnturnedUser.Player.Player.input.channel.openWrite();
-                    if (PlayerInputPackets.Count > 24)
-                    {
-                        while (PlayerInputPackets.Count > 24)
-                        {
-                            PlayerInputPackets.RemoveAt(0);
-                        }
-                    }
                     //_playerDummy.Data.UnturnedUser.Player.Player.input.channel.write((byte)playerInputPackets.Count);
                     // todo: remake
                     foreach (var playerInputPacket3 in PlayerInputPackets)
                     {
                         queue.Enqueue(playerInputPacket3);
                     }
+                    PlayerInputPackets.Clear();
                     //s_ServerSidePacketsField.SetValue(Player.input, queue);
                 }
                 Count++;

@@ -312,7 +312,23 @@ namespace Dummy.Services
                 AsyncHelper.Schedule("Kick a dummy timer", () => KickTimerTask(playerDummy.SteamID.m_SteamID, kickTimer));
             }
 
+            AsyncHelper.Schedule("Remove rigidbody", () => RemoveRigidbody(playerDummy).AsTask());
             m_Dummies.Add(playerDummy);
+        }
+
+        private async UniTask RemoveRigidbody(DummyUser player)
+        {
+            var movement = player.Player.Player.movement;
+            await UniTask.SwitchToMainThread();
+            await UniTask.DelayFrame(1);
+            var r = movement.gameObject.GetComponent<Rigidbody>();
+            UnityEngine.Object.Destroy(r);
+            // coggers
+            while (!m_IsDisposing)
+            {
+                await UniTask.Delay(1);
+                player.Simulation.Yaw += 10;
+            }
         }
 
         public async Task<bool> RemoveDummyAsync(CSteamID id)
