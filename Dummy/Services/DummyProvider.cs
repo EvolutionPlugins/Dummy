@@ -16,6 +16,7 @@ using OpenMod.Core.Helpers;
 using OpenMod.Unturned.Users;
 using SDG.NetTransport;
 using SDG.Unturned;
+using Serilog;
 using Steamworks;
 using System;
 using System.Collections.Generic;
@@ -57,8 +58,18 @@ namespace Dummy.Services
             Provider.onServerDisconnected += OnServerDisconnected;
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
             DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
+            SteamChannel.onTriggerSend += onTriggerSend;
 
             AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
+        }
+
+        private void onTriggerSend(SteamPlayer player, string name, ESteamCall mode, ESteamPacket type, object[] arguments)
+        {
+            if(!Dummies.Any(c => c.SteamPlayer == player))
+            {
+                return;
+            }
+            m_Logger.LogDebug($"{player.playerID.steamID} / server send {name}");
         }
 
         private async Task DontAutoKickTask()
@@ -314,7 +325,8 @@ namespace Dummy.Services
                 AsyncHelper.Schedule("Kick a dummy timer", () => KickTimerTask(playerDummy.SteamID.m_SteamID, kickTimer));
             }
 
-            AsyncHelper.Schedule("Remove rigidbody", () => RemoveRigidbody(playerDummy).AsTask());
+            //AsyncHelper.Schedule("Remove rigidbody", () => RemoveRigidbody(playerDummy).AsTask());
+            UniTask.Run(() => RemoveRigidbody(playerDummy));
             m_Dummies.Add(playerDummy);
         }
 
@@ -326,10 +338,16 @@ namespace Dummy.Services
             var r = movement.gameObject.GetComponent<Rigidbody>();
             UnityEngine.Object.Destroy(r);
             // coggers
+            var i = 0;
             while (!m_IsDisposing)
             {
                 await UniTask.Delay(1);
                 player.Simulation.Yaw += 10;
+                // todo: put it on simulation
+                if (i % 100 == 0)
+                    Log.Debug(movement.fall.ToString());
+                i++;
+                movement.controller.CheckedMove(Vector3.up * movement.fall * 1, false);
             }
         }
 
