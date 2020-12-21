@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
+using NuGet.Versioning;
 using OpenMod.API.Ioc;
 using OpenMod.API.Plugins;
 using OpenMod.API.Prioritization;
@@ -65,9 +66,16 @@ namespace Dummy.Services
 
         private void onTriggerSend(SteamPlayer player, string name, ESteamCall mode, ESteamPacket type, object[] arguments)
         {
-            if(!Dummies.Any(c => c.SteamPlayer == player))
+            var dummy = Dummies.FirstOrDefault(x => x.SteamPlayer == player);
+            if(dummy == null)
             {
                 return;
+            }
+            if(name == nameof(Player.askTeleport))
+            {
+                // todo: works after simulation tick
+                dummy.Simulation.PlayerInputPackets.Clear();
+                dummy.Player.Player.transform.localPosition = (Vector3)arguments[0];
             }
             m_Logger.LogDebug($"{player.playerID.steamID} / server send {name}");
         }
@@ -347,7 +355,7 @@ namespace Dummy.Services
                 if (i % 100 == 0)
                     Log.Debug(movement.fall.ToString());
                 i++;
-                movement.controller.CheckedMove(Vector3.up * movement.fall * 1, false);
+                
             }
         }
 

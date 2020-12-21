@@ -90,6 +90,9 @@ namespace Dummy.Threads
                     Yaw = Player.look.yaw;
                     Sequence++;
 
+                    var movement = Player.movement;
+                    movement.controller.CheckedMove(Vector3.up * movement.fall, movement.landscapeHoleVolume != null);
+
                     if (Player.stance.stance == EPlayerStance.DRIVING)
                     {
                         PlayerInputPackets.Add(new DrivingPlayerInputPacket());
