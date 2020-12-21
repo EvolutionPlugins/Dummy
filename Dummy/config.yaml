@@ -9,6 +9,10 @@ events:
   allowDamage: true # Enabling this dummy can be damaged.
   callOnCheckValidWithExplanation: true # Before entering the server will be called event Provider.OnCheckValidWithExplanation
 
+fun:
+  alwaysRotate: true
+  rotateYaw: 10
+
 default:
   isPro: true
   characterId: 0

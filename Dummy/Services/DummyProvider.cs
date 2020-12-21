@@ -8,7 +8,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
-using NuGet.Versioning;
 using OpenMod.API.Ioc;
 using OpenMod.API.Plugins;
 using OpenMod.API.Prioritization;
@@ -17,7 +16,6 @@ using OpenMod.Core.Helpers;
 using OpenMod.Unturned.Users;
 using SDG.NetTransport;
 using SDG.Unturned;
-using Serilog;
 using Steamworks;
 using System;
 using System.Collections.Generic;
@@ -67,11 +65,11 @@ namespace Dummy.Services
         private void onTriggerSend(SteamPlayer player, string name, ESteamCall mode, ESteamPacket type, object[] arguments)
         {
             var dummy = Dummies.FirstOrDefault(x => x.SteamPlayer == player);
-            if(dummy == null)
+            if (dummy == null)
             {
                 return;
             }
-            if(name == nameof(Player.askTeleport))
+            if (name == nameof(Player.askTeleport))
             {
                 // todo: works after simulation tick
                 dummy.Simulation.PlayerInputPackets.Clear();
@@ -94,7 +92,7 @@ namespace Dummy.Services
             }
         }
 
-        private async Task KickTimerTask(ulong id, uint timer)
+        private async Task KickTimerTask(ulong id, float timer)
         {
             if (timer == 0)
             {
@@ -327,13 +325,18 @@ namespace Dummy.Services
 
         private void PostAddDummy(DummyUser playerDummy)
         {
-            var kickTimer = m_PluginAccessor.Instance.Configuration.GetSection("options:kickDummyAfterSeconds").Get<uint>();
-            if (kickTimer != 0)
+            var configuration = m_Configuration.Get<Configuration>();
+            var kickTimer = configuration.Options.KickDummyAfterSeconds;
+            if (kickTimer > 0)
             {
                 AsyncHelper.Schedule("Kick a dummy timer", () => KickTimerTask(playerDummy.SteamID.m_SteamID, kickTimer));
             }
 
             UniTask.Run(() => RemoveRigidbody(playerDummy));
+            if (configuration.Fun.AlwaysRotate)
+            {
+                UniTask.Run(() => RotateDummy(playerDummy, configuration.Fun.RotateYaw));
+            }
 
             m_Dummies.Add(playerDummy);
         }
@@ -346,6 +349,15 @@ namespace Dummy.Services
             var movement = player.Player.Player.movement;
             var r = movement.gameObject.GetComponent<Rigidbody>();
             UnityEngine.Object.Destroy(r);
+        }
+
+        private async UniTask RotateDummy(DummyUser player, float rotateYaw)
+        {
+            while (player != null && !m_IsDisposing)
+            {
+                await UniTask.Delay(1);
+                player.Simulation.Yaw += rotateYaw;
+            }
         }
 
         public async Task<bool> RemoveDummyAsync(CSteamID id)
