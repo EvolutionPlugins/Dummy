@@ -56,7 +56,6 @@ namespace Dummy.Services
             m_TransportConnection = transportConnection;
             Provider.onServerDisconnected += OnServerDisconnected;
             ChatManager.onServerSendingMessage += OnServerSendingMessage;
-            DamageTool.damagePlayerRequested += DamageTool_damagePlayerRequested;
             SteamChannel.onTriggerSend += onTriggerSend;
 
             AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
@@ -142,31 +141,6 @@ namespace Dummy.Services
         protected virtual void OnServerDisconnected(CSteamID steamID)
         {
             AsyncHelper.RunSync(() => RemoveDummyAsync(steamID));
-        }
-
-        // todo: rewrite to use openmod event (Monitor)
-        protected virtual void DamageTool_damagePlayerRequested(ref DamagePlayerParameters parameters, ref bool shouldAllow)
-        {
-            var steamId = parameters.player.channel.owner.playerID.steamID;
-            if (!Dummies.Any(x => x.SteamID == steamId))
-            {
-                return;
-            }
-            shouldAllow = m_Configuration.Get<Configuration>().Events.AllowDamage;
-            var totalTimes = parameters.times;
-
-            if (parameters.respectArmor)
-            {
-                totalTimes *= DamageTool.getPlayerArmor(parameters.limb, parameters.player);
-            }
-            if (parameters.applyGlobalArmorMultiplier)
-            {
-                totalTimes *= Provider.modeConfigData.Players.Armor_Multiplier;
-            }
-            var totalDamage = (byte)Mathf.Min(255, parameters.damage * totalTimes);
-
-            var killerId = parameters.killer;
-            ChatManager.say(killerId, m_StringLocalizer["events:damaged", new { DamageAmount = totalDamage, Id = steamId }], Color.green, true);
         }
 
         #endregion Events
@@ -406,7 +380,6 @@ namespace Dummy.Services
 
             Provider.onServerDisconnected -= OnServerDisconnected;
             ChatManager.onServerSendingMessage -= OnServerSendingMessage;
-            DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
             SteamChannel.onTriggerSend -= onTriggerSend;
             return new ValueTask(ClearDummiesAsync());
         }
