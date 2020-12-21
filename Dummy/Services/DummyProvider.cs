@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
-using Color = UnityEngine.Color;
 
 namespace Dummy.Services
 {
@@ -54,8 +53,8 @@ namespace Dummy.Services
             m_Logger = logger;
             m_LoggerFactory = loggerFactory;
             m_TransportConnection = transportConnection;
+
             Provider.onServerDisconnected += OnServerDisconnected;
-            ChatManager.onServerSendingMessage += OnServerSendingMessage;
             SteamChannel.onTriggerSend += onTriggerSend;
 
             AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
@@ -110,33 +109,6 @@ namespace Dummy.Services
         }
 
         #region Events
-
-        protected virtual void OnServerSendingMessage(ref string text, ref Color color, SteamPlayer fromPlayer,
-            SteamPlayer toPlayer, EChatMode mode, ref string iconURL, ref bool useRichTextFormatting)
-        {
-            if (toPlayer == null)
-            {
-                return;
-            }
-
-            var dummy = Dummies.FirstOrDefault(d => d.SteamID == toPlayer.playerID.steamID);
-            if (dummy == null)
-            {
-                return;
-            }
-
-            foreach (var owner in dummy.Owners)
-            {
-                var steamPlayerOwner = PlayerTool.getSteamPlayer(owner);
-                if (steamPlayerOwner == null)
-                {
-                    continue;
-                }
-
-                ChatManager.serverSendMessage(m_StringLocalizer["events:chatted", new { Text = text, dummy.Id }], color,
-                    toPlayer: steamPlayerOwner, iconURL: iconURL, useRichTextFormatting: true);
-            }
-        }
 
         protected virtual void OnServerDisconnected(CSteamID steamID)
         {
@@ -379,7 +351,6 @@ namespace Dummy.Services
             m_IsDisposing = true;
 
             Provider.onServerDisconnected -= OnServerDisconnected;
-            ChatManager.onServerSendingMessage -= OnServerSendingMessage;
             SteamChannel.onTriggerSend -= onTriggerSend;
             return new ValueTask(ClearDummiesAsync());
         }
