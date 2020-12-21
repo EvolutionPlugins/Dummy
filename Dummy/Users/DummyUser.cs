@@ -28,6 +28,7 @@ namespace Dummy.Users
         public DummyUserSimulationThread Simulation { get; }
         public DummyPlayer Player { get; }
         public HashSet<CSteamID> Owners { get; }
+        public Player CopyUserVoice { get; set; }
         public HashSet<CSteamID> SubscribersUI { get; }
 
         public CSteamID SteamID => Player.SteamId;
