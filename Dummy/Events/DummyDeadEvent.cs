@@ -1,13 +1,11 @@
 ﻿using Cysharp.Threading.Tasks;
 using Dummy.API;
 using OpenMod.API.Eventing;
-using OpenMod.API.Users;
 using OpenMod.Core.Eventing;
-using OpenMod.Core.Helpers;
-using OpenMod.Core.Users;
 using OpenMod.UnityEngine.Extensions;
 using OpenMod.Unturned.Players;
 using OpenMod.Unturned.Players.Life.Events;
+using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using System.Threading.Tasks;
 
@@ -16,12 +14,12 @@ namespace Dummy.Events
     public class DummyDeadEvent : IEventListener<UnturnedPlayerDeathEvent>
     {
         private readonly IDummyProvider m_DummyProvider;
-        private readonly IUserManager m_UserManager;
+        private readonly IUnturnedUserDirectory m_UnturnedUserDirectory;
 
-        public DummyDeadEvent(IDummyProvider dummyProvider, IUserManager userManager)
+        public DummyDeadEvent(IDummyProvider dummyProvider, IUnturnedUserDirectory unturnedUserDirectory)
         {
             m_DummyProvider = dummyProvider;
-            m_UserManager = userManager;
+            m_UnturnedUserDirectory = unturnedUserDirectory;
         }
 
         [EventListener(Priority = EventListenerPriority.Monitor)]
@@ -35,22 +33,27 @@ namespace Dummy.Events
 
             foreach (var owner in dummy.Owners)
             {
-                var player = await m_UserManager.FindUserAsync(KnownActorTypes.Player, owner.ToString(), UserSearchMode.FindById);
+                var player = m_UnturnedUserDirectory.FindUser(owner);
                 if (player == null)
                 {
                     continue;
                 }
+
                 await player.PrintMessageAsync($"Dummy {@event.Player.SteamId} has died. Death reason: {@event.DeathCause.ToString().ToLower()}, killer = {@event.Instigator}. Respawning...");
             }
 
-            AsyncHelper.Schedule($"Revive dummy {@event.Player.SteamId}", () => Revive(@event.Player).AsTask());
+            UniTask.Run(() => Revive(dummy.Player));
         }
 
         private async UniTask Revive(UnturnedPlayer player)
         {
             await UniTask.Delay(1500);
             await UniTask.SwitchToMainThread();
-            if (player.IsAlive) return;
+            if (player.IsAlive)
+            {
+                return;
+            }
+
             player.Player.life.sendRevive();
             player.Player.life.channel.send("tellRevive", ESteamCall.ALL, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
             {
