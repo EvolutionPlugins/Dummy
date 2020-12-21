@@ -158,29 +158,7 @@ namespace Dummy.Services
 
             Provider.pending.Add(pending);
 
-            if (config.Events.CallOnCheckValidWithExplanation)
-            {
-                var isValid = true;
-                var explanation = string.Empty;
-                try
-                {
-                    Provider.onCheckValidWithExplanation(new ValidateAuthTicketResponse_t
-                    {
-                        m_SteamID = id,
-                        m_eAuthSessionResponse = EAuthSessionResponse.k_EAuthSessionResponseOK,
-                        m_OwnerSteamID = id
-                    }, ref isValid, ref explanation);
-                }
-                catch (Exception e)
-                {
-                    m_Logger.LogError(e, "Plugin raised an exception from onCheckValidWithExplanation: ");
-                }
-                if (!isValid)
-                {
-                    Provider.pending.RemoveAt(Provider.pending.Count - 1);
-                    throw new DummyCanceledSpawnException($"Plugin reject connection a dummy({id}). Reason: {explanation}");
-                }
-            }
+            PreAddDummy(dummyPlayerID);
 
             Provider.accept(dummyPlayerID, @default.IsPro, false, @default.FaceId, @default.HairId, @default.BeardId,
                 @default.SkinColor.ToColor(), @default.Color.ToColor(), @default.MarkerColor.ToColor(),
@@ -224,29 +202,7 @@ namespace Dummy.Services
 
             Provider.pending.Add(pending);
 
-            if (config.Events.CallOnCheckValidWithExplanation)
-            {
-                var isValid = true;
-                var explanation = string.Empty;
-                try
-                {
-                    Provider.onCheckValidWithExplanation(new ValidateAuthTicketResponse_t
-                    {
-                        m_SteamID = id,
-                        m_eAuthSessionResponse = EAuthSessionResponse.k_EAuthSessionResponseOK,
-                        m_OwnerSteamID = id
-                    }, ref isValid, ref explanation);
-                }
-                catch (Exception e)
-                {
-                    m_Logger.LogError(e, "Plugin raised an exception from onCheckValidWithExplanation: ");
-                }
-                if (!isValid)
-                {
-                    Provider.pending.RemoveAt(Provider.pending.Count - 1);
-                    throw new DummyCanceledSpawnException($"Plugin reject connection a dummy({id}). Reason: {explanation}");
-                }
-            }
+            PreAddDummy(dummyPlayerID);
 
             Provider.accept(dummyPlayerID, userSteamPlayer.isPro, false, userSteamPlayer.face, userSteamPlayer.hair,
                 userSteamPlayer.beard, userSteamPlayer.skin, userSteamPlayer.color, userSteamPlayer.markerColor,
@@ -267,6 +223,64 @@ namespace Dummy.Services
         public Task<DummyUser> AddDummyByParameters(CSteamID id, HashSet<CSteamID> owners, ConfigurationSettings settings)
         {
             throw new NotImplementedException();
+        }
+
+        private void PreAddDummy(SteamPlayerID dummy)
+        {
+            var config = m_Configuration.Get<Configuration>();
+
+            if (config.Events.CallOnCheckValidWithExplanation)
+            {
+                var isValid = true;
+                var explanation = string.Empty;
+                try
+                {
+                    Provider.onCheckValidWithExplanation(new ValidateAuthTicketResponse_t
+                    {
+                        m_SteamID = dummy.steamID,
+                        m_eAuthSessionResponse = EAuthSessionResponse.k_EAuthSessionResponseOK,
+                        m_OwnerSteamID = dummy.steamID
+                    }, ref isValid, ref explanation);
+                }
+                catch (Exception e)
+                {
+                    m_Logger.LogError(e, "Plugin raised an exception from onCheckValidWithExplanation: ");
+                }
+                if (!isValid)
+                {
+                    Provider.pending.RemoveAt(Provider.pending.Count - 1);
+                    throw new DummyCanceledSpawnException($"Plugin reject connection a dummy({dummy.steamID}). Reason: {explanation}");
+                }
+            }
+
+            if (config.Events.CallOnCheckBanStatusWithHWID)
+            {
+                m_TransportConnection.TryGetIPv4Address(out var ip);
+                var isBanned = false;
+                var banReason = string.Empty;
+                var banRemainingDuration = 0U;
+                if (SteamBlacklist.checkBanned(dummy.steamID, ip, out var steamBlacklistID))
+                {
+                    isBanned = true;
+                    banReason = steamBlacklistID.reason;
+                    banRemainingDuration = steamBlacklistID.getTime();
+                }
+
+                try
+                {
+                    Provider.onCheckBanStatusWithHWID?.Invoke(dummy, ip, ref isBanned, ref banReason, ref banRemainingDuration);
+                }
+                catch (Exception e)
+                {
+                    m_Logger.LogError(e, "Plugin raised an exception from onCheckValidWithExplanation: ");
+                }
+
+                if (isBanned)
+                {
+                    Provider.pending.RemoveAt(Provider.pending.Count - 1);
+                    throw new DummyCanceledSpawnException($"Dummy {dummy.steamID} is banned! Ban reason: {banReason}, duration: {banRemainingDuration}");
+                }
+            }
         }
 
         private void PostAddDummy(DummyUser playerDummy)

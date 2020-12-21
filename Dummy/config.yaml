@@ -8,6 +8,7 @@
 events:
   allowDamage: true # Enabling this dummy can be damaged.
   callOnCheckValidWithExplanation: true # Before entering the server will be called event Provider.OnCheckValidWithExplanation
+  callOnCheckBanStatusWithHWID: true # Before entering the server will be called event Provider.onCheckBanStatusWithHWID
 
 fun:
   alwaysRotate: true
