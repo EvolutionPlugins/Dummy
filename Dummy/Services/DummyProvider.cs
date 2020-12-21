@@ -333,30 +333,19 @@ namespace Dummy.Services
                 AsyncHelper.Schedule("Kick a dummy timer", () => KickTimerTask(playerDummy.SteamID.m_SteamID, kickTimer));
             }
 
-            //AsyncHelper.Schedule("Remove rigidbody", () => RemoveRigidbody(playerDummy).AsTask());
             UniTask.Run(() => RemoveRigidbody(playerDummy));
+
             m_Dummies.Add(playerDummy);
         }
 
         private async UniTask RemoveRigidbody(DummyUser player)
         {
-            var movement = player.Player.Player.movement;
             await UniTask.SwitchToMainThread();
             await UniTask.DelayFrame(1);
+
+            var movement = player.Player.Player.movement;
             var r = movement.gameObject.GetComponent<Rigidbody>();
             UnityEngine.Object.Destroy(r);
-            // coggers
-            var i = 0;
-            while (!m_IsDisposing)
-            {
-                await UniTask.Delay(1);
-                player.Simulation.Yaw += 10;
-                // todo: put it on simulation
-                if (i % 100 == 0)
-                    Log.Debug(movement.fall.ToString());
-                i++;
-                
-            }
         }
 
         public async Task<bool> RemoveDummyAsync(CSteamID id)
@@ -406,6 +395,7 @@ namespace Dummy.Services
             Provider.onServerDisconnected -= OnServerDisconnected;
             ChatManager.onServerSendingMessage -= OnServerSendingMessage;
             DamageTool.damagePlayerRequested -= DamageTool_damagePlayerRequested;
+            SteamChannel.onTriggerSend -= onTriggerSend;
             return new ValueTask(ClearDummiesAsync());
         }
     }

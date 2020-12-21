@@ -12,7 +12,7 @@ namespace Dummy.Services
 
         public DummyOverflowsException(IStringLocalizer stringLocalizer, byte dummiesCount, byte maxDummies) : base(stringLocalizer[
             "exceptions:overflow",
-            new { Dummies = dummiesCount, MaxDummies = maxDummies }])
+            new { DummiesCount = dummiesCount, MaxDummies = maxDummies }])
         {
             DummiesCount = dummiesCount;
             MaxDummies = maxDummies;
