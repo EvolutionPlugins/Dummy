@@ -9,11 +9,11 @@ namespace Dummy.Patches
     [HarmonyPatch(typeof(Provider))]
     public static class Patch_Provider
     {
-        internal static event NeedDummyProvider OnNeedProvider;
+        internal static event NeedDummyProvider OnNeedDummy;
 
         public static int GetDummiesCount()
         {
-            return OnNeedProvider?.Invoke().Dummies.Count ?? 0;
+            return OnNeedDummy?.Invoke().Dummies.Count ?? 0;
         }
 
         private static readonly MethodInfo m_GetClients = AccessTools.DeclaredPropertyGetter(typeof(Provider), "clients");

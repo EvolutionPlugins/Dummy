@@ -26,8 +26,9 @@ namespace Dummy
 
         protected override UniTask OnLoadAsync()
         {
-            Patch_Provider.OnNeedProvider += GiveProvider;
+            Patch_Provider.OnNeedDummy += GiveProvider;
             Patch_EffectManager.OnNeedDummy += GiveProvider;
+            Patch_PlayerVoice.OnNeedDummy += GiveProvider;
 
             m_Logger.LogInformation("Made with <3 by Evolution Plugins");
             m_Logger.LogInformation("Owner of EvolutionPlugins: DiFFoZ");
@@ -39,8 +40,9 @@ namespace Dummy
 
         protected override UniTask OnUnloadAsync()
         {
-            Patch_Provider.OnNeedProvider -= GiveProvider;
+            Patch_Provider.OnNeedDummy -= GiveProvider;
             Patch_EffectManager.OnNeedDummy -= GiveProvider;
+            Patch_PlayerVoice.OnNeedDummy -= GiveProvider;
             return UniTask.CompletedTask;
         }
 
