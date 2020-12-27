@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Dummy.Users;
 using SDG.Unturned;
+using Serilog;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -82,16 +83,18 @@ namespace Dummy.Threads
                     for (var i = 0; i < ControlsSettings.NUM_PLUGIN_KEYS; i++)
                     {
                         var num = Player.input.keys.Length - ControlsSettings.NUM_PLUGIN_KEYS + i;
-                        Player.input.keys[num] = false;
+                        Player.input.keys[num] = false; // todo
                     }
-
                     Analog = (byte)(Player.movement.horizontal << 4 | Player.movement.vertical);
                     Pitch = Player.look.pitch;
                     Yaw = Player.look.yaw;
                     Sequence++;
 
                     var movement = Player.movement;
-                    movement.controller.CheckedMove(Vector3.up * movement.fall, movement.landscapeHoleVolume != null);
+                    // it should also change direction on where is a dummy stand on (exmaple: ice)
+                    var vector = movement.transform.rotation * Vector3.right.normalized * movement.speed * PlayerInput.RATE;
+                    vector += Vector3.up * movement.fall;
+                    movement.controller.CheckedMove(vector, movement.landscapeHoleVolume != null);
 
                     if (Player.stance.stance == EPlayerStance.DRIVING)
                     {
@@ -126,9 +129,8 @@ namespace Dummy.Threads
 
                     var playerInputPacket2 = PlayerInputPackets[PlayerInputPackets.Count - 1];
                     playerInputPacket2.keys = num2;
-                    if (playerInputPacket2 is DrivingPlayerInputPacket)
+                    if (playerInputPacket2 is DrivingPlayerInputPacket drivingPlayerInputPacket)
                     {
-                        var drivingPlayerInputPacket = playerInputPacket2 as DrivingPlayerInputPacket;
                         var vehicle = Player.movement.getVehicle();
 
                         if (vehicle != null)
@@ -155,20 +157,16 @@ namespace Dummy.Threads
                         var walkingPlayerInputPacket = playerInputPacket2 as WalkingPlayerInputPacket;
 
                         walkingPlayerInputPacket.analog = Analog;
-                        walkingPlayerInputPacket.position = Player.transform.localPosition;
+                        walkingPlayerInputPacket.position = Player.transform.position; // before: localposition
                         walkingPlayerInputPacket.yaw = Yaw;
                         walkingPlayerInputPacket.pitch = Pitch;
                     }
 
-                    //_playerDummy.Data.UnturnedUser.Player.Player.input.channel.openWrite();
-                    //_playerDummy.Data.UnturnedUser.Player.Player.input.channel.write((byte)playerInputPackets.Count);
-                    // todo: remake
                     foreach (var playerInputPacket3 in PlayerInputPackets)
                     {
                         queue.Enqueue(playerInputPacket3);
                     }
                     PlayerInputPackets.Clear();
-                    //s_ServerSidePacketsField.SetValue(Player.input, queue);
                 }
                 Count++;
             }
