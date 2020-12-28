@@ -5,14 +5,11 @@ namespace EvolutionPlugins.Dummy.Extensions.Look.Actions
 {
     public class FullRotationAction : IAction
     {
-
-        private int _times;
         private readonly int _speed;
 
-        public FullRotationAction(int speed, int times = 1)
+        public FullRotationAction(int speed)
         {
             _speed = speed;
-            _times = times;
         }
         
         public void Do(PlayerDummy dummy)
