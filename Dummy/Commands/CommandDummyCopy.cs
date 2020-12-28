@@ -11,7 +11,9 @@ using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
+using SDG.NetTransport;
 using Color = System.Drawing.Color;
 using Command = OpenMod.Core.Commands.Command;
 
@@ -27,6 +29,10 @@ namespace EvolutionPlugins.Dummy.Commands
         private readonly IDummyProvider m_DummyProvider;
         private readonly IUserDataSeeder m_UserDataSeeder;
         private readonly IUserDataStore m_UserDataStore;
+        
+        private static readonly ConstructorInfo FuckYouTrojaner =
+            typeof(UnturnedUser).GetConstructor(new[]{typeof(UnturnedUserProvider), typeof(IUserDataStore), typeof(Player)});
+        private static readonly MethodInfo TransportConnectionFactory = Type.GetType("NetTransportFactory")?.GetMethod("CreateServerTransport", BindingFlags.Static | BindingFlags.NonPublic);
 
         public CommandDummyCopy(IServiceProvider serviceProvider, IConfiguration configuration,
             IDummyProvider dummyProvider, IUserDataSeeder userDataSeeder, IUserDataStore userDataStore) : base(serviceProvider)
@@ -49,16 +55,21 @@ namespace EvolutionPlugins.Dummy.Commands
 
             var id = await m_DummyProvider.GetAvailableIdAsync();
 
-            var steamPlayer = user.SteamPlayer;
+            var steamPlayer = user.Player.SteamPlayer;
+            
+            //TODO: check this again after netcode changes (been a few months lol)
+            ITransportConnection connection = (ITransportConnection) TransportConnectionFactory.Invoke(null, null);
 
-            Provider.pending.Add(new SteamPending(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil),
+            SteamPlayerID player = new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil);
+            
+            Provider.pending.Add(new SteamPending(connection, player,
                 true, steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
                 UnityEngine.Color.white, steamPlayer.hand, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, 0UL, Array.Empty<ulong>(),
                 EPlayerSkillset.NONE, "english", CSteamID.Nil));
 
             await UniTask.SwitchToMainThread();
 
-            Provider.accept(new SteamPlayerID(id, 0, "dummy", "dummy", "dummy", CSteamID.Nil), true, false,
+            Provider.accept(player, true, false,
                 steamPlayer.face, steamPlayer.hair, steamPlayer.beard, steamPlayer.skin, steamPlayer.color,
                 UnityEngine.Color.white, steamPlayer.hand, steamPlayer.shirtItem, steamPlayer.pantsItem, steamPlayer.hatItem,
                 steamPlayer.backpackItem, steamPlayer.vestItem, steamPlayer.maskItem, steamPlayer.glassesItem,
@@ -66,11 +77,15 @@ namespace EvolutionPlugins.Dummy.Commands
                 "english", CSteamID.Nil);
 
             var dummy = Provider.clients.Last();
-            dummy.player.teleportToLocationUnsafe(user.Player.transform.position, user.Player.transform.rotation.eulerAngles.y);
+            var transform = user.Player.Player.transform;
+            dummy.player.teleportToLocationUnsafe(transform.position, transform.rotation.eulerAngles.y);
 
             await UniTask.SwitchToTaskPool();
 
-            var dummyUser = new UnturnedUser(m_UserDataStore, dummy.player);
+            if (FuckYouTrojaner == null)
+                return;
+            
+            UnturnedUser dummyUser = (UnturnedUser) FuckYouTrojaner.Invoke(new object[]{m_DummyProvider, m_UserDataStore, dummy.player});
 
             await m_UserDataSeeder.SeedUserDataAsync(dummyUser.Id, dummyUser.Type, dummyUser.DisplayName); // https://github.com/openmod/openmod/pull/109
             await m_DummyProvider.AddDummyAsync(id, new PlayerDummyData(new List<CSteamID> { user.SteamId }, dummyUser));

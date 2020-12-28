@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace EvolutionPlugins.Dummy.API
 {
     [Service]
-    public interface IDummyProvider
+    public interface IDummyProvider : IUserProvider
     {
         IReadOnlyDictionary<CSteamID, PlayerDummy> Dummies { get; }
 

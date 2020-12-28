@@ -175,5 +175,36 @@ namespace EvolutionPlugins.Dummy.Providers
 
             return new ValueTask(ClearAllDummiesAsync());
         }
+
+        public bool SupportsUserType(string userType)
+        {
+            return false;
+        }
+
+        public async Task<IUser> FindUserAsync(string userType, string searchString, UserSearchMode searchMode)
+        {
+            if (searchMode == UserSearchMode.FindById)
+            {
+                CSteamID id = m_Dummies.Keys.FirstOrDefault(c => c.ToString() == searchString);
+                return id == CSteamID.Nil ? null : m_Dummies[id].Data.UnturnedUser;
+            }
+
+            return null;
+        }
+
+        public async Task<IReadOnlyCollection<IUser>> GetUsersAsync(string userType)
+        {
+            return m_Dummies.Values.Select(dummy => dummy.Data.UnturnedUser).Cast<IUser>().ToList();
+        }
+
+        public async Task BroadcastAsync(string userType, string message, System.Drawing.Color? color = null)
+        {
+            
+        }
+
+        public async Task BroadcastAsync(string message, System.Drawing.Color? color = null)
+        {
+            
+        }
     }
 }

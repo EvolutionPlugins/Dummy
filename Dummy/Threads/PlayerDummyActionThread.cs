@@ -28,7 +28,7 @@ namespace EvolutionPlugins.Dummy.Threads
         {
             while (Enabled)
             {
-                foreach (IAction action in _actions)
+                foreach (IAction action in _actions.ToList())
                 {
                     action.Do(_dummy);
                     //Lol

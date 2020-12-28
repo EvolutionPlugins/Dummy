@@ -17,7 +17,7 @@ namespace EvolutionPlugins.Dummy.Extensions.Movement
             int offset;
             if (Dir == StrafeDirection.Left) offset = 1;
             else offset = -1;
-            typeof(PlayerMovement).GetField("_horizontal")?.SetValue(dummy.Data.UnturnedUser.Player.movement, dummy.Data.UnturnedUser.Player.movement.horizontal + offset);
+            typeof(PlayerMovement).GetField("_horizontal")?.SetValue(dummy.Data.UnturnedUser.Player.Player.movement, dummy.Data.UnturnedUser.Player.Player.movement.horizontal + offset);
         }
     }
 }

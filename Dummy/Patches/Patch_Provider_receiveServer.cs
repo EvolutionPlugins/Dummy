@@ -5,6 +5,7 @@ using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using SDG.NetTransport;
 using UnityEngine;
 using Types = SDG.Unturned.Types;
 
@@ -15,7 +16,7 @@ namespace EvolutionPlugins.Dummy.Patches
     {
         public static NeedProvider onNeedProvider;
 
-        public static bool Prefix(CSteamID steamID, byte[] packet, int offset)
+        public static bool Prefix(ITransportConnection connection, CSteamID steamID, byte[] packet, int offset)
         {
             var steamPacket = (ESteamPacket)packet[offset];
 
@@ -301,7 +302,7 @@ namespace EvolutionPlugins.Dummy.Patches
                     return false;
                 }
                 Utils.notifyClientPending(steamID);
-                SteamPending item = new SteamPending(steamPlayerID, (bool)objects[9], (byte)objects[13], (byte)objects[14], (byte)objects[15], (Color)objects[16], (Color)objects[17], (Color)objects[18], (bool)objects[19], (ulong)objects[20], (ulong)objects[21], (ulong)objects[22], (ulong)objects[23], (ulong)objects[24], (ulong)objects[25], (ulong)objects[26], (ulong[])objects[27], (EPlayerSkillset)(byte)objects[28], (string)objects[30], (CSteamID)objects[31]);
+                SteamPending item = new SteamPending(connection, steamPlayerID, (bool)objects[9], (byte)objects[13], (byte)objects[14], (byte)objects[15], (Color)objects[16], (Color)objects[17], (Color)objects[18], (bool)objects[19], (ulong)objects[20], (ulong)objects[21], (ulong)objects[22], (ulong)objects[23], (ulong)objects[24], (ulong)objects[25], (ulong)objects[26], (ulong[])objects[27], (EPlayerSkillset)((byte)objects[28]), (string)objects[30], (CSteamID)objects[31]);
                 if (Provider.isWhitelisted || !flag4)
                 {
                     Provider.pending.Add(item);

@@ -17,7 +17,7 @@ namespace EvolutionPlugins.Dummy.Extensions.Look.Actions
         
         public void Do(PlayerDummy dummy)
         {
-            dummy.Data.UnturnedUser.Player.transform.rotation = Quaternion.Slerp(dummy.Data.UnturnedUser.Player.transform.localRotation,Quaternion.LookRotation(dummy.Data.UnturnedUser.Player.transform.forward), Time.deltaTime * _speed);
+            dummy.Data.UnturnedUser.Player.Player.transform.rotation = Quaternion.Slerp(dummy.Data.UnturnedUser.Player.Player.transform.localRotation,Quaternion.LookRotation(dummy.Data.UnturnedUser.Player.Player.transform.forward), Time.deltaTime * _speed);
         }
     }
 }

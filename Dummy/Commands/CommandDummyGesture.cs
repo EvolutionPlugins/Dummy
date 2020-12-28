@@ -43,7 +43,7 @@ namespace EvolutionPlugins.Dummy.Commands
                 throw new UserFriendlyException($"Unable find a gesture {gesture}");
             }
 
-            dummy.Data.UnturnedUser.Player.animator.sendGesture(eGesture, false);
+            dummy.Data.UnturnedUser.Player.Player.animator.sendGesture(eGesture, false);
         }
     }
 }

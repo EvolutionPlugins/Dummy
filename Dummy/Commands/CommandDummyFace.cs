@@ -48,7 +48,7 @@ namespace EvolutionPlugins.Dummy.Commands
                 throw new UserFriendlyException($"Can't change to {faceId} because is higher {Customization.FACES_FREE + Customization.FACES_PRO}");
             }
 
-            dummy.Data.UnturnedUser.Player.clothing.channel.send("tellSwapFace", ESteamCall.NOT_OWNER, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
+            dummy.Data.UnturnedUser.Player.Player.clothing.channel.send("tellSwapFace", ESteamCall.NOT_OWNER, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
             {
                 faceId
             });
