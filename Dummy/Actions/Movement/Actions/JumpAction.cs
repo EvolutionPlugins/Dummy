@@ -1,24 +1,22 @@
-using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
+using HarmonyLib;
 using SDG.Unturned;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Dummy.Actions.Movement.Actions
 {
     public class JumpAction : IAction
     {
+        private const float JUMP = 7;
+        private readonly static MethodInfo FallSetter = AccessTools.PropertySetter(typeof(PlayerMovement), "fall");
+
         public Task Do(DummyUser dummy)
         {
-            var player = dummy.Player.Player;
-            async UniTask Jump()
-            {
-                await UniTask.SwitchToMainThread();
-                byte analog = (byte)(player.movement.horizontal << 4 | player.movement.vertical);
-                player.movement.simulate(1u, 1, (analog >> 4 & 15) - 1, (analog & 15) - 1, 0f, 0f, true, false,
-                    player.transform.localPosition, PlayerInput.RATE);
-            }
-            return Jump().AsTask();
+            var movement = dummy.Player.Player.movement;
+            FallSetter.Invoke(movement, new[] { (object)(JUMP * (1f + (movement.player.skills.mastery(0, 6) * 0.25f)) * movement.pluginJumpMultiplier) });
+            return Task.CompletedTask;
         }
     }
 }

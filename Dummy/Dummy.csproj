@@ -14,7 +14,7 @@
       <GenerateNugetPackage>true</GenerateNugetPackage>
       <RepositoryUrl>https://github.com/EvolutionPlugins/Dummy</RepositoryUrl>
       <RepositoryType>git</RepositoryType>
-      <LangVersion>preview</LangVersion>
+      <LangVersion>9.0</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>

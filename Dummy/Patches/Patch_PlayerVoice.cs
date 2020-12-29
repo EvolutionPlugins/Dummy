@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using SDG.Unturned;
+using Serilog;
 using System.Linq;
 
 namespace Dummy.Patches
@@ -20,7 +21,7 @@ namespace Dummy.Patches
             {
                 return;
             }
-
+            // packet.Length.ToString() == 65535
             __instance.channel.decodeVoicePacket(packet, out var size, out var walkie);
             var call = dummy.Player.Player.voice.channel.getCall("askVoiceChat");
             dummy.Player.Player.voice.channel.encodeVoicePacket((byte)call, out var packetSize, out var packet1, packet, (ushort)size, walkie);
