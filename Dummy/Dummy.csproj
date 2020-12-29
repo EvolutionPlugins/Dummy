@@ -14,7 +14,7 @@
       <GenerateNugetPackage>true</GenerateNugetPackage>
       <RepositoryUrl>https://github.com/EvolutionPlugins/Dummy</RepositoryUrl>
       <RepositoryType>git</RepositoryType>
-      <LangVersion>9.0</LangVersion>
+      <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -41,5 +41,5 @@
     </PackageReference>
     <PackageReference Include="OpenMod.Unturned" Version="2.3.8" />
   </ItemGroup>
-  
+   
 </Project>
