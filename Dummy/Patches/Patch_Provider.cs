@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using SDG.Unturned;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -16,8 +17,15 @@ namespace Dummy.Patches
             return OnNeedDummy?.Invoke().Dummies.Count ?? 0;
         }
 
-        private static readonly MethodInfo m_GetClients = AccessTools.DeclaredPropertyGetter(typeof(Provider), "clients");
-        private static readonly MethodInfo m_GetDummiesCount = SymbolExtensions.GetMethodInfo(() => GetDummiesCount());
+        private static readonly MethodInfo s_GetClients = AccessTools.DeclaredPropertyGetter(typeof(Provider), "clients");
+        private static readonly MethodInfo s_GetDummiesCount = SymbolExtensions.GetMethodInfo(() => GetDummiesCount());
+
+        [HarmonyPrefix]
+        [HarmonyPatch("battlEyeServerKickPlayer")]
+        public static bool battlEyeServerKickPlayer(int playerID)
+        {
+            return !OnNeedDummy().Dummies.Any(x => x.Player.BattlEyeId == playerID);
+        }
 
         [HarmonyTranspiler]
         [HarmonyPatch("receiveServer")]
@@ -30,11 +38,11 @@ namespace Dummy.Patches
             for (var i = 0; i < codes.Count; i++)
             {
                 var instruction = codes[i];
-                if (instruction.opcode == OpCodes.Call && instruction.Calls(m_GetClients))
+                if (instruction.opcode == OpCodes.Call && instruction.Calls(s_GetClients))
                 {
                     i += 4;
 
-                    codes.Insert(i, new CodeInstruction(OpCodes.Call, m_GetDummiesCount));
+                    codes.Insert(i, new CodeInstruction(OpCodes.Call, s_GetDummiesCount));
                     codes.Insert(i + 1, new CodeInstruction(OpCodes.Sub, null));
                     break;
                 }
@@ -53,11 +61,11 @@ namespace Dummy.Patches
             for (var i = 0; i < codes.Count; i++)
             {
                 var instruction = codes[i];
-                if (instruction.opcode == OpCodes.Call && instruction.Calls(m_GetClients))
+                if (instruction.opcode == OpCodes.Call && instruction.Calls(s_GetClients))
                 {
                     i += 2;
 
-                    codes.Insert(i, new CodeInstruction(OpCodes.Call, m_GetDummiesCount));
+                    codes.Insert(i, new CodeInstruction(OpCodes.Call, s_GetDummiesCount));
                     codes.Insert(i + 1, new CodeInstruction(OpCodes.Sub, null));
                     break;
                 }

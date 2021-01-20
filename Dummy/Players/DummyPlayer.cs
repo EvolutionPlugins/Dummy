@@ -1,14 +1,21 @@
 ﻿using Dummy.Users;
+using HarmonyLib;
 using OpenMod.Unturned.Players;
 using SDG.Unturned;
 using System;
+using System.Reflection;
 
 namespace Dummy.Players
 {
     public class DummyPlayer : UnturnedPlayer, IEquatable<DummyUser>
     {
+        private static readonly FieldInfo s_BattlEyeId = AccessTools.Field(typeof(SteamPlayer), "battlEyeId");
+
+        public int BattlEyeId { get; }
+
         public DummyPlayer(SteamPlayer steamPlayer) : base(steamPlayer.player)
         {
+            BattlEyeId = (int)s_BattlEyeId.GetValue(steamPlayer);
         }
 
         public bool Equals(DummyUser other)
