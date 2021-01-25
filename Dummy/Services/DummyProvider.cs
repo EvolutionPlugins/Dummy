@@ -54,7 +54,6 @@ namespace Dummy.Services
             m_LoggerFactory = loggerFactory;
             m_TransportConnection = transportConnection;
 
-            Provider.onServerDisconnected += OnServerDisconnected;
             SteamChannel.onTriggerSend += onTriggerSend;
 
             AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
@@ -107,15 +106,6 @@ namespace Dummy.Services
             m_Logger.LogDebug($"[Kick timer] => Kick dummy {id}");
             await user.Session.DisconnectAsync();
         }
-
-        #region Events
-
-        protected virtual void OnServerDisconnected(CSteamID steamID)
-        {
-            AsyncHelper.RunSync(() => RemoveDummyAsync(steamID));
-        }
-
-        #endregion Events
 
         private void CheckSpawn(CSteamID id)
         {
@@ -364,7 +354,6 @@ namespace Dummy.Services
             }
             m_IsDisposing = true;
 
-            Provider.onServerDisconnected -= OnServerDisconnected;
             SteamChannel.onTriggerSend -= onTriggerSend;
             return new ValueTask(ClearDummiesAsync());
         }

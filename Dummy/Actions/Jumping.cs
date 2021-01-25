@@ -1,5 +1,6 @@
 using Dummy.Actions.Movement.Actions;
 using Dummy.Users;
+using System;
 using System.Threading.Tasks;
 
 namespace Dummy.Actions
@@ -24,7 +25,7 @@ namespace Dummy.Actions
         public static async Task TempJump(this DummyUser playerDummy, float time)
         {
             playerDummy.JumpingConstantOn();
-            await Task.Delay((int)(time * 1000));
+            await Task.Delay(TimeSpan.FromSeconds(time));
             playerDummy.JumpingConstantOff();
         }
     }

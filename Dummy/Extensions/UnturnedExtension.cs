@@ -16,10 +16,10 @@ namespace Dummy.Extensions
             return true;
         }
 
-        public static async UniTask<bool> TeleportToLocationAsync(this DummyUser DummyUser, Vector3 position) =>
-            await DummyUser.TeleportToLocationAsync(position, DummyUser.Player.Player.transform.eulerAngles.y);
+        public static UniTask<bool> TeleportToLocationAsync(this DummyUser DummyUser, Vector3 position) =>
+             DummyUser.TeleportToLocationAsync(position, DummyUser.Player.Player.transform.eulerAngles.y);
 
-        public static async UniTask<bool> TeleportToPlayerAsync(this DummyUser from, UnturnedUser to) =>
-            await from.TeleportToLocationAsync(to.Player.Player.transform.position, to.Player.Player.transform.rotation.eulerAngles.y);
+        public static UniTask<bool> TeleportToPlayerAsync(this DummyUser from, UnturnedUser to) =>
+             from.TeleportToLocationAsync(to.Player.Player.transform.position, to.Player.Player.transform.rotation.eulerAngles.y);
     }
 }
