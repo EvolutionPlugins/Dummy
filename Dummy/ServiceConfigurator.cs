@@ -11,10 +11,7 @@ namespace Dummy
     {
         public void ConfigureServices(IOpenModServiceConfigurationContext openModStartupContext, IServiceCollection serviceCollection)
         {
-            serviceCollection.Configure<PermissionCheckerOptions>(options =>
-            {
-                options.AddPermissionCheckProvider<DummyPermissionCheckProvider>();
-            });
+            serviceCollection.Configure<PermissionCheckerOptions>(options => options.AddPermissionCheckProvider<DummyPermissionCheckProvider>());
             serviceCollection.AddTransient<ITransportConnection, DummyTransportConnection>();
         }
     }

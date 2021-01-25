@@ -29,9 +29,6 @@ namespace Dummy.Patches
 
         [HarmonyTranspiler]
         [HarmonyPatch("receiveServer")]
-#if DEBUG
-        [HarmonyDebug]
-#endif
         public static IEnumerable<CodeInstruction> receiveServer(IEnumerable<CodeInstruction> instructions)
         {
             var codes = new List<CodeInstruction>(instructions);
@@ -52,9 +49,6 @@ namespace Dummy.Patches
 
         [HarmonyTranspiler]
         [HarmonyPatch("verifyNextPlayerInQueue")]
-#if DEBUG
-        [HarmonyDebug]
-#endif
         public static IEnumerable<CodeInstruction> verifyNextPlayerInQueue(IEnumerable<CodeInstruction> instructions)
         {
             var codes = new List<CodeInstruction>(instructions);

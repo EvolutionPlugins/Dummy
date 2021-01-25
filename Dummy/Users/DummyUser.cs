@@ -1,12 +1,9 @@
-// ReSharper disable CheckNamespace
-
 using Cysharp.Threading.Tasks;
 using Dummy.Players;
 using Dummy.Threads;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using OpenMod.API.Users;
-using OpenMod.Core.Helpers;
 using OpenMod.Core.Users;
 using OpenMod.Extensions.Games.Abstractions.Players;
 using OpenMod.UnityEngine.Extensions;
@@ -55,8 +52,8 @@ namespace Dummy.Users
             Actions.Enabled = true;
             Simulation.Enabled = !disableSimulation;
 
-            AsyncHelper.Schedule($"Action a dummy {Id}", () => Actions.Start().AsTask());
-            AsyncHelper.Schedule($"Simulation a dummy {Id}", () => Simulation.Start().AsTask());
+            UniTask.Run(Actions.Start);
+            UniTask.Run(Simulation.Start);
         }
 
         public override Task PrintMessageAsync(string message)
@@ -90,6 +87,14 @@ namespace Dummy.Users
             return PrintMessageTask().AsTask();
         }
 
+        public bool Equals(DummyUser other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+
+            return other.SteamID.Equals(SteamID);
+        }
+
         public ValueTask DisposeAsync()
         {
             Actions.Enabled = false;
@@ -99,14 +104,6 @@ namespace Dummy.Users
                 dummySession.OnSessionEnd();
             }
             return new ValueTask(Session.DisconnectAsync());
-        }
-
-        public bool Equals(DummyUser other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-
-            return other.SteamID.Equals(SteamID);
         }
     }
 }

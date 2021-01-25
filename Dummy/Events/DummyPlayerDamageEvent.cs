@@ -6,9 +6,8 @@ using Microsoft.Extensions.Localization;
 using OpenMod.API.Eventing;
 using OpenMod.Core.Eventing;
 using OpenMod.Unturned.Players.Life.Events;
-using SDG.Unturned;
+using OpenMod.Unturned.Users;
 using System.Threading.Tasks;
-using UnityEngine;
 
 namespace Dummy.Events
 {
@@ -17,12 +16,15 @@ namespace Dummy.Events
         private readonly IDummyProvider m_DummyProvider;
         private readonly IConfiguration m_Configuration;
         private readonly IStringLocalizer m_StringLocalizer;
+        private readonly IUnturnedUserDirectory m_UnturnedUserDirectory;
 
-        public DummyPlayerDamageEvent(IDummyProvider dummyProvider, IConfiguration configuration, IStringLocalizer stringLocalizer)
+        public DummyPlayerDamageEvent(IDummyProvider dummyProvider, IConfiguration configuration,
+            IStringLocalizer stringLocalizer, IUnturnedUserDirectory unturnedUserDirectory)
         {
             m_DummyProvider = dummyProvider;
             m_Configuration = configuration;
             m_StringLocalizer = stringLocalizer;
+            m_UnturnedUserDirectory = unturnedUserDirectory;
         }
 
         [EventListener(Priority = EventListenerPriority.Monitor)]
@@ -34,9 +36,13 @@ namespace Dummy.Events
                 return;
             }
 
-            ChatManager.say(@event.Killer,
-                m_StringLocalizer["events:damaged", new { DamageAmount = @event.DamageAmount, Id = dummy.Id }],
-                Color.green, true);
+            var player = m_UnturnedUserDirectory.FindUser(@event.Killer);
+            if (player == null)
+            {
+                return;
+            }
+
+            await player.PrintMessageAsync(m_StringLocalizer["events:damaged", new { DamageAmount = @event.DamageAmount, Id = dummy.Id }]);
         }
 
         [EventListener(Priority = EventListenerPriority.Normal)]

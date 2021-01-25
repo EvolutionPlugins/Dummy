@@ -1,19 +1,35 @@
 ﻿options:
-  amountDummies: 1 # How many dummies can be spawned at the same time. 
-  kickDummyAfterSeconds: 600 # A timer to kick a dummy after the amount of time. Set to 0 to disable timer kick
-  isAdmin: false # On spawning, a dummy will be an admin
-  canExecuteCommands: true # Enabling this a dummy can execute commands without admin or permission.
-  disableSimulations: false # [WARNING] Disabling this option can break plugin but if your host-server is slow then disable (takes about ~2-5% of CPU each a dummy)
+  # Max dummies can be spawned at the same time
+  amountDummies: 1
+  # A timer to kick a dummy after the number of seconds. Setting it to 0 will disable the timer.
+  kickDummyAfterSeconds: 600
+  # On spawning, a dummy will be an admin
+  isAdmin: false 
+  # Enabling this a dummy can execute commands without admin or permission.
+  canExecuteCommands: true 
+  # [WARNING] Disabling this option can break plugin but if your host-server is slow then disable (takes about ~2-5% of CPU each a dummy)
+  disableSimulations: false 
 
+
+# Configuration for events (helpful for developers)
+# With those events, you can check if a dummy can enter to the server (like a real player)
 events:
-  allowDamage: true # Enabling this dummy can be damaged.
-  callOnCheckValidWithExplanation: true # Before entering the server will be called event Provider.OnCheckValidWithExplanation
-  callOnCheckBanStatusWithHWID: true # Before entering the server will be called event Provider.onCheckBanStatusWithHWID
+  # Enabling this dummy can be damaged.
+  allowDamage: true 
+  # Before entering the server will be called an event Provider.onCheckValidWithExplanation
+  callOnCheckValidWithExplanation: true 
+  # Before entering the server will be called an event Provider.onCheckBanStatusWithHWID
+  callOnCheckBanStatusWithHWID: true 
 
+# Just for fun :D
 fun:
+  # Dummy will be always rotating (each 1ms rotate X°)
   alwaysRotate: true
+  # The X deg.
   rotateYaw: 10
 
+# On spawing dummy (/dummy spawn) it will use default configuration
+# [WIP] Skins
 default:
   isPro: true
   characterId: 0
@@ -33,6 +49,7 @@ default:
   faceId: 31
   markerColor: "Orange"
   isLeftHanded: false
+  # Right not is not working
   skins:
     shirt: 901
     pants: 902
@@ -41,6 +58,8 @@ default:
     vest: 898
     mask: 737
     glasses: 909
+  # Available skillsets:
+  # NONE FIRE POLICE ARMY FARM FISH CAMP WORK CHEF THIEF MEDIC
   playerSkillset: POLICE
   language: English
   lobbyId: 0
