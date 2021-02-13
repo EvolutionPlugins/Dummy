@@ -30,7 +30,8 @@ namespace Dummy
 
             Logger.LogWarning("RECOMMENDED USE VERSION PLUGIN FOR OPENMOD!");
             Logger.LogWarning("https://github.com/evolutionplugins/dummy");
-            Logger.LogWarning("READ ABOUT MIGRATING ROCKETMOD TO OPENMOD HERE:");
+            Logger.LogWarning("ROCKETMOD VERSION WILL NOT GET ANY UPDATES!");
+            Logger.LogWarning("READ ABOUT INSTALLING OPENMOD: https://openmod.github.io/openmod-docs/userdoc/installation/unturned.html");
             Logger.LogWarning("https://openmod.github.io/openmod-docs/user-guide/migration/rocketmod/");
             Logger.Log("Made with <3 by Evolution Plugins", ConsoleColor.Cyan);
             Logger.Log("https://github.com/diffoz \\ https://github.com/evolutionplugins", ConsoleColor.Cyan);
