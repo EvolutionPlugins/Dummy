@@ -14,7 +14,9 @@
       <GenerateNugetPackage>true</GenerateNugetPackage>
       <RepositoryUrl>https://github.com/EvolutionPlugins/Dummy</RepositoryUrl>
       <RepositoryType>git</RepositoryType>
-      <LangVersion>latest</LangVersion>
+      <LangVersion>9.0</LangVersion>
+      <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+      <EnableNETAnalyzers>true</EnableNETAnalyzers>
     </PropertyGroup>
 
     <ItemGroup>
@@ -32,6 +34,17 @@
     </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\libs\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>..\libs\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Legacy2CPSWorkaround" Version="1.0.0">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
@@ -39,7 +52,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="OpenMod.Unturned" Version="2.3.8" />
+    <PackageReference Include="OpenMod.Unturned" Version="3.0.11" PrivateAssets="all" />
   </ItemGroup>
    
 </Project>

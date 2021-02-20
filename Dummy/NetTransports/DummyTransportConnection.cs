@@ -26,10 +26,6 @@ namespace Dummy.NetTransports
             return this == other;
         }
 
-        public void Send(byte[] buffer, long size, ESendType sendType)
-        {
-        }
-
         public bool TryGetIPv4Address(out uint address)
         {
             address = Parser.getUInt32FromIP(m_Configuration["default:ip"]);
@@ -50,6 +46,10 @@ namespace Dummy.NetTransports
         public string GetAddressString(bool withPort)
         {
             return m_Configuration["default:ip"] + (withPort ? (":" + m_Configuration["default:port"]) : string.Empty);
+        }
+
+        public void Send(byte[] buffer, long size, ENetReliability sendType)
+        {
         }
     }
 }

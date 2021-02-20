@@ -144,9 +144,9 @@ namespace Dummy.Threads
                             {
                                 drivingPlayerInputPacket.position = transform.position;
                             }
-                            drivingPlayerInputPacket.angle_x = MeasurementTool.angleToByte2(transform.rotation.eulerAngles.x);
-                            drivingPlayerInputPacket.angle_y = MeasurementTool.angleToByte2(transform.rotation.eulerAngles.y);
-                            drivingPlayerInputPacket.angle_z = MeasurementTool.angleToByte2(transform.rotation.eulerAngles.z);
+
+                            drivingPlayerInputPacket.rotation = transform.rotation;
+
                             drivingPlayerInputPacket.speed = (byte)(Mathf.Clamp(vehicle.speed, -100f, 100f) + 128f);
                             drivingPlayerInputPacket.physicsSpeed = (byte)(Mathf.Clamp(vehicle.physicsSpeed, -100f, 100f) + 128f);
                             drivingPlayerInputPacket.turn = (byte)(vehicle.turn + 1);
