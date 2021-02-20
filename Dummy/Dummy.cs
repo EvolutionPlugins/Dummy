@@ -1,6 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Patches;
+using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using OpenMod.API.Plugins;
 using OpenMod.Unturned.Plugins;
@@ -29,6 +30,11 @@ namespace Dummy
             Patch_Provider.OnNeedDummy += GiveProvider;
             Patch_EffectManager.OnNeedDummy += GiveProvider;
             Patch_PlayerVoice.OnNeedDummy += GiveProvider;
+
+            var type = AccessTools.TypeByName("SDG.Unturned.ServerMessageHandler_ReadyToConnect");
+            var orgMethod = AccessTools.Method(type, "ReadMessage");
+            var patchMethod = SymbolExtensions.GetMethodInfo(() => Patch_ServerMessageHandler_ReadyToConnect.ReadMessage(null));
+            Harmony.CreateProcessor(orgMethod).AddTranspiler(new HarmonyMethod(patchMethod));
 
             m_Logger.LogInformation("Made with <3 by Evolution Plugins");
             m_Logger.LogInformation("Owner of EvolutionPlugins: DiFFoZ");
