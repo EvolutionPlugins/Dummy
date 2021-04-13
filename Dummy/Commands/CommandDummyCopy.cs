@@ -1,20 +1,20 @@
-﻿using Dummy.API;
+﻿extern alias JetBrainsAnnotations;
+using System;
+using System.Threading.Tasks;
+using Dummy.API;
 using Dummy.Extensions;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using Microsoft.Extensions.Localization;
 using OpenMod.Core.Commands;
 using OpenMod.Unturned.Users;
-using Steamworks;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Command = OpenMod.Core.Commands.Command;
 
 namespace Dummy.Commands
 {
     [Command("copy")]
-    [CommandDescription("Creates a dummy and copy your skin, hait, beard, etc...")]
+    [CommandDescription("Creates a dummy and copy your skin, hair, beard, etc...")]
     [CommandActor(typeof(UnturnedUser))]
     [CommandParent(typeof(CommandDummy))]
+    [UsedImplicitly]
     public class CommandDummyCopy : Command
     {
         private readonly IDummyProvider m_DummyProvider;
@@ -32,7 +32,12 @@ namespace Dummy.Commands
             var user = (UnturnedUser)Context.Actor;
 
             var id = await m_DummyProvider.GetAvailableIdAsync();
-            var playerDummy = await m_DummyProvider.AddCopiedDummyAsync(id, new HashSet<CSteamID> { user.SteamId }, user);
+            var playerDummy = await m_DummyProvider.AddCopiedDummyAsync(id, new() { user.SteamId }, user);
+            if (playerDummy is null)
+            {
+                throw new NotImplementedException(nameof(playerDummy));
+            }
+            
             await playerDummy.TeleportToPlayerAsync(user);
 
             await PrintAsync(m_StringLocalizer["commands:general:copy", new { Id = id }]);

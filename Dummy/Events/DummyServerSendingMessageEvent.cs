@@ -1,20 +1,25 @@
-﻿using Dummy.API;
+﻿extern alias JetBrainsAnnotations;
+using System.Drawing;
+using System.Threading.Tasks;
+using Dummy.API;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using Microsoft.Extensions.Localization;
 using OpenMod.API.Eventing;
 using OpenMod.Core.Eventing;
 using OpenMod.Unturned.Players.Chat.Events;
 using OpenMod.Unturned.Users;
-using System.Threading.Tasks;
 
 namespace Dummy.Events
 {
+    [UsedImplicitly]
     public class DummyServerSendingMessageEvent : IEventListener<UnturnedServerSendingMessageEvent>
     {
         private readonly IDummyProvider m_DummyProvider;
         private readonly IUnturnedUserDirectory m_UnturnedUserDirectory;
         private readonly IStringLocalizer m_StringLocalizer;
 
-        public DummyServerSendingMessageEvent(IDummyProvider dummyProvider, IUnturnedUserDirectory unturnedUserDirectory,
+        public DummyServerSendingMessageEvent(IDummyProvider dummyProvider,
+            IUnturnedUserDirectory unturnedUserDirectory,
             IStringLocalizer stringLocalizer)
         {
             m_DummyProvider = dummyProvider;
@@ -23,8 +28,13 @@ namespace Dummy.Events
         }
 
         [EventListener(Priority = EventListenerPriority.Monitor)]
-        public async Task HandleEventAsync(object sender, UnturnedServerSendingMessageEvent @event)
+        public async Task HandleEventAsync(object? sender, UnturnedServerSendingMessageEvent @event)
         {
+            if (@event.ToPlayer is null)
+            {
+                return;
+            }
+
             var dummy = await m_DummyProvider.GetPlayerDummyAsync(@event.ToPlayer.SteamId.m_SteamID);
             if (dummy == null)
             {
@@ -39,8 +49,9 @@ namespace Dummy.Events
                     continue;
                 }
 
-                await playerOwner.PrintMessageAsync(m_StringLocalizer["events:chatted", new { Text = @event.Text, dummy.Id }],
-                    System.Drawing.Color.Green, @event.IsRich, @event.IconUrl);
+                await playerOwner.PrintMessageAsync(
+                    m_StringLocalizer["events:chatted", new { @event.Text, dummy.Id }],
+                    Color.Green, @event.IsRich, @event.IconUrl);
             }
         }
     }

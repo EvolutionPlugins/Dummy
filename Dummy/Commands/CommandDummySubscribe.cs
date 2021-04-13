@@ -1,13 +1,17 @@
-﻿using Cysharp.Threading.Tasks;
+﻿extern alias JetBrainsAnnotations;
+using System;
+using System.Linq;
+using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
+using HarmonyLib;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using Microsoft.Extensions.Localization;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
 using OpenMod.Unturned.Users;
+using SDG.NetTransport;
 using SDG.Unturned;
-using System;
-using System.Linq;
 
 namespace Dummy.Commands
 {
@@ -16,8 +20,12 @@ namespace Dummy.Commands
     [CommandActor(typeof(UnturnedUser))]
     [CommandSyntax("<id> <crushUI>")]
     [CommandDescription("Allows seeing what kind UIs a dummy sees. Also, you can interact with UI.")]
+    [UsedImplicitly]
     public class CommandDummySubscribe : CommandDummyAction
     {
+        internal static readonly ClientStaticMethod s_SendEffectClearAllMethod =
+            AccessTools.StaticFieldRefAccess<EffectManager, ClientStaticMethod>("SendEffectClearAll");
+
         private readonly IDummyProvider m_DummyProvider;
 
         public CommandDummySubscribe(IServiceProvider serviceProvider,
@@ -29,9 +37,14 @@ namespace Dummy.Commands
 
         protected override async UniTask ExecuteDummyAsync(DummyUser playerDummy)
         {
+            if (Context.Parameters.Count != 2)
+            {
+                throw new CommandWrongUsageException(Context);
+            }
+
             var user = (UnturnedUser)Context.Actor;
             var crushUI = await Context.Parameters.GetAsync<bool>(1);
-            if(m_DummyProvider.Dummies.Any(x => x.SubscribersUI.Contains(user.SteamId)))
+            if (m_DummyProvider.Dummies.Any(x => x.SubscribersUI.Contains(user.SteamId)))
             {
                 throw new UserFriendlyException("You can only subscribe to 1 dummy");
             }
@@ -40,7 +53,10 @@ namespace Dummy.Commands
 
             if (crushUI)
             {
-                EffectManager.instance.channel.send("askEffectClearAll", user.SteamId, ESteamPacket.UPDATE_RELIABLE_BUFFER);
+                await UniTask.SwitchToMainThread();
+
+                s_SendEffectClearAllMethod.Invoke(ENetReliability.Reliable,
+                    user.Player.Player.channel.GetOwnerTransportConnection());
             }
         }
     }

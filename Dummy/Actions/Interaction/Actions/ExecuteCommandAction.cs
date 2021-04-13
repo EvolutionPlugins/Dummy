@@ -1,4 +1,5 @@
-﻿using Dummy.API;
+﻿extern alias JetBrainsAnnotations;
+using Dummy.API;
 using Dummy.Users;
 using OpenMod.API.Commands;
 using System;
@@ -10,12 +11,10 @@ namespace Dummy.Actions.Interaction.Actions
     {
         private readonly ICommandExecutor m_CommandExecutor;
 
-        public Action<Exception> ExceptionHandler { get; }
-#pragma warning disable CA1819 // Properties should not return arrays
+        public Action<Exception?>? ExceptionHandler { get; }
         public string[] Arguments { get; }
-#pragma warning restore CA1819 // Properties should not return arrays
 
-        public ExecuteCommandAction(ICommandExecutor commandExecutor, string[] args, Action<Exception> exceptionHandler)
+        public ExecuteCommandAction(ICommandExecutor commandExecutor, string[] args, Action<Exception?>? exceptionHandler)
         {
             ExceptionHandler = exceptionHandler;
             Arguments = args;

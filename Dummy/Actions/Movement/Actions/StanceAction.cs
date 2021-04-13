@@ -1,8 +1,8 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
 using SDG.Unturned;
-using System.Threading.Tasks;
 
 namespace Dummy.Actions.Movement.Actions
 {
@@ -15,10 +15,15 @@ namespace Dummy.Actions.Movement.Actions
 
         public EPlayerStance Stance { get; }
 
-        public async Task Do(DummyUser dummy)
+        public Task Do(DummyUser dummy)
         {
-            await UniTask.SwitchToMainThread();
-            dummy.Player.Player.stance.stance = Stance;
+            async UniTask SetStance()
+            {
+                await UniTask.SwitchToMainThread();
+                dummy.Player.Player.stance.stance = Stance;
+            }
+
+            return SetStance().AsTask();
         }
     }
 }

@@ -1,12 +1,17 @@
-﻿using Cysharp.Threading.Tasks;
+﻿extern alias JetBrainsAnnotations;
+using Cysharp.Threading.Tasks;
 using Dummy.API;
+using Dummy.Extensions;
 using Dummy.Users;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using SDG.Unturned;
+using System;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace Dummy.Extensions.Interaction.Actions.Barricade
+namespace Dummy.Actions.Interaction.Actions.Barricade
 {
+    [UsedImplicitly]
     public class SalvageBarricadeAction : IAction
     {
         public SalvageBarricadeAction(byte x, byte y, ushort plant, ushort index)
@@ -19,13 +24,16 @@ namespace Dummy.Extensions.Interaction.Actions.Barricade
 
         public SalvageBarricadeAction(Transform barricade)
         {
-            if (BarricadeManager.tryGetInfo(barricade, out var x, out var y, out var plant, out var index, out _))
+            if (!BarricadeManager.tryGetInfo(barricade, out var x, out var y, out var plant,
+                out var index, out _))
             {
-                X = x;
-                Y = y;
-                Plant = plant;
-                Index = index;
+                throw new Exception("Barricade not found");
             }
+
+            X = x;
+            Y = y;
+            Plant = plant;
+            Index = index;
         }
 
         public byte X { get; }
@@ -33,10 +41,18 @@ namespace Dummy.Extensions.Interaction.Actions.Barricade
         public ushort Plant { get; }
         public ushort Index { get; }
 
-        public async Task Do(DummyUser dummy)
+        public Task Do(DummyUser dummy)
         {
-            await UniTask.SwitchToMainThread();
-            BarricadeManager.instance.askSalvageBarricade(dummy.SteamID, X, Y, Plant, Index);
+            async UniTask SalvageBarricade()
+            {
+                await UniTask.SwitchToMainThread();
+
+                var context = ServerInvocationContextExtenison.GetContext(dummy.SteamPlayer);
+
+                BarricadeManager.ReceiveSalvageBarricadeRequest(context, X, Y, Plant, Index);
+            }
+
+            return SalvageBarricade().AsTask();
         }
     }
 }

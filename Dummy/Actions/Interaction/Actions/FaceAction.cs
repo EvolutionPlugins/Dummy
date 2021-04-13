@@ -21,13 +21,16 @@ namespace Dummy.Actions.Interaction.Actions
 
         public byte Index { get; }
 
-        public async Task Do(DummyUser dummy)
+        public Task Do(DummyUser dummy)
         {
-            await UniTask.SwitchToMainThread();
-            dummy.Player.Player.equipment.channel.send("tellSwapFace", ESteamCall.NOT_OWNER, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
+            async UniTask SetFace()
             {
-                Index
-            });
+                await UniTask.SwitchToMainThread();
+                // todo: bypass Nelson index checking
+                dummy.Player.Player.clothing.ServerSetFace(Index);
+            }
+
+            return SetFace().AsTask();
         }
     }
 }

@@ -1,9 +1,11 @@
-﻿using Dummy.API;
+﻿extern alias JetBrainsAnnotations;
+using System;
+using System.Threading.Tasks;
+using Dummy.API;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using Microsoft.Extensions.Localization;
 using OpenMod.Core.Commands;
 using Steamworks;
-using System;
-using System.Threading.Tasks;
 
 namespace Dummy.Commands
 {
@@ -13,6 +15,7 @@ namespace Dummy.Commands
     [CommandDescription("Removes a dummy by id")]
     [CommandParent(typeof(CommandDummy))]
     [CommandSyntax("<id>")]
+    [UsedImplicitly]
     public class CommandDummyRemove : Command
     {
         private readonly IDummyProvider m_DummyProvider;
@@ -31,6 +34,7 @@ namespace Dummy.Commands
             {
                 throw new CommandWrongUsageException(Context);
             }
+
             var id = (CSteamID)await Context.Parameters.GetAsync<ulong>(0);
 
             if (await m_DummyProvider.RemoveDummyAsync(id))
@@ -38,6 +42,7 @@ namespace Dummy.Commands
                 await PrintAsync(m_StringLocalizer["commands:general:remove:success", new { Id = id }]);
                 return;
             }
+
             await PrintAsync(m_StringLocalizer["commands:general:remove:fail", new { Id = id }]);
         }
     }

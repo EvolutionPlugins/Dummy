@@ -1,21 +1,26 @@
+using System.Reflection;
+using System.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
 using HarmonyLib;
 using SDG.Unturned;
-using System.Reflection;
-using System.Threading.Tasks;
 
 namespace Dummy.Actions.Movement.Actions
 {
     public class JumpAction : IAction
     {
-        private const float JUMP = 7;
-        private readonly static MethodInfo FallSetter = AccessTools.PropertySetter(typeof(PlayerMovement), "fall");
+        private const float c_Jump = 7;
+        private static readonly MethodInfo s_СFallSetter = AccessTools.PropertySetter(typeof(PlayerMovement), "fall");
 
         public Task Do(DummyUser dummy)
         {
             var movement = dummy.Player.Player.movement;
-            FallSetter.Invoke(movement, new[] { (object)(JUMP * (1f + (movement.player.skills.mastery(0, 6) * 0.25f)) * movement.pluginJumpMultiplier) });
+            s_СFallSetter.Invoke(movement,
+                new[]
+                {
+                    (object)(c_Jump * (1f + (movement.player.skills.mastery(0, 6) * 0.25f)) *
+                             movement.pluginJumpMultiplier)
+                });
             return Task.CompletedTask;
         }
     }

@@ -1,9 +1,15 @@
-﻿using Autofac;
+﻿extern alias JetBrainsAnnotations;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Autofac;
 using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Extensions;
 using Dummy.Models;
 using Dummy.Users;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
@@ -17,15 +23,13 @@ using OpenMod.Unturned.Users;
 using SDG.NetTransport;
 using SDG.Unturned;
 using Steamworks;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Dummy.Services
 {
     [ServiceImplementation(Lifetime = ServiceLifetime.Singleton, Priority = Priority.Lowest)]
+    [UsedImplicitly]
     public class DummyProvider : IDummyProvider, IAsyncDisposable
     {
         private readonly HashSet<DummyUser> m_Dummies;
@@ -36,8 +40,10 @@ namespace Dummy.Services
         private readonly ILoggerFactory m_LoggerFactory;
         private readonly ITransportConnection m_TransportConnection;
 
-        private IStringLocalizer m_StringLocalizer => m_PluginAccessor.Instance.LifetimeScope.Resolve<IStringLocalizer>();
-        private IConfiguration m_Configuration => m_PluginAccessor.Instance.Configuration;
+        private IStringLocalizer StringLocalizer =>
+            m_PluginAccessor.Instance!.LifetimeScope.Resolve<IStringLocalizer>();
+
+        private IConfiguration Configuration => m_PluginAccessor.Instance!.Configuration;
         private bool m_IsDisposing;
 
         public IReadOnlyCollection<DummyUser> Dummies => m_Dummies;
@@ -46,7 +52,7 @@ namespace Dummy.Services
             IUserDataStore userDataStore, ILogger<DummyProvider> logger, ILoggerFactory loggerFactory,
             ITransportConnection transportConnection)
         {
-            m_Dummies = new HashSet<DummyUser>();
+            m_Dummies = new();
             m_PluginAccessor = pluginAccessor;
             m_UserManager = userManager;
             m_UserDataStore = userDataStore;
@@ -54,25 +60,27 @@ namespace Dummy.Services
             m_LoggerFactory = loggerFactory;
             m_TransportConnection = transportConnection;
 
-            SteamChannel.onTriggerSend += onTriggerSend;
-
             AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
         }
 
-        private void onTriggerSend(SteamPlayer player, string name, ESteamCall mode, ESteamPacket type, object[] arguments)
+        // todo
+        private void OnTriggerSend(SteamPlayer player, string name, ESteamCall mode, ESteamPacket type,
+            object[] arguments)
         {
-            var dummy = Dummies.FirstOrDefault(x => x.SteamPlayer == player);
-            if (dummy == null)
-            {
-                return;
-            }
-            if (name == nameof(Player.askTeleport))
-            {
-                // todo: works after simulation tick
-                dummy.Simulation.PlayerInputPackets.Clear();
-                dummy.Player.Player.transform.localPosition = (Vector3)arguments[0];
-            }
-            m_Logger.LogDebug($"{player.playerID.steamID} / server send {name}");
+            // var dummy = Dummies.FirstOrDefault(x => x.SteamPlayer == player);
+            // if (dummy == null)
+            // {
+            //     return;
+            // }
+            //
+            // if (name == nameof(Player.askTeleport))
+            // {
+            //     // todo: works after simulation tick
+            //     dummy.Simulation.PlayerInputPackets.Clear();
+            //     dummy.Player.Player.transform.localPosition = (Vector3)arguments[0];
+            // }
+            //
+            // m_Logger.LogDebug($"{player.playerID.steamID} / server send {name}");
         }
 
         private async Task DontAutoKickTask()
@@ -85,6 +93,7 @@ namespace Dummy.Services
                     var client = dummy.SteamPlayer;
                     client.timeLastPacketWasReceivedFromClient = Time.realtimeSinceStartup;
                 }
+
                 await Task.Delay(5000);
             }
         }
@@ -95,51 +104,60 @@ namespace Dummy.Services
             {
                 return;
             }
-            m_Logger.LogDebug($"Start kick timer, will kicked after {timer} sec");
+
+            m_Logger.LogDebug("Start kick timer, will kicked after {Timer} sec", timer);
             await Task.Delay(TimeSpan.FromSeconds(timer));
 
             var user = await GetPlayerDummyAsync(id);
-            if (user == null)
+            if (user?.Session == null)
             {
                 return;
             }
-            m_Logger.LogDebug($"[Kick timer] => Kick dummy {id}");
+
+            m_Logger.LogDebug("[Kick timer] => Kick dummy {Id}", user.Id);
             await user.Session.DisconnectAsync();
         }
-
-        private void CheckSpawn(CSteamID id)
+        
+        [AssertionMethod]
+        private void ValidateSpawn(CSteamID id)
         {
             if (m_Dummies.Any(x => x.SteamID == id))
             {
-                throw new DummyContainsException(m_StringLocalizer, id.m_SteamID);
+                throw new DummyContainsException(StringLocalizer, id.m_SteamID);
             }
 
-            var amountDummiesConfig = m_Configuration.Get<Configuration>().Options.AmountDummies;
+            var amountDummiesConfig = Configuration.Get<Configuration>().Options?.AmountDummies ?? 0;
             if (amountDummiesConfig != 0 && Dummies.Count + 1 > amountDummiesConfig)
             {
-                throw new DummyOverflowsException(m_StringLocalizer, (byte)Dummies.Count, amountDummiesConfig);
+                throw new DummyOverflowsException(StringLocalizer, (byte)Dummies.Count, amountDummiesConfig);
             }
         }
 
-        public async Task<DummyUser> AddDummyAsync(CSteamID id, HashSet<CSteamID> owners)
+        public async Task<DummyUser?> AddDummyAsync(CSteamID id, HashSet<CSteamID> owners)
         {
             await UniTask.SwitchToMainThread();
 
-            CheckSpawn(id);
+            ValidateSpawn(id);
 
-            var config = m_Configuration.Get<Configuration>();
-            var @default = config.Default;
-            var skins = config.Default.Skins;
+            var config = Configuration.Get<Configuration>();
+            var @default = config.Default ?? throw new ArgumentException(nameof(config.Default));
+            var skins = config.Default?.Skins ?? throw new ArgumentException(nameof(config.Default.Skins));
+            var options = config.Options ?? throw new ArgumentException(nameof(config.Options));
 
             var dummyPlayerID = new SteamPlayerID(id, @default.CharacterId, @default.PlayerName,
-                @default.CharacterName, @default.NickName, @default.SteamGroupId, @default.HWID.GetBytes());
+                @default.CharacterName, @default.NickName, @default.SteamGroupId, @default.Hwid.GetBytes());
+
+
+            var skinColor = @default.SkinColor?.ToColor() ?? Color.white;
+            var color = @default.Color?.ToColor() ?? Color.white;
+            var markerColor = @default.MarkerColor?.ToColor() ?? Color.white;
 
             // todo: skins are VERY HARD to implement ;(
             var pending = new SteamPending(m_TransportConnection, dummyPlayerID, @default.IsPro, @default.FaceId,
-                @default.HairId, @default.BeardId, @default.SkinColor.ToColor(), @default.Color.ToColor(),
-                @default.MarkerColor.ToColor(), @default.IsLeftHanded, skins.Shirt, skins.Pants, skins.Hat,
-                skins.Backpack, skins.Vest, skins.Mask, skins.Glasses, Array.Empty<ulong>(), @default.PlayerSkillset,
-                @default.Language, @default.LobbyId)
+                @default.HairId, @default.BeardId, skinColor, color, markerColor,
+                @default.IsLeftHanded, skins.Shirt, skins.Pants, skins.Hat,
+                skins.Backpack, skins.Vest, skins.Mask, skins.Glasses, Array.Empty<ulong>(),
+                @default.PlayerSkillset, @default.Language, @default.LobbyId)
             {
                 hasAuthentication = true,
                 hasGroup = true,
@@ -151,26 +169,30 @@ namespace Dummy.Services
             PreAddDummy(dummyPlayerID);
 
             Provider.accept(dummyPlayerID, @default.IsPro, false, @default.FaceId, @default.HairId, @default.BeardId,
-                @default.SkinColor.ToColor(), @default.Color.ToColor(), @default.MarkerColor.ToColor(),
-                @default.IsLeftHanded, skins.Shirt, skins.Pants, skins.Hat, skins.Backpack, skins.Vest, skins.Mask,
-                skins.Glasses, Array.Empty<int>(), Array.Empty<string>(), Array.Empty<string>(), @default.PlayerSkillset,
-                @default.Language, @default.LobbyId);
+                skinColor, color, markerColor, @default.IsLeftHanded, skins.Shirt, skins.Pants, skins.Hat,
+                skins.Backpack,
+                skins.Vest, skins.Mask, skins.Glasses, Array.Empty<int>(), Array.Empty<string>(),
+                Array.Empty<string>(), @default.PlayerSkillset, @default.Language, @default.LobbyId);
 
-            var playerDummy = new DummyUser((UnturnedUserProvider)m_UserManager.UserProviders.FirstOrDefault(c => c is UnturnedUserProvider),
-                m_UserDataStore, Provider.clients.Last(), m_LoggerFactory, m_StringLocalizer, config.Options.DisableSimulations, owners);
+            var playerDummy = new DummyUser(
+                (UnturnedUserProvider)(m_UserManager.UserProviders.FirstOrDefault(c => c is UnturnedUserProvider)
+                                       ?? throw new InvalidOperationException()),
+                m_UserDataStore, Provider.clients.Last(), m_LoggerFactory, StringLocalizer,
+                options.DisableSimulations, owners);
 
             PostAddDummy(playerDummy);
 
             return playerDummy;
         }
 
-        public async Task<DummyUser> AddCopiedDummyAsync(CSteamID id, HashSet<CSteamID> owners, UnturnedUser userCopy)
+        public async Task<DummyUser?> AddCopiedDummyAsync(CSteamID id, HashSet<CSteamID> owners, UnturnedUser userCopy)
         {
             await UniTask.SwitchToMainThread();
 
-            CheckSpawn(id);
+            ValidateSpawn(id);
 
-            var config = m_Configuration.Get<Configuration>();
+            var config = Configuration.Get<Configuration>();
+            var options = config.Options ?? throw new ArgumentException(nameof(config.Options));
             var userSteamPlayer = userCopy.Player.SteamPlayer;
 
             // todo: maybe, also copy nickname?
@@ -202,30 +224,35 @@ namespace Dummy.Services
                 userSteamPlayer.skinDynamicProps, userSteamPlayer.skillset, userSteamPlayer.language,
                 userSteamPlayer.lobbyID);
 
-            var playerDummy = new DummyUser((UnturnedUserProvider)m_UserManager.UserProviders.FirstOrDefault(c => c is UnturnedUserProvider),
-                m_UserDataStore, Provider.clients.Last(), m_LoggerFactory, m_StringLocalizer, config.Options.DisableSimulations, owners);
+            var playerDummy = new DummyUser(
+                (UnturnedUserProvider)(m_UserManager.UserProviders.FirstOrDefault(c => c is UnturnedUserProvider)
+                                       ?? throw new InvalidOperationException()),
+                m_UserDataStore, Provider.clients.Last(), m_LoggerFactory, StringLocalizer,
+                options.DisableSimulations, owners);
 
             PostAddDummy(playerDummy);
 
             return playerDummy;
         }
 
-        public Task<DummyUser> AddDummyByParameters(CSteamID id, HashSet<CSteamID> owners, ConfigurationSettings settings)
+        public Task<DummyUser?> AddDummyByParameters(CSteamID id, HashSet<CSteamID> owners,
+            ConfigurationSettings settings)
         {
             throw new NotImplementedException();
         }
 
         private void PreAddDummy(SteamPlayerID dummy)
         {
-            var config = m_Configuration.Get<Configuration>();
+            var config = Configuration.Get<Configuration>();
+            var events = config.Events ?? throw new ArgumentException(nameof(config.Events));
 
-            if (config.Events.CallOnCheckValidWithExplanation)
+            if (events.CallOnCheckValidWithExplanation)
             {
                 var isValid = true;
                 var explanation = string.Empty;
                 try
                 {
-                    Provider.onCheckValidWithExplanation(new ValidateAuthTicketResponse_t
+                    Provider.onCheckValidWithExplanation(new()
                     {
                         m_SteamID = dummy.steamID,
                         m_eAuthSessionResponse = EAuthSessionResponse.k_EAuthSessionResponseOK,
@@ -234,58 +261,70 @@ namespace Dummy.Services
                 }
                 catch (Exception e)
                 {
-                    m_Logger.LogError(e, "Plugin raised an exception from onCheckValidWithExplanation: ");
+                    m_Logger.LogError(e, "Plugin raised an exception from onCheckValidWithExplanation");
                 }
+
                 if (!isValid)
                 {
                     Provider.pending.RemoveAt(Provider.pending.Count - 1);
-                    throw new DummyCanceledSpawnException($"Plugin reject connection a dummy({dummy.steamID}). Reason: {explanation}");
+                    throw new DummyCanceledSpawnException(
+                        $"Plugin reject connection a dummy({dummy.steamID}). Reason: {explanation}");
                 }
             }
 
-            if (config.Events.CallOnCheckBanStatusWithHWID)
+            if (!config.Events.CallOnCheckBanStatusWithHwid)
             {
-                m_TransportConnection.TryGetIPv4Address(out var ip);
-                var isBanned = false;
-                var banReason = string.Empty;
-                var banRemainingDuration = 0U;
-                if (SteamBlacklist.checkBanned(dummy.steamID, ip, out var steamBlacklistID))
-                {
-                    isBanned = true;
-                    banReason = steamBlacklistID.reason;
-                    banRemainingDuration = steamBlacklistID.getTime();
-                }
-
-                try
-                {
-                    Provider.onCheckBanStatusWithHWID?.Invoke(dummy, ip, ref isBanned, ref banReason, ref banRemainingDuration);
-                }
-                catch (Exception e)
-                {
-                    m_Logger.LogError(e, "Plugin raised an exception from onCheckValidWithExplanation: ");
-                }
-
-                if (isBanned)
-                {
-                    Provider.pending.RemoveAt(Provider.pending.Count - 1);
-                    throw new DummyCanceledSpawnException($"Dummy {dummy.steamID} is banned! Ban reason: {banReason}, duration: {banRemainingDuration}");
-                }
+                return;
             }
+
+            m_TransportConnection.TryGetIPv4Address(out var ip);
+            var isBanned = false;
+            var banReason = string.Empty;
+            var banRemainingDuration = 0U;
+            if (SteamBlacklist.checkBanned(dummy.steamID, ip, out var steamBlacklistID))
+            {
+                isBanned = true;
+                banReason = steamBlacklistID!.reason;
+                banRemainingDuration = steamBlacklistID.getTime();
+            }
+
+            try
+            {
+                Provider.onCheckBanStatusWithHWID?.Invoke(dummy, ip, ref isBanned, ref banReason,
+                    ref banRemainingDuration);
+            }
+            catch (Exception e)
+            {
+                m_Logger.LogError(e, "Plugin raised an exception from onCheckValidWithExplanation: ");
+            }
+
+            if (!isBanned)
+            {
+                return;
+            }
+            
+            Provider.pending.RemoveAt(Provider.pending.Count - 1);
+            throw new DummyCanceledSpawnException(
+                $"Dummy {dummy.steamID} is banned! Ban reason: {banReason}, duration: {banRemainingDuration}");
         }
 
         private void PostAddDummy(DummyUser playerDummy)
         {
-            var configuration = m_Configuration.Get<Configuration>();
-            var kickTimer = configuration.Options.KickDummyAfterSeconds;
+            var configuration = Configuration.Get<Configuration>();
+            var options = configuration.Options ?? throw new ArgumentException(nameof(configuration.Options));
+            var fun = configuration.Fun ?? throw new ArgumentException(nameof(configuration.Fun));
+            var kickTimer = options.KickDummyAfterSeconds;
+            
             if (kickTimer > 0)
             {
-                AsyncHelper.Schedule("Kick a dummy timer", () => KickTimerTask(playerDummy.SteamID.m_SteamID, kickTimer));
+                AsyncHelper.Schedule("Kick a dummy timer",
+                    () => KickTimerTask(playerDummy.SteamID.m_SteamID, kickTimer));
             }
 
             UniTask.Run(() => RemoveRigidbody(playerDummy));
-            if (configuration.Fun.AlwaysRotate)
+            if (fun.AlwaysRotate)
             {
-                UniTask.Run(() => RotateDummy(playerDummy, configuration.Fun.RotateYaw));
+                UniTask.Run(() => RotateDummy(playerDummy, fun.RotateYaw));
             }
 
             m_Dummies.Add(playerDummy);
@@ -298,12 +337,12 @@ namespace Dummy.Services
 
             var movement = player.Player.Player.movement;
             var r = movement.gameObject.GetComponent<Rigidbody>();
-            UnityEngine.Object.Destroy(r);
+            Object.Destroy(r);
         }
 
         private async UniTask RotateDummy(DummyUser player, float rotateYaw)
         {
-            while (player != null && !m_IsDisposing)
+            while (!m_IsDisposing)
             {
                 await UniTask.Delay(1);
                 player.Simulation.Yaw += rotateYaw;
@@ -317,6 +356,7 @@ namespace Dummy.Services
             {
                 return false;
             }
+
             await UniTask.SwitchToMainThread();
             await playerDummy.DisposeAsync();
             m_Dummies.Remove(playerDummy);
@@ -338,24 +378,25 @@ namespace Dummy.Services
             {
                 result.m_SteamID++;
             }
+
             return Task.FromResult(result);
         }
 
-        public Task<DummyUser> GetPlayerDummyAsync(ulong id)
+        public Task<DummyUser?> GetPlayerDummyAsync(ulong id)
         {
-            return Task.FromResult(Dummies.FirstOrDefault(p => p.SteamID.m_SteamID == id));
+            return Task.FromResult<DummyUser?>(Dummies.FirstOrDefault(p => p.SteamID.m_SteamID == id));
         }
 
         public ValueTask DisposeAsync()
         {
             if (m_IsDisposing)
             {
-                return new ValueTask(Task.CompletedTask);
+                return new(Task.CompletedTask);
             }
-            m_IsDisposing = true;
 
-            SteamChannel.onTriggerSend -= onTriggerSend;
-            return new ValueTask(ClearDummiesAsync());
+            m_IsDisposing = true;
+            
+            return new(ClearDummiesAsync());
         }
     }
 }

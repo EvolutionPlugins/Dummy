@@ -1,10 +1,12 @@
-﻿using Cysharp.Threading.Tasks;
+﻿extern alias JetBrainsAnnotations;
+using System;
+using Cysharp.Threading.Tasks;
+using Dummy.Actions.Interaction.Actions.UI;
 using Dummy.API;
-using Dummy.Extensions.Interaction.Actions;
 using Dummy.Users;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using Microsoft.Extensions.Localization;
 using OpenMod.Core.Commands;
-using System;
 
 namespace Dummy.Commands.Actions
 {
@@ -12,6 +14,7 @@ namespace Dummy.Commands.Actions
     [CommandAlias("if")]
     [CommandSyntax("<id> <inputFieldName> <text>")]
     [CommandParent(typeof(CommandDummy))]
+    [UsedImplicitly]
     public class CommandDummyInputText : CommandDummyAction
     {
         private readonly IStringLocalizer m_StringLocalizer;
@@ -24,8 +27,13 @@ namespace Dummy.Commands.Actions
 
         protected override UniTask ExecuteDummyAsync(DummyUser playerDummy)
         {
-            var text = Context.Parameters.GetArgumentLine(2);
+            if (Context.Parameters.Count is < 2)
+            {
+                throw new CommandWrongUsageException(Context);
+            }
+            
             var inputFieldName = Context.Parameters[1];
+            var text = Context.Parameters.GetArgumentLine(2);
             playerDummy.Actions.Actions.Enqueue(new InputTextAction(inputFieldName, text));
             return PrintAsync(m_StringLocalizer["commands:actions:inputfield:success",
                 new { playerDummy.Id, Text = text, InputFieldName = inputFieldName }]).AsUniTask();

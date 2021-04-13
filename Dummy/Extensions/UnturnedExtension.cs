@@ -8,18 +8,21 @@ namespace Dummy.Extensions
 {
     public static class UnturnedExtension
     {
-        public static async UniTask<bool> TeleportToLocationAsync(this DummyUser DummyUser, Vector3 position, float rotation)
+        public static async UniTask<bool> TeleportToLocationAsync(this DummyUser dummyUser, Vector3 position, float rotation)
         {
             await UniTask.SwitchToMainThread();
             var b = MeasurementTool.angleToByte(rotation);
-            DummyUser.Player.Player.channel.send("askTeleport", ESteamCall.ALL, ESteamPacket.UPDATE_RELIABLE_BUFFER, position, b);
+            dummyUser.Player.Player.ReceiveTeleport(position, b);
             return true;
         }
 
-        public static UniTask<bool> TeleportToLocationAsync(this DummyUser DummyUser, Vector3 position) =>
-             DummyUser.TeleportToLocationAsync(position, DummyUser.Player.Player.transform.eulerAngles.y);
+        public static UniTask<bool> TeleportToLocationAsync(this DummyUser dummyUser, Vector3 position) =>
+             dummyUser.TeleportToLocationAsync(position, dummyUser.Player.Player.transform.eulerAngles.y);
 
-        public static UniTask<bool> TeleportToPlayerAsync(this DummyUser from, UnturnedUser to) =>
-             from.TeleportToLocationAsync(to.Player.Player.transform.position, to.Player.Player.transform.rotation.eulerAngles.y);
+        public static UniTask<bool> TeleportToPlayerAsync(this DummyUser from, UnturnedUser to)
+        {
+            Transform transform;
+            return @from.TeleportToLocationAsync((transform = to.Player.Player.transform).position, transform.rotation.eulerAngles.y);
+        }
     }
 }

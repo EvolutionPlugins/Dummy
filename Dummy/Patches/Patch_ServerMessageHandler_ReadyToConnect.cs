@@ -4,6 +4,7 @@ using System.Reflection.Emit;
 
 namespace Dummy.Patches
 {
+    // ReSharper disable once InconsistentNaming
     public static class Patch_ServerMessageHandler_ReadyToConnect
     {
         public static IEnumerable<CodeInstruction> ReadMessage(IEnumerable<CodeInstruction> instructions)
@@ -17,7 +18,7 @@ namespace Dummy.Patches
                     i += 4;
 
                     codes.Insert(i, new CodeInstruction(OpCodes.Call, Patch_Provider.s_GetDummiesCount));
-                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Sub, null));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Sub));
                     break;
                 }
             }

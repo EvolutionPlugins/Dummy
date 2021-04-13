@@ -1,5 +1,9 @@
-﻿namespace Dummy.Models
+﻿extern alias JetBrainsAnnotations;
+using JetBrainsAnnotations::JetBrains.Annotations;
+
+namespace Dummy.Models
 {
+    [UsedImplicitly]
     public class ConfigurationOptions
     {
         public byte AmountDummies { get; set; }

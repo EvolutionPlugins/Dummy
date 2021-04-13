@@ -1,15 +1,14 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using OpenMod.Core.Users;
 using SDG.Unturned;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Dummy.Users
 {
-    public class DummyUserSession : UserSessionBase
+    public sealed class DummyUserSession : UserSessionBase
     {
-        private static bool s_IsShuttingDown;
+        private static bool s_isShuttingDown;
 
         static DummyUserSession()
         {
@@ -18,12 +17,13 @@ namespace Dummy.Users
 
         private static void Provider_onCommenceShutdown()
         {
-            s_IsShuttingDown = true;
+            s_isShuttingDown = true;
         }
 
+        // ReSharper disable once SuggestBaseTypeForParameter
         public DummyUserSession(DummyUser user) : base(user)
         {
-            SessionData = new Dictionary<string, object>();
+            SessionData = new();
             SessionStartTime = DateTime.Now;
         }
 
@@ -33,7 +33,7 @@ namespace Dummy.Users
             {
                 await UniTask.SwitchToMainThread();
                 SessionEndTime = DateTime.Now;
-                if (!s_IsShuttingDown)
+                if (!s_isShuttingDown)
                 {
                     Provider.kick(((DummyUser)User).SteamID, reason ?? string.Empty);
                 }

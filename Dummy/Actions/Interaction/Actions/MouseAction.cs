@@ -1,11 +1,14 @@
-﻿using Cysharp.Threading.Tasks;
-using Dummy.Actions.Interaction;
+﻿extern alias JetBrainsAnnotations;
+using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using System.Threading.Tasks;
 
 namespace Dummy.Actions.Interaction.Actions
 {
+    // todo
+    [UsedImplicitly]
     public class MouseAction : IAction
     {
         public MouseAction(MouseState state)
@@ -19,7 +22,7 @@ namespace Dummy.Actions.Interaction.Actions
         {
             var player = dummy.Player.Player;
 
-            // rewrite to use DummyUserSimulationThread
+            // todo: rewrite to use DummyUserSimulationThread
             async UniTask ClickMouse()
             {
                 await UniTask.SwitchToMainThread();
@@ -28,6 +31,7 @@ namespace Dummy.Actions.Interaction.Actions
                 else
                     player.equipment.simulate(player.input.simulation, true, false, false);
             }
+
             return ClickMouse().AsTask();
         }
     }

@@ -1,16 +1,19 @@
-﻿using HarmonyLib;
+﻿extern alias JetBrainsAnnotations;
+using HarmonyLib;
 using SDG.Unturned;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using JetBrainsAnnotations::JetBrains.Annotations;
 
 namespace Dummy.Patches
 {
+    // ReSharper disable InconsistentNaming
     [HarmonyPatch(typeof(Provider))]
     public static class Patch_Provider
     {
-        internal static event NeedDummyProvider OnNeedDummy;
+        internal static event NeedDummyProvider? OnNeedDummy;
 
         public static int GetDummiesCount()
         {
@@ -22,27 +25,31 @@ namespace Dummy.Patches
 
         [HarmonyPrefix]
         [HarmonyPatch("battlEyeServerKickPlayer")]
+        [UsedImplicitly]
         public static bool battlEyeServerKickPlayer(int playerID)
         {
-            return !OnNeedDummy().Dummies.Any(x => x.Player.BattlEyeId == playerID);
+            return !(OnNeedDummy?.Invoke().Dummies.Any(x => x.Player.BattlEyeId == playerID) ?? false);
         }
 
         [HarmonyTranspiler]
         [HarmonyPatch("verifyNextPlayerInQueue")]
+        [UsedImplicitly]
         public static IEnumerable<CodeInstruction> verifyNextPlayerInQueue(IEnumerable<CodeInstruction> instructions)
         {
             var codes = new List<CodeInstruction>(instructions);
             for (var i = 0; i < codes.Count; i++)
             {
                 var instruction = codes[i];
-                if (instruction.opcode == OpCodes.Call && instruction.Calls(s_GetClients))
+                if (instruction.opcode != OpCodes.Call || !instruction.Calls(s_GetClients))
                 {
-                    i += 2;
-
-                    codes.Insert(i, new CodeInstruction(OpCodes.Call, s_GetDummiesCount));
-                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Sub, null));
-                    break;
+                    continue;
                 }
+                
+                i += 2;
+
+                codes.Insert(i, new(OpCodes.Call, s_GetDummiesCount));
+                codes.Insert(i + 1, new(OpCodes.Sub));
+                break;
             }
             return codes;
         }

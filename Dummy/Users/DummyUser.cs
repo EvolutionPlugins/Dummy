@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Dummy.Players;
 using Dummy.Threads;
@@ -7,17 +11,12 @@ using OpenMod.API.Users;
 using OpenMod.Core.Users;
 using OpenMod.Extensions.Games.Abstractions.Players;
 using OpenMod.UnityEngine.Extensions;
-using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Threading.Tasks;
 
 namespace Dummy.Users
 {
-    public class DummyUser : UserBase, IAsyncDisposable, IEquatable<DummyUser>, IPlayerUser<DummyPlayer>
+    public sealed class DummyUser : UserBase, IAsyncDisposable, IEquatable<DummyUser>, IPlayerUser<DummyPlayer>
     {
         private readonly IStringLocalizer m_StringLocalizer;
 
@@ -25,7 +24,7 @@ namespace Dummy.Users
         public DummyUserSimulationThread Simulation { get; }
         public DummyPlayer Player { get; }
         public HashSet<CSteamID> Owners { get; }
-        public Player CopyUserVoice { get; set; }
+        public Player? CopyUserVoice { get; set; }
         public HashSet<CSteamID> SubscribersUI { get; }
 
         public CSteamID SteamID => Player.SteamId;
@@ -33,11 +32,12 @@ namespace Dummy.Users
 
         IPlayer IPlayerUser.Player => Player;
 
-        protected internal DummyUser(UnturnedUserProvider userProvider, IUserDataStore userDataStore, SteamPlayer steamPlayer,
-            ILoggerFactory loggerFactory, IStringLocalizer stringLocalizer, bool disableSimulation, HashSet<CSteamID> owners = null)
+        internal DummyUser(IUserProvider userProvider, IUserDataStore userDataStore, SteamPlayer steamPlayer,
+            ILoggerFactory loggerFactory, IStringLocalizer stringLocalizer, bool disableSimulation,
+            HashSet<CSteamID>? owners = null)
             : base(userProvider, userDataStore)
         {
-            SubscribersUI = new HashSet<CSteamID>();
+            SubscribersUI = new();
             Id = steamPlayer.playerID.steamID.ToString();
             DisplayName = steamPlayer.playerID.characterName;
             Type = KnownActorTypes.Player;
@@ -66,7 +66,7 @@ namespace Dummy.Users
             return PrintMessageAsync(message, color, true, null);
         }
 
-        private Task PrintMessageAsync(string message, Color color, bool isRich, string iconUrl)
+        private Task PrintMessageAsync(string message, Color color, bool isRich, string? iconUrl)
         {
             async UniTask PrintMessageTask()
             {
@@ -79,7 +79,9 @@ namespace Dummy.Users
                     {
                         continue;
                     }
-                    ChatManager.serverSendMessage(m_StringLocalizer["events:chatted", new { Id, Text = message }], color.ToUnityColor(),
+
+                    ChatManager.serverSendMessage(m_StringLocalizer["events:chatted", new { Id, Text = message }],
+                        color.ToUnityColor(),
                         toPlayer: player.channel.owner, iconURL: iconUrl, useRichTextFormatting: isRich);
                 }
             }
@@ -103,7 +105,18 @@ namespace Dummy.Users
             {
                 dummySession.OnSessionEnd();
             }
-            return new ValueTask(Session.DisconnectAsync());
+
+            return new(Session!.DisconnectAsync());
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals((obj as DummyUser)!);
+        }
+
+        public override int GetHashCode()
+        {
+            return Player.GetHashCode();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Cysharp.Threading.Tasks;
+﻿extern alias JetBrainsAnnotations;
+using Cysharp.Threading.Tasks;
 using Dummy.API;
 using OpenMod.API.Eventing;
 using OpenMod.Core.Eventing;
@@ -8,9 +9,11 @@ using OpenMod.Unturned.Players.Life.Events;
 using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using System.Threading.Tasks;
+using JetBrainsAnnotations::JetBrains.Annotations;
 
 namespace Dummy.Events
 {
+    [UsedImplicitly]
     public class DummyDeadEvent : IEventListener<UnturnedPlayerDeathEvent>
     {
         private readonly IDummyProvider m_DummyProvider;
@@ -23,7 +26,7 @@ namespace Dummy.Events
         }
 
         [EventListener(Priority = EventListenerPriority.Monitor)]
-        public async Task HandleEventAsync(object sender, UnturnedPlayerDeathEvent @event)
+        public async Task HandleEventAsync(object? sender, UnturnedPlayerDeathEvent @event)
         {
             var dummy = await m_DummyProvider.GetPlayerDummyAsync(@event.Player.SteamId.m_SteamID);
             if (dummy == null)
@@ -39,12 +42,11 @@ namespace Dummy.Events
                     continue;
                 }
 
-                await player.PrintMessageAsync($"Dummy {@event.Player.SteamId} has died. Death reason: {@event.DeathCause.ToString().ToLower()}, killer = {@event.Instigator}. Respawning...");
+                await player.PrintMessageAsync(
+                    $"Dummy {@event.Player.SteamId} has died. Death reason: {@event.DeathCause.ToString().ToLower()}, killer = {@event.Instigator}. Respawning...");
             }
-            // without that it will deadlock the server
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+
             UniTask.Run(() => Revive(dummy.Player));
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         private async UniTask Revive(UnturnedPlayer player)
@@ -56,12 +58,11 @@ namespace Dummy.Events
                 return;
             }
 
-            player.Player.life.sendRevive();
-            player.Player.life.channel.send("tellRevive", ESteamCall.ALL, ESteamPacket.UPDATE_RELIABLE_BUFFER, new object[]
-            {
-                player.Transform.Position.ToUnityVector(),
-                MeasurementTool.angleToByte(player.Player.transform.rotation.eulerAngles.y)
-            });
+            var life = player.Player.life;
+            life.sendRevive();
+
+            life.ReceiveRevive(player.Transform.Position.ToUnityVector(),
+                MeasurementTool.angleToByte(player.Player.transform.rotation.eulerAngles.y));
         }
     }
 }

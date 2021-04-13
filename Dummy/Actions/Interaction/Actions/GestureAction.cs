@@ -15,10 +15,15 @@ namespace Dummy.Actions.Interaction.Actions
 
         public EPlayerGesture Gesture { get; }
 
-        public async Task Do(DummyUser dummy)
+        public Task Do(DummyUser dummy)
         {
-            await UniTask.SwitchToMainThread();
-            dummy.Player.Player.animator.sendGesture(Gesture, false);
+            async UniTask SetGesture()
+            {
+                await UniTask.SwitchToMainThread();
+                dummy.Player.Player.animator.sendGesture(Gesture, false);
+            }
+
+            return SetGesture().AsTask();
         }
     }
 }

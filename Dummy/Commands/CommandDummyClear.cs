@@ -1,15 +1,17 @@
-﻿using Dummy.API;
-using Microsoft.Extensions.Localization;
-using OpenMod.Core.Commands;
+﻿extern alias JetBrainsAnnotations;
 using System;
 using System.Threading.Tasks;
-using Command = OpenMod.Core.Commands.Command;
+using Dummy.API;
+using JetBrainsAnnotations::JetBrains.Annotations;
+using Microsoft.Extensions.Localization;
+using OpenMod.Core.Commands;
 
 namespace Dummy.Commands
 {
     [Command("clear")]
     [CommandDescription("Clears all dummies")]
     [CommandParent(typeof(CommandDummy))]
+    [UsedImplicitly]
     public class CommandDummyClear : Command
     {
         private readonly IDummyProvider m_DummyProvider;

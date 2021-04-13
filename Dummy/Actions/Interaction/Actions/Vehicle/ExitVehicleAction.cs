@@ -1,18 +1,25 @@
-﻿using Cysharp.Threading.Tasks;
+﻿extern alias JetBrainsAnnotations;
+using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using SDG.Unturned;
 using System.Threading.Tasks;
-using UnityEngine;
 
 namespace Dummy.Actions.Interaction.Actions.Vehicle
 {
+    [UsedImplicitly]
     public class ExitVehicleAction : IAction
     {
-        public async Task Do(DummyUser dummy)
+        public Task Do(DummyUser dummy)
         {
-            await UniTask.SwitchToMainThread();
-            VehicleManager.instance.askExitVehicle(dummy.SteamID, Vector3.zero);
+            async UniTask ExitVehicle()
+            {
+                await UniTask.SwitchToMainThread();
+                VehicleManager.forceRemovePlayer(dummy.Player.SteamId);
+            }
+
+            return ExitVehicle().AsTask();
         }
     }
 }

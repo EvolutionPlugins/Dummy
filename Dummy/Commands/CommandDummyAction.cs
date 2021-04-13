@@ -1,11 +1,11 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
 using Microsoft.Extensions.Localization;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
-using System;
-using System.Threading.Tasks;
 
 namespace Dummy.Commands
 {
@@ -27,6 +27,7 @@ namespace Dummy.Commands
             {
                 throw new CommandWrongUsageException(Context);
             }
+
             var id = await Context.Parameters.GetAsync<ulong>(0);
 
             var dummy = await m_DummyProvider.GetPlayerDummyAsync(id);

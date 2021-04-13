@@ -1,6 +1,6 @@
-﻿using Dummy.API;
+﻿using System.Threading.Tasks;
+using Dummy.API;
 using Dummy.Users;
-using System.Threading.Tasks;
 
 namespace Dummy.Actions.Movement.Actions
 {

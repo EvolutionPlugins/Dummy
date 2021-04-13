@@ -1,11 +1,13 @@
-﻿using Cysharp.Threading.Tasks;
+﻿extern alias JetBrainsAnnotations;
+using System;
+using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Extensions;
 using Dummy.Users;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using Microsoft.Extensions.Localization;
 using OpenMod.Core.Commands;
 using OpenMod.Unturned.Users;
-using System;
 
 namespace Dummy.Commands
 {
@@ -14,6 +16,7 @@ namespace Dummy.Commands
     [CommandActor(typeof(UnturnedUser))]
     [CommandSyntax("<id>")]
     [CommandParent(typeof(CommandDummy))]
+    [UsedImplicitly]
     public class CommandDummyTphere : CommandDummyAction
     {
         private readonly IStringLocalizer m_StringLocalizer;
@@ -26,7 +29,7 @@ namespace Dummy.Commands
 
         protected override async UniTask ExecuteDummyAsync(DummyUser playerDummy)
         {
-            if(await playerDummy.TeleportToPlayerAsync((UnturnedUser)Context.Actor))
+            if (await playerDummy.TeleportToPlayerAsync((UnturnedUser)Context.Actor))
             {
                 await PrintAsync(m_StringLocalizer["commands:general:tphere:success", new { playerDummy.Id }]);
             }

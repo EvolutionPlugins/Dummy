@@ -1,5 +1,5 @@
-using Dummy.Users;
 using System.Threading.Tasks;
+using Dummy.Users;
 
 namespace Dummy.API
 {

@@ -1,11 +1,15 @@
-﻿using Cysharp.Threading.Tasks;
+﻿extern alias JetBrainsAnnotations;
+using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using SDG.Unturned;
+using System;
 using System.Threading.Tasks;
 
 namespace Dummy.Actions.Interaction.Actions.Vehicle
 {
+    [UsedImplicitly]
     public class EnterVehicleAction : IAction
     {
         public InteractableVehicle InteractableVehicle { get; }
@@ -20,11 +24,20 @@ namespace Dummy.Actions.Interaction.Actions.Vehicle
             InteractableVehicle = VehicleManager.findVehicleByNetInstanceID(instanceId);
         }
 
-        public async Task Do(DummyUser dummy)
+        public Task Do(DummyUser dummy)
         {
-            await UniTask.SwitchToMainThread();
-            VehicleManager.instance.askEnterVehicle(dummy.SteamID, InteractableVehicle.instanceID, InteractableVehicle.asset.hash,
-                (byte)InteractableVehicle.asset.engine);
+            if (InteractableVehicle is null)
+            {
+                throw new NullReferenceException(nameof(InteractableVehicle));
+            }
+
+            async UniTask ForceEnter()
+            {
+                await UniTask.SwitchToMainThread();
+                VehicleManager.ServerForcePassengerIntoVehicle(dummy.Player.Player, InteractableVehicle);
+            }
+
+            return ForceEnter().AsTask();
         }
     }
 }

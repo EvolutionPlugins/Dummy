@@ -4,7 +4,7 @@ using Dummy.Users;
 using SDG.Unturned;
 using System.Threading.Tasks;
 
-namespace Dummy.Extensions.Interaction.Actions
+namespace Dummy.Actions.Interaction.Actions.UI
 {
     public class InputTextAction : IAction
     {

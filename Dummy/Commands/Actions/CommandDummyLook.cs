@@ -1,16 +1,19 @@
-﻿using Cysharp.Threading.Tasks;
+﻿extern alias JetBrainsAnnotations;
+using System;
+using Cysharp.Threading.Tasks;
 using Dummy.Actions.Movement.Actions;
 using Dummy.API;
 using Dummy.Users;
+using JetBrainsAnnotations::JetBrains.Annotations;
 using Microsoft.Extensions.Localization;
 using OpenMod.Core.Commands;
-using System;
 
 namespace Dummy.Commands.Actions
 {
     [Command("look")]
     [CommandParent(typeof(CommandDummy))]
     [CommandSyntax("<yaw> <pitch>")]
+    [UsedImplicitly]
     public class CommandDummyLook : CommandDummyAction
     {
         public CommandDummyLook(IServiceProvider serviceProvider, IDummyProvider dummyProvider,
@@ -20,10 +23,11 @@ namespace Dummy.Commands.Actions
 
         protected override async UniTask ExecuteDummyAsync(DummyUser playerDummy)
         {
-            if (Context.Parameters.Count < 3)
+            if (Context.Parameters.Count is < 3 or > 3)
             {
                 throw new CommandWrongUsageException(Context);
             }
+
             var yaw = await Context.Parameters.GetAsync<float>(1);
             var pitch = await Context.Parameters.GetAsync<float>(2);
 

@@ -1,9 +1,8 @@
-﻿using Cysharp.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Reflection;
+using Cysharp.Threading.Tasks;
 using Dummy.Users;
 using SDG.Unturned;
-using Serilog;
-using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
@@ -12,7 +11,7 @@ namespace Dummy.Threads
     public class DummyUserSimulationThread
     {
         private static readonly FieldInfo s_ServerSidePacketsField = typeof(PlayerInput).GetField("serversidePackets",
-            BindingFlags.NonPublic | BindingFlags.Instance);
+            BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         public byte Analog { get; private set; }
         public uint Count { get; private set; }
@@ -85,6 +84,7 @@ namespace Dummy.Threads
                         var num = Player.input.keys.Length - ControlsSettings.NUM_PLUGIN_KEYS + i;
                         Player.input.keys[num] = false; // todo
                     }
+
                     Analog = (byte)(Player.movement.horizontal << 4 | Player.movement.vertical);
                     Pitch = Player.look.pitch;
                     Yaw = Player.look.yaw;
@@ -92,7 +92,8 @@ namespace Dummy.Threads
 
                     var movement = Player.movement;
                     // it should also change direction on where is a dummy stand on (exmaple: ice)
-                    var vector = movement.transform.rotation * Vector3.right.normalized * movement.speed * PlayerInput.RATE;
+                    var vector = movement.transform.rotation * Vector3.right.normalized * movement.speed *
+                                 PlayerInput.RATE;
                     vector += Vector3.up * movement.fall;
                     movement.controller.CheckedMove(vector, movement.landscapeHoleVolume != null);
 
@@ -104,6 +105,7 @@ namespace Dummy.Threads
                     {
                         PlayerInputPackets.Add(new WalkingPlayerInputPacket());
                     }
+
                     var playerInputPacket = PlayerInputPackets[PlayerInputPackets.Count - 1];
                     playerInputPacket.sequence = Sequence;
                     playerInputPacket.recov = Recov;
@@ -111,11 +113,13 @@ namespace Dummy.Threads
                     Buffer += PlayerInput.SAMPLES;
                     Simulation++;
                 }
+
                 if (Consumed < Buffer)
                 {
                     Consumed++;
                     Clock++;
                 }
+
                 if (Consumed == Buffer && PlayerInputPackets.Count > 0)
                 {
                     ushort num2 = 0;
@@ -136,19 +140,15 @@ namespace Dummy.Threads
                         if (vehicle != null)
                         {
                             var transform = vehicle.transform;
-                            if (vehicle.asset.engine == EEngine.TRAIN)
-                            {
-                                drivingPlayerInputPacket.position = new Vector3(vehicle.roadPosition, 0f, 0f);
-                            }
-                            else
-                            {
-                                drivingPlayerInputPacket.position = transform.position;
-                            }
+                            drivingPlayerInputPacket.position = vehicle.asset.engine == EEngine.TRAIN
+                                ? new Vector3(vehicle.roadPosition, 0f, 0f)
+                                : transform.position;
 
                             drivingPlayerInputPacket.rotation = transform.rotation;
 
                             drivingPlayerInputPacket.speed = (byte)(Mathf.Clamp(vehicle.speed, -100f, 100f) + 128f);
-                            drivingPlayerInputPacket.physicsSpeed = (byte)(Mathf.Clamp(vehicle.physicsSpeed, -100f, 100f) + 128f);
+                            drivingPlayerInputPacket.physicsSpeed =
+                                (byte)(Mathf.Clamp(vehicle.physicsSpeed, -100f, 100f) + 128f);
                             drivingPlayerInputPacket.turn = (byte)(vehicle.turn + 1);
                         }
                     }
@@ -156,7 +156,7 @@ namespace Dummy.Threads
                     {
                         var walkingPlayerInputPacket = playerInputPacket2 as WalkingPlayerInputPacket;
 
-                        walkingPlayerInputPacket.analog = Analog;
+                        walkingPlayerInputPacket!.analog = Analog;
                         walkingPlayerInputPacket.position = Player.transform.position; // before: localposition
                         walkingPlayerInputPacket.yaw = Yaw;
                         walkingPlayerInputPacket.pitch = Pitch;
@@ -166,8 +166,10 @@ namespace Dummy.Threads
                     {
                         queue.Enqueue(playerInputPacket3);
                     }
+
                     PlayerInputPackets.Clear();
                 }
+
                 Count++;
             }
         }
