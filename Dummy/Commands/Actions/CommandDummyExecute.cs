@@ -36,13 +36,11 @@ namespace Dummy.Commands.Actions
             {
                 throw new CommandWrongUsageException(Context);
             }
-            
+
             var wait = false;
             Exception? exception = null;
             var command = Context.Parameters.Skip(1).ToArray();
-            
-            // todo: review it
-            
+
             playerDummy.Actions.Actions.Enqueue(new ExecuteCommandAction(m_CommandExecutor, command, e =>
             {
                 exception = e;

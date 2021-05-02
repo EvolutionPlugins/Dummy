@@ -63,26 +63,6 @@ namespace Dummy.Services
             AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
         }
 
-        // todo
-        private void OnTriggerSend(SteamPlayer player, string name, ESteamCall mode, ESteamPacket type,
-            object[] arguments)
-        {
-            // var dummy = Dummies.FirstOrDefault(x => x.SteamPlayer == player);
-            // if (dummy == null)
-            // {
-            //     return;
-            // }
-            //
-            // if (name == nameof(Player.askTeleport))
-            // {
-            //     // todo: works after simulation tick
-            //     dummy.Simulation.PlayerInputPackets.Clear();
-            //     dummy.Player.Player.transform.localPosition = (Vector3)arguments[0];
-            // }
-            //
-            // m_Logger.LogDebug($"{player.playerID.steamID} / server send {name}");
-        }
-
         private async Task DontAutoKickTask()
         {
             while (!m_IsDisposing)

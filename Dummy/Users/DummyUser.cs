@@ -11,12 +11,13 @@ using OpenMod.API.Users;
 using OpenMod.Core.Users;
 using OpenMod.Extensions.Games.Abstractions.Players;
 using OpenMod.UnityEngine.Extensions;
+using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
 
 namespace Dummy.Users
 {
-    public sealed class DummyUser : UserBase, IAsyncDisposable, IEquatable<DummyUser>, IPlayerUser<DummyPlayer>
+    public sealed class DummyUser : UnturnedUser, IPlayerUser<DummyPlayer>, IAsyncDisposable, IEquatable<DummyUser>
     {
         private readonly IStringLocalizer m_StringLocalizer;
 
@@ -32,15 +33,12 @@ namespace Dummy.Users
 
         IPlayer IPlayerUser.Player => Player;
 
-        internal DummyUser(IUserProvider userProvider, IUserDataStore userDataStore, SteamPlayer steamPlayer,
+        internal DummyUser(UnturnedUserProvider userProvider, IUserDataStore userDataStore, SteamPlayer steamPlayer,
             ILoggerFactory loggerFactory, IStringLocalizer stringLocalizer, bool disableSimulation,
             HashSet<CSteamID>? owners = null)
-            : base(userProvider, userDataStore)
+            : base(userProvider, userDataStore, steamPlayer.player, null)
         {
             SubscribersUI = new();
-            Id = steamPlayer.playerID.steamID.ToString();
-            DisplayName = steamPlayer.playerID.characterName;
-            Type = KnownActorTypes.Player;
             Session = new DummyUserSession(this);
 
             Player = new DummyPlayer(steamPlayer);
@@ -89,14 +87,6 @@ namespace Dummy.Users
             return PrintMessageTask().AsTask();
         }
 
-        public bool Equals(DummyUser other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-
-            return other.SteamID.Equals(SteamID);
-        }
-
         public ValueTask DisposeAsync()
         {
             Actions.Enabled = false;
@@ -107,6 +97,13 @@ namespace Dummy.Users
             }
 
             return new(Session!.DisconnectAsync());
+        }
+
+        public bool Equals(DummyUser other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return other.SteamId.Equals(SteamId);
         }
 
         public override bool Equals(object obj)
