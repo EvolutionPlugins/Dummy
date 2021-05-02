@@ -59,10 +59,11 @@ namespace Dummy.Events
             }
 
             var life = player.Player.life;
+            var transform = life.transform;
             life.sendRevive();
 
-            life.ReceiveRevive(player.Transform.Position.ToUnityVector(),
-                MeasurementTool.angleToByte(player.Player.transform.rotation.eulerAngles.y));
+            life.ReceiveRevive(transform.position,
+                MeasurementTool.angleToByte(transform.rotation.eulerAngles.y));
         }
     }
 }
