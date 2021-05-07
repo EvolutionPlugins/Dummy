@@ -30,7 +30,7 @@ namespace Dummy.Commands
 
             var id = await Context.Parameters.GetAsync<ulong>(0);
 
-            var dummy = await m_DummyProvider.GetPlayerDummyAsync(id);
+            var dummy = await m_DummyProvider.FindDummyUserAsync(id);
             if (dummy == null)
             {
                 throw new UserFriendlyException(m_StringLocalizer["commands:dummyNotFound", new { Id = id }]);

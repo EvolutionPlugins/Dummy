@@ -31,16 +31,12 @@ namespace Dummy.Commands
         {
             var user = (UnturnedUser)Context.Actor;
 
-            var id = await m_DummyProvider.GetAvailableIdAsync();
-            var playerDummy = await m_DummyProvider.AddCopiedDummyAsync(id, new() { user.SteamId }, user);
-            if (playerDummy is null)
-            {
-                throw new NotImplementedException(nameof(playerDummy));
-            }
-            
+            var playerDummy =
+                await m_DummyProvider.AddCopiedDummyAsync(null, new() { user.SteamId }, user);
+
             await playerDummy.TeleportToPlayerAsync(user);
 
-            await PrintAsync(m_StringLocalizer["commands:general:copy", new { Id = id }]);
+            await PrintAsync(m_StringLocalizer["commands:general:copy", new { Id = playerDummy.SteamId }]);
         }
     }
 }

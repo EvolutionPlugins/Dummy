@@ -1,5 +1,6 @@
 ﻿extern alias JetBrainsAnnotations;
 using JetBrainsAnnotations::JetBrains.Annotations;
+using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
 

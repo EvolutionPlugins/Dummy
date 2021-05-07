@@ -17,7 +17,7 @@ using Steamworks;
 
 namespace Dummy.Users
 {
-    public sealed class DummyUser : UnturnedUser, IPlayerUser<DummyPlayer>, IAsyncDisposable, IEquatable<DummyUser>
+    public class DummyUser : UnturnedUser, IPlayerUser<DummyPlayer>, IAsyncDisposable, IEquatable<DummyUser>
     {
         private readonly IStringLocalizer m_StringLocalizer;
 
@@ -25,21 +25,18 @@ namespace Dummy.Users
         public DummyUserSimulationThread Simulation { get; }
         public DummyPlayer Player { get; }
         public HashSet<CSteamID> Owners { get; }
-        public Player? CopyUserVoice { get; set; }
-        public HashSet<CSteamID> SubscribersUI { get; }
 
         public CSteamID SteamID => Player.SteamId;
         public SteamPlayer SteamPlayer => Player.SteamPlayer;
 
         IPlayer IPlayerUser.Player => Player;
 
-        internal DummyUser(UnturnedUserProvider userProvider, IUserDataStore userDataStore, SteamPlayer steamPlayer,
+        public DummyUser(UnturnedUserProvider userProvider, IUserDataStore userDataStore, SteamPlayer steamPlayer,
             ILoggerFactory loggerFactory, IStringLocalizer stringLocalizer, bool disableSimulation,
             HashSet<CSteamID>? owners = null)
-            : base(userProvider, userDataStore, steamPlayer.player, null)
-        {
-            SubscribersUI = new();
-            Session = new DummyUserSession(this);
+            : base(userProvider, userDataStore, steamPlayer.player)
+        { 
+            //Session = new DummyUserSession(this);
 
             Player = new DummyPlayer(steamPlayer);
             m_StringLocalizer = stringLocalizer;
@@ -103,7 +100,7 @@ namespace Dummy.Users
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return other.SteamId.Equals(SteamId);
+            return other.SteamID.Equals(SteamID);
         }
 
         public override bool Equals(object obj)

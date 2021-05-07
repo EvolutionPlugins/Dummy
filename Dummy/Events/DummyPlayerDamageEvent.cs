@@ -65,7 +65,7 @@ namespace Dummy.Events
 
         private Task<DummyUser?> GetDummyUser(ulong id)
         {
-            return m_DummyProvider.GetPlayerDummyAsync(id);
+            return m_DummyProvider.FindDummyUserAsync(id);
         }
     }
 }

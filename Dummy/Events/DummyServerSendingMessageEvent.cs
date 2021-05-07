@@ -35,7 +35,7 @@ namespace Dummy.Events
                 return;
             }
 
-            var dummy = await m_DummyProvider.GetPlayerDummyAsync(@event.ToPlayer.SteamId.m_SteamID);
+            var dummy = await m_DummyProvider.FindDummyUserAsync(@event.ToPlayer.SteamId.m_SteamID);
             if (dummy == null)
             {
                 return;

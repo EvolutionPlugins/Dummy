@@ -10,12 +10,17 @@ using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using System.Threading.Tasks;
 using JetBrainsAnnotations::JetBrains.Annotations;
+using SDG.NetTransport;
+using UnityEngine;
 
 namespace Dummy.Events
 {
     [UsedImplicitly]
     public class DummyDeadEvent : IEventListener<UnturnedPlayerDeathEvent>
     {
+        private static readonly ClientInstanceMethod<Vector3, byte> s_SendRevive =
+            ClientInstanceMethod<Vector3, byte>.Get(typeof(PlayerLife), "ReceiveRevive");
+
         private readonly IDummyProvider m_DummyProvider;
         private readonly IUnturnedUserDirectory m_UnturnedUserDirectory;
 
@@ -28,7 +33,7 @@ namespace Dummy.Events
         [EventListener(Priority = EventListenerPriority.Monitor)]
         public async Task HandleEventAsync(object? sender, UnturnedPlayerDeathEvent @event)
         {
-            var dummy = await m_DummyProvider.GetPlayerDummyAsync(@event.Player.SteamId.m_SteamID);
+            var dummy = await m_DummyProvider.FindDummyUserAsync(@event.Player.SteamId.m_SteamID);
             if (dummy == null)
             {
                 return;
@@ -62,7 +67,8 @@ namespace Dummy.Events
             var transform = life.transform;
             life.sendRevive();
 
-            life.ReceiveRevive(transform.position,
+            s_SendRevive.InvokeAndLoopback(life.GetNetId(), ENetReliability.Reliable,
+                Provider.EnumerateClients_Remote(), transform.position,
                 MeasurementTool.angleToByte(transform.rotation.eulerAngles.y));
         }
     }

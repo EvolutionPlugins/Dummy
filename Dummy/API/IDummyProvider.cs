@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dummy.Models;
 using Dummy.Services;
@@ -21,7 +22,7 @@ namespace Dummy.API
         /// <param name="owners">Owners get all notification about a dummy</param>
         /// <exception cref="DummyContainsException">Dummy with id already created. Use GetAvailableIdAsync to get available ID</exception>
         /// <exception cref="DummyOverflowsException">Dummies limit reached</exception>
-        Task<DummyUser?> AddDummyAsync(CSteamID id, HashSet<CSteamID> owners);
+        Task<DummyUser> AddDummyAsync(CSteamID? id, HashSet<CSteamID> owners);
 
         /// <summary>
         /// Spawn a dummy and copy all of the user
@@ -31,16 +32,19 @@ namespace Dummy.API
         /// <param name="userCopy">Copy parameters from user</param>
         /// <exception cref="DummyContainsException">Dummy with id already created. Use GetAvailableIdAsync to get available ID</exception>
         /// <exception cref="DummyOverflowsException">Dummies limit reached</exception>
-        Task<DummyUser?> AddCopiedDummyAsync(CSteamID id, HashSet<CSteamID> owners, UnturnedUser userCopy);
+        Task<DummyUser> AddCopiedDummyAsync(CSteamID? id, HashSet<CSteamID>? owners, UnturnedUser? userCopy);
 
-        Task<DummyUser?> AddDummyByParameters(CSteamID id, HashSet<CSteamID> owners, ConfigurationSettings settings);
+        Task<DummyUser> AddDummyByParameters(CSteamID? id, HashSet<CSteamID>? owners, ConfigurationSettings? settings);
 
         Task<bool> RemoveDummyAsync(CSteamID id);
 
         Task ClearDummiesAsync();
 
-        Task<DummyUser?> GetPlayerDummyAsync(ulong id);
+        Task<DummyUser?> FindDummyUserAsync(ulong id);
 
+        Task<DummyUser?> FindDummyUserAsync(CSteamID id);
+
+        [Obsolete]
         Task<CSteamID> GetAvailableIdAsync();
     }
 }

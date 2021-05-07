@@ -30,16 +30,11 @@ namespace Dummy.Commands
         protected override async Task OnExecuteAsync()
         {
             var user = (UnturnedUser)Context.Actor;
-
-            var id = await m_DummyProvider.GetAvailableIdAsync();
-            var playerDummy = await m_DummyProvider.AddDummyAsync(id, new() { user.SteamId });
-            if (playerDummy == null)
-            {
-                throw new NotImplementedException();
-            }
+            
+            var playerDummy = await m_DummyProvider.AddDummyAsync(null, new() { user.SteamId });
             await playerDummy.TeleportToPlayerAsync(user);
 
-            await PrintAsync(m_StringLocalizer["commands:general:create", new { Id = id }]);
+            await PrintAsync(m_StringLocalizer["commands:general:create", new { Id = playerDummy.SteamId }]);
         }
     }
 }
