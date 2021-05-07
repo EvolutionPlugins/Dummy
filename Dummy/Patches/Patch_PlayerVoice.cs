@@ -17,20 +17,6 @@ namespace Dummy.Patches
                 return;
             }
 
-            var dummy = OnNeedDummy?.Invoke().Dummies
-                .FirstOrDefault(c => c.CopyUserVoice != null && c.CopyUserVoice == __instance.player);
-            if (dummy == null)
-            {
-                return;
-            }
-            
-            // todo:
-
-            // __instance.channel.decodeVoicePacket(packet, out var size, out var walkie);
-            // var call = dummy.Player.Player.voice.channel.getCall("askVoiceChat");
-            // dummy.Player.Player.voice.channel.encodeVoicePacket((byte)call, out var packetSize, out var packet1, packet,
-            //     (ushort)size, walkie);
-            // dummy.Player.Player.voice.askVoiceChat(packet1);
         }
     }
 }
