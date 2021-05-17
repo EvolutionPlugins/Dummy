@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Resources;
 using Cysharp.Threading.Tasks;
 using Dummy.Users;
 using SDG.Framework.Water;
@@ -15,6 +16,10 @@ namespace Dummy.Threads
         private static readonly FieldInfo s_ServerSidePacketsField = typeof(PlayerInput).GetField("serversidePackets",
             BindingFlags.NonPublic | BindingFlags.Instance)!;
 
+        private static readonly PropertyInfo s_FallProperty =
+            typeof(PlayerMovement).GetProperty(nameof(PlayerMovement.fall),
+                BindingFlags.Instance | BindingFlags.Public)!;
+
         private static readonly float SWIM = 3f;
         private static readonly float JUMP = 7f;
 
@@ -22,6 +27,7 @@ namespace Dummy.Threads
         public uint Simulation { get; private set; }
         public Vector3 Move { get; set; } // set only X and Y props
         public bool Jump { get; set; } // will be jumping until consume all stamina
+        public bool Sprint { get; set; } // will be sprinting until consume all stamina
 
         private uint Count { get; set; }
         private uint Buffer { get; set; }
@@ -70,7 +76,7 @@ namespace Dummy.Threads
                     Player.input.keys[2] = Player.equipment.secondary;
                     Player.input.keys[3] = Player.stance.crouch;
                     Player.input.keys[4] = Player.stance.prone;
-                    Player.input.keys[5] = Player.stance.sprint;
+                    Player.input.keys[5] = Player.stance.sprint || Sprint;
                     Player.input.keys[6] = Player.animator.leanLeft;
                     Player.input.keys[7] = Player.animator.leanRight;
                     Player.input.keys[8] = false;
@@ -95,6 +101,7 @@ namespace Dummy.Threads
                     switch (stance)
                     {
                         case EPlayerStance.CLIMB:
+                            s_FallProperty.SetValue(movement, JUMP);
                             Direction = normalizedMove * speed / 2;
                             controller.CheckedMove(Vector3.up * Direction.z * delta, landscapeHoleVolume != null);
                             break;
@@ -103,14 +110,23 @@ namespace Dummy.Threads
                             Direction = normalizedMove * speed * 1.5f;
                             if (Player.stance.isSubmerged || Player.look.pitch > 110 && Move.z > 0.1f)
                             {
-                                var fall = Jump ? SWIM * movement.pluginJumpMultiplier : movement.fall;
+                                var fall = Jump
+                                    ? SWIM * movement.pluginJumpMultiplier
+                                    : movement.fall + Physics.gravity.y * delta / 7f;
+                                if (fall < Physics.gravity.y / 7f)
+                                {
+                                    fall = Physics.gravity.y / 7f;
+                                }
+
+                                s_FallProperty.SetValue(movement, fall);
                                 controller.CheckedMove(
                                     Player.look.aim.rotation * Direction * delta + Vector3.up * fall * delta,
                                     landscapeHoleVolume != null);
                             }
                             else
                             {
-                                controller.CheckedMove(rotation * Direction * delta + Vector3.up * movement.fall * delta,
+                                controller.CheckedMove(
+                                    rotation * Direction * delta + Vector3.up * movement.fall * delta,
                                     landscapeHoleVolume != null);
                             }
 
@@ -118,7 +134,13 @@ namespace Dummy.Threads
                         }
                         default:
                         {
-                            var fall = movement.fall;
+                            var fall = movement.fall + Physics.gravity.y *
+                                (movement.fall <= 0f ? movement.totalGravityMultiplier : 1f) * delta * 3f;
+                            if (fall < Physics.gravity.y * 2f * movement.totalGravityMultiplier)
+                            {
+                                fall = Physics.gravity.y * 2f * movement.totalGravityMultiplier;
+                            }
+                            
                             var jumpMastery = Player.skills.mastery(0, 6);
 
                             if (Jump && movement.isGrounded && !Player.life.isBroken &&
@@ -128,8 +150,11 @@ namespace Dummy.Threads
                                 fall = JUMP * (1f + jumpMastery * movement.pluginJumpMultiplier);
                                 Player.life.askTire((byte)(10f * (1f - jumpMastery * 0.5f)));
                             }
+                            
+                            s_FallProperty.SetValue(movement, fall);
 
-                            if (movement.isGrounded && movement.ground.transform != null && movement.ground.normal.y > 0)
+                            if (movement.isGrounded && movement.ground.transform != null &&
+                                movement.ground.normal.y > 0)
                             {
                                 Slope = Mathf.Lerp(Slope, Mathf.Max(movement.ground.normal.y, 0.01f), delta);
                             }
@@ -142,7 +167,8 @@ namespace Dummy.Threads
                             switch (material)
                             {
                                 case EPhysicsMaterial.ICE_STATIC:
-                                    Direction = Vector3.Lerp(Direction, rotation * normalizedMove * speed * Slope * delta,
+                                    Direction = Vector3.Lerp(Direction,
+                                        rotation * normalizedMove * speed * Slope * delta,
                                         delta);
                                     break;
                                 case EPhysicsMaterial.METAL_SLIP:

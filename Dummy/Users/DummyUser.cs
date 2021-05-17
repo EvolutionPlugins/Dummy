@@ -48,7 +48,7 @@ namespace Dummy.Users
             Actions.Enabled = true;
             Simulation.Enabled = !disableSimulation;
 #if DEBUG
-            Simulation.Move = new Vector3(1f, 0f);
+            //Simulation.Move = new Vector3(1f, 0f);
 #endif
             UniTask.Run(Actions.Start);
             UniTask.Run(Simulation.Start);

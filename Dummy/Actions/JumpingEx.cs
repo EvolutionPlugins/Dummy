@@ -8,7 +8,7 @@ using JetBrainsAnnotations::JetBrains.Annotations;
 namespace Dummy.Actions
 {
     [UsedImplicitly]
-    public static class Jumping
+    public static class JumpingEx
     {
         public static void JumpingConstantOn(this DummyUser dummy)
         {
@@ -27,7 +27,7 @@ namespace Dummy.Actions
         }
 
         [UsedImplicitly]
-        public static async Task TempJump(this DummyUser playerDummy, float time)
+        public static async Task TempJumpAsync(this DummyUser playerDummy, float time)
         {
             playerDummy.JumpingConstantOn();
             await Task.Delay(TimeSpan.FromSeconds(time));
