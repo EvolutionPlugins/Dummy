@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Dummy.Players;
@@ -14,6 +13,8 @@ using OpenMod.UnityEngine.Extensions;
 using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
+using UnityEngine;
+using Color = System.Drawing.Color;
 
 namespace Dummy.Users
 {
@@ -23,7 +24,7 @@ namespace Dummy.Users
 
         public DummyUserActionThread Actions { get; }
         public DummyUserSimulationThread Simulation { get; }
-        public DummyPlayer Player { get; }
+        public new DummyPlayer Player { get; }
         public HashSet<CSteamID> Owners { get; }
 
         public CSteamID SteamID => Player.SteamId;
@@ -46,7 +47,9 @@ namespace Dummy.Users
 
             Actions.Enabled = true;
             Simulation.Enabled = !disableSimulation;
-
+#if DEBUG
+            Simulation.Move = new Vector3(1f, 0f);
+#endif
             UniTask.Run(Actions.Start);
             UniTask.Run(Simulation.Start);
         }
@@ -61,7 +64,7 @@ namespace Dummy.Users
             return PrintMessageAsync(message, color, true, null);
         }
 
-        private Task PrintMessageAsync(string message, Color color, bool isRich, string? iconUrl)
+        private new Task PrintMessageAsync(string message, Color color, bool isRich, string? iconUrl)
         {
             async UniTask PrintMessageTask()
             {

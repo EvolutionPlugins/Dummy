@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Cysharp.Threading.Tasks;
 using Dummy.Users;
+using SDG.Framework.Water;
 using SDG.Unturned;
 using UnityEngine;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
@@ -13,23 +15,22 @@ namespace Dummy.Threads
         private static readonly FieldInfo s_ServerSidePacketsField = typeof(PlayerInput).GetField("serversidePackets",
             BindingFlags.NonPublic | BindingFlags.Instance)!;
 
-        public byte Analog { get; private set; }
-        public uint Count { get; private set; }
-        public float Tick { get; private set; }
-        public uint Buffer { get; private set; }
-        public uint Simulation { get; private set; }
-        public int Sequence { get; private set; }
-        public int Recov { get; }
-        public uint Consumed { get; private set; }
-        public uint Clock { get; private set; }
-#pragma warning disable CA1819 // Properties should not return arrays
-        public ushort[] Flags { get; }
-#pragma warning restore CA1819 // Properties should not return arrays
-        public float Yaw { get; set; }
-        public float Pitch { get; set; }
-        public List<PlayerInputPacket> PlayerInputPackets { get; }
-        public bool Enabled { get; set; }
+        private static readonly float SWIM = 3f;
+        private static readonly float JUMP = 7f;
 
+        public bool Enabled { get; set; }
+        public uint Simulation { get; private set; }
+        public Vector3 Move { get; set; } // set only X and Y props
+        public bool Jump { get; set; } // will be jumping until consume all stamina
+
+        private uint Count { get; set; }
+        private uint Buffer { get; set; }
+        private uint Consumed { get; set; }
+        private ushort[] Flags { get; }
+        private Vector3 Direction { get; set; }
+        private float Slope { get; set; }
+        private float Fall2 { get; set; }
+        private List<PlayerInputPacket> PlayerInputPackets { get; }
         private readonly DummyUser m_PlayerDummy;
         private readonly ILogger m_Logger;
 
@@ -39,18 +40,14 @@ namespace Dummy.Threads
         {
             m_PlayerDummy = playerDummy;
             m_Logger = logger;
-            Analog = 0;
+
             Count = 0;
-            Tick = Time.realtimeSinceStartup;
             Buffer = 0;
             Simulation = 0;
-            Sequence = -1;
-            Recov = -1;
             Consumed = 0;
-            Clock = 0;
-            Yaw = 0;
-            Pitch = 0;
-            PlayerInputPackets = new List<PlayerInputPacket>();
+            Move = Vector3.zero;
+            Jump = false;
+            PlayerInputPackets = new();
             Flags = new ushort[9 + ControlsSettings.NUM_PLUGIN_KEYS];
             for (byte b = 0; b < 9 + ControlsSettings.NUM_PLUGIN_KEYS; b++)
             {
@@ -60,16 +57,15 @@ namespace Dummy.Threads
 
         public async UniTask Start()
         {
-            await UniTask.Delay(1000); // waiting
+            await UniTask.DelayFrame(5, PlayerLoopTiming.FixedUpdate);
             var queue = (Queue<PlayerInputPacket>)s_ServerSidePacketsField.GetValue(Player.input);
+
             while (Enabled)
             {
                 await UniTask.WaitForFixedUpdate();
                 if (Count % PlayerInput.SAMPLES == 0)
                 {
-                    Tick = Time.realtimeSinceStartup;
-
-                    Player.input.keys[0] = Player.movement.jump;
+                    Player.input.keys[0] = Player.movement.jump || Jump;
                     Player.input.keys[1] = Player.equipment.primary;
                     Player.input.keys[2] = Player.equipment.secondary;
                     Player.input.keys[3] = Player.stance.crouch;
@@ -85,17 +81,117 @@ namespace Dummy.Threads
                         Player.input.keys[num] = false; // todo
                     }
 
-                    Analog = (byte)(Player.movement.horizontal << 4 | Player.movement.vertical);
-                    Pitch = Player.look.pitch;
-                    Yaw = Player.look.yaw;
-                    Sequence++;
-
                     var movement = Player.movement;
-                    // it should also change direction on where is a dummy stand on (exmaple: ice)
-                    var vector = movement.transform.rotation * Vector3.right.normalized * movement.speed *
-                                 PlayerInput.RATE;
-                    vector += Vector3.up * movement.fall;
-                    movement.controller.CheckedMove(vector, movement.landscapeHoleVolume != null);
+                    var material = GetMaterialAtPlayer();
+                    var rotation = Player.transform.rotation;
+                    var normalizedMove = Move.normalized;
+                    var speed = movement.speed;
+                    var delta = PlayerInput.RATE;
+                    var stance = Player.stance.stance;
+                    var controller = movement.controller;
+                    var landscapeHoleVolume = movement.landscapeHoleVolume;
+
+                    // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
+                    switch (stance)
+                    {
+                        case EPlayerStance.CLIMB:
+                            Direction = normalizedMove * speed / 2;
+                            controller.CheckedMove(Vector3.up * Direction.z * delta, landscapeHoleVolume != null);
+                            break;
+                        case EPlayerStance.SWIM:
+                        {
+                            Direction = normalizedMove * speed * 1.5f;
+                            if (Player.stance.isSubmerged || Player.look.pitch > 110 && Move.z > 0.1f)
+                            {
+                                var fall = Jump ? SWIM * movement.pluginJumpMultiplier : movement.fall;
+                                controller.CheckedMove(
+                                    Player.look.aim.rotation * Direction * delta + Vector3.up * fall * delta,
+                                    landscapeHoleVolume != null);
+                            }
+                            else
+                            {
+                                controller.CheckedMove(rotation * Direction * delta + Vector3.up * movement.fall * delta,
+                                    landscapeHoleVolume != null);
+                            }
+
+                            break;
+                        }
+                        default:
+                        {
+                            var fall = movement.fall;
+                            var jumpMastery = Player.skills.mastery(0, 6);
+
+                            if (Jump && movement.isGrounded && !Player.life.isBroken &&
+                                Player.life.stamina >= 10f * (1f - jumpMastery * 0.5f) &&
+                                stance is EPlayerStance.STAND or EPlayerStance.SPRINT)
+                            {
+                                fall = JUMP * (1f + jumpMastery * movement.pluginJumpMultiplier);
+                                Player.life.askTire((byte)(10f * (1f - jumpMastery * 0.5f)));
+                            }
+
+                            if (movement.isGrounded && movement.ground.transform != null && movement.ground.normal.y > 0)
+                            {
+                                Slope = Mathf.Lerp(Slope, Mathf.Max(movement.ground.normal.y, 0.01f), delta);
+                            }
+                            else
+                            {
+                                Slope = Mathf.Lerp(Slope, 1f, delta);
+                            }
+
+                            // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
+                            switch (material)
+                            {
+                                case EPhysicsMaterial.ICE_STATIC:
+                                    Direction = Vector3.Lerp(Direction, rotation * normalizedMove * speed * Slope * delta,
+                                        delta);
+                                    break;
+                                case EPhysicsMaterial.METAL_SLIP:
+                                {
+                                    var num2 = Slope < 0.75f ? 0f : Mathf.Lerp(0f, 1f, (Slope - 0.75f) * 4f);
+
+                                    Direction = Vector3.Lerp(Direction,
+                                        rotation * normalizedMove * speed * Slope * delta * 2f,
+                                        movement.isMoving ? 2f * delta : 0.5f * num2 * delta);
+                                    break;
+                                }
+                                default:
+                                    Direction = rotation * normalizedMove * speed * Slope * delta;
+                                    break;
+                            }
+
+                            var vector = Direction;
+                            if (movement.isGrounded && movement.ground.normal.y > 0)
+                            {
+                                var angleSlope = Vector3.Angle(Vector3.up, movement.ground.normal);
+                                var maxAngleSlope = 59f;
+                                if (Level.info?.configData?.Max_Walkable_Slope > -0.5f)
+                                {
+                                    maxAngleSlope = Level.info.configData.Max_Walkable_Slope;
+                                }
+
+                                if (angleSlope > maxAngleSlope)
+                                {
+                                    Fall2 += 16f * delta;
+                                    if (Fall2 > 128f)
+                                    {
+                                        Fall2 = 128f;
+                                    }
+
+                                    var a = Vector3.Cross(Vector3.Cross(Vector3.up, movement.ground.normal),
+                                        movement.ground.normal);
+                                    vector += a * Fall2 * delta;
+                                }
+                                else
+                                {
+                                    Fall2 = 0;
+                                }
+                            }
+
+                            vector += Vector3.up * fall * delta;
+                            controller.CheckedMove(vector, movement.landscapeHoleVolume != null);
+                            break;
+                        }
+                    }
 
                     if (Player.stance.stance == EPlayerStance.DRIVING)
                     {
@@ -106,9 +202,11 @@ namespace Dummy.Threads
                         PlayerInputPackets.Add(new WalkingPlayerInputPacket());
                     }
 
-                    var playerInputPacket = PlayerInputPackets[PlayerInputPackets.Count - 1];
-                    playerInputPacket.sequence = Sequence;
-                    playerInputPacket.recov = Recov;
+                    /*var playerInputPacket = PlayerInputPackets.Last();
+                    
+                    // not required for a dummy
+                    playerInputPacket.sequence = 0; 
+                    playerInputPacket.recov = 0;*/
 
                     Buffer += PlayerInput.SAMPLES;
                     Simulation++;
@@ -117,49 +215,52 @@ namespace Dummy.Threads
                 if (Consumed < Buffer)
                 {
                     Consumed++;
-                    Clock++;
                 }
 
                 if (Consumed == Buffer && PlayerInputPackets.Count > 0)
                 {
-                    ushort num2 = 0;
+                    ushort compressedKeys = 0;
                     for (byte b = 0; b < Player.input.keys.Length; b++)
                     {
                         if (Player.input.keys[b])
                         {
-                            num2 |= Flags[b];
+                            compressedKeys |= Flags[b];
                         }
                     }
 
-                    var playerInputPacket2 = PlayerInputPackets[PlayerInputPackets.Count - 1];
-                    playerInputPacket2.keys = num2;
-                    if (playerInputPacket2 is DrivingPlayerInputPacket drivingPlayerInputPacket)
-                    {
-                        var vehicle = Player.movement.getVehicle();
+                    var playerInputPacket2 = PlayerInputPackets.Last();
+                    playerInputPacket2.keys = compressedKeys;
 
-                        if (vehicle != null)
+                    switch (playerInputPacket2)
+                    {
+                        case DrivingPlayerInputPacket drivingPlayerInputPacket:
                         {
-                            var transform = vehicle.transform;
-                            drivingPlayerInputPacket.position = vehicle.asset.engine == EEngine.TRAIN
-                                ? new Vector3(vehicle.roadPosition, 0f, 0f)
-                                : transform.position;
+                            var vehicle = Player.movement.getVehicle();
 
-                            drivingPlayerInputPacket.rotation = transform.rotation;
+                            if (vehicle != null)
+                            {
+                                var transform = vehicle.transform;
+                                drivingPlayerInputPacket.position = vehicle.asset.engine == EEngine.TRAIN
+                                    ? new(vehicle.roadPosition, 0f, 0f)
+                                    : transform.position;
 
-                            drivingPlayerInputPacket.speed = (byte)(Mathf.Clamp(vehicle.speed, -100f, 100f) + 128f);
-                            drivingPlayerInputPacket.physicsSpeed =
-                                (byte)(Mathf.Clamp(vehicle.physicsSpeed, -100f, 100f) + 128f);
-                            drivingPlayerInputPacket.turn = (byte)(vehicle.turn + 1);
+                                drivingPlayerInputPacket.rotation = transform.rotation;
+
+                                drivingPlayerInputPacket.speed = (byte)(Mathf.Clamp(vehicle.speed, -100f, 100f) + 128f);
+                                drivingPlayerInputPacket.physicsSpeed =
+                                    (byte)(Mathf.Clamp(vehicle.physicsSpeed, -100f, 100f) + 128f);
+                                drivingPlayerInputPacket.turn = (byte)(vehicle.turn + 1);
+                            }
+
+                            break;
                         }
-                    }
-                    else
-                    {
-                        var walkingPlayerInputPacket = playerInputPacket2 as WalkingPlayerInputPacket;
-
-                        walkingPlayerInputPacket!.analog = Analog;
-                        walkingPlayerInputPacket.position = Player.transform.position; // before: localposition
-                        walkingPlayerInputPacket.yaw = Yaw;
-                        walkingPlayerInputPacket.pitch = Pitch;
+                        case WalkingPlayerInputPacket walkingPlayerInputPacket:
+                            walkingPlayerInputPacket!.analog =
+                                (byte)(Player.movement.horizontal << 4 | Player.movement.vertical);
+                            walkingPlayerInputPacket.position = Player.transform.position;
+                            walkingPlayerInputPacket.yaw = Player.look.yaw;
+                            walkingPlayerInputPacket.pitch = Player.look.pitch;
+                            break;
                     }
 
                     foreach (var playerInputPacket3 in PlayerInputPackets)
@@ -172,6 +273,30 @@ namespace Dummy.Threads
 
                 Count++;
             }
+        }
+
+        private EPhysicsMaterial GetMaterialAtPlayer()
+        {
+            var movement = Player.movement;
+
+            if (Player.stance.stance == EPlayerStance.CLIMB)
+            {
+                return EPhysicsMaterial.TILE_STATIC;
+            }
+
+            if (Player.stance.stance == EPlayerStance.SWIM || WaterUtility.isPointUnderwater(Player.transform.position))
+            {
+                return EPhysicsMaterial.WATER_STATIC;
+            }
+
+            if (movement.ground.transform == null)
+            {
+                return EPhysicsMaterial.NONE;
+            }
+
+            return movement.ground.transform.CompareTag("Ground")
+                ? PhysicsTool.checkMaterial(Player.transform.position)
+                : PhysicsTool.checkMaterial(movement.ground.collider);
         }
     }
 }

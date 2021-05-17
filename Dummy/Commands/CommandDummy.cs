@@ -6,6 +6,7 @@ using Command = OpenMod.Core.Commands.Command;
 namespace Dummy.Commands
 {
     [Command("dummy")]
+    [CommandSyntax("[copy/create/remove/button/execute]")]
     public class CommandDummy : Command
     {
         public CommandDummy(IServiceProvider serviceProvider) : base(serviceProvider)

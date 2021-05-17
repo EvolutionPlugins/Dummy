@@ -17,8 +17,7 @@ namespace Dummy.Actions.Movement.Actions
 
         public Task Do(DummyUser dummy)
         {
-            dummy.Simulation.Yaw = Yaw;
-            dummy.Simulation.Pitch = Pitch;
+            // FIXME
             return Task.CompletedTask;
         }
     }

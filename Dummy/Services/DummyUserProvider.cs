@@ -386,8 +386,8 @@ namespace Dummy.Services
         {
             while (!m_Disposed)
             {
+                // FIXME
                 await UniTask.Delay(1);
-                player.Simulation.Yaw += rotateYaw;
             }
         }
 
