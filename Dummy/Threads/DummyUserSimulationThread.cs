@@ -69,6 +69,7 @@ namespace Dummy.Threads
             while (Enabled)
             {
                 await UniTask.WaitForFixedUpdate();
+
                 if (Count % PlayerInput.SAMPLES == 0)
                 {
                     Player.input.keys[0] = Player.movement.jump || Jump;
@@ -227,12 +228,6 @@ namespace Dummy.Threads
                     {
                         PlayerInputPackets.Add(new WalkingPlayerInputPacket());
                     }
-
-                    /*var playerInputPacket = PlayerInputPackets.Last();
-                    
-                    // not required for a dummy
-                    playerInputPacket.sequence = 0; 
-                    playerInputPacket.recov = 0;*/
 
                     Buffer += PlayerInput.SAMPLES;
                     Simulation++;

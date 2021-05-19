@@ -12,23 +12,12 @@ namespace Dummy.Actions.Movement.Actions
     [UsedImplicitly]
     public class SprintAction : IAction
     {
-        public Task Do(DummyUser dummy)
+        public async Task Do(DummyUser dummy)
         {
-            var player = dummy.Player.Player;
+            dummy.Simulation.Sprint = true;
 
-            async UniTask Sprint()
-            {
-                await UniTask.SwitchToMainThread();
-                
-                // FIXME
-
-                // player.movement.simulate(dummy.Simulation.Simulation, dummy.Simulation.Recov,
-                //     player.movement.horizontal - 1, player.movement.vertical - 1,
-                //     player.look.look_x, player.look.look_y, false, true, Vector3.zero,
-                //     PlayerInput.RATE, false);
-            }
-
-            return Sprint().AsTask();
+            await UniTask.DelayFrame(5, PlayerLoopTiming.FixedUpdate);
+            dummy.Simulation.Sprint = false;
         }
     }
 }
