@@ -36,22 +36,22 @@ namespace Dummy.Users
             ILoggerFactory loggerFactory, IStringLocalizer stringLocalizer, bool disableSimulation,
             HashSet<CSteamID>? owners = null)
             : base(userProvider, userDataStore, steamPlayer.player)
-        { 
-            //Session = new DummyUserSession(this);
-
-            Player = new DummyPlayer(steamPlayer);
+        {
+            Player = new(steamPlayer);
             m_StringLocalizer = stringLocalizer;
             Owners = owners ?? new HashSet<CSteamID>();
-            Actions = new DummyUserActionThread(this, loggerFactory.CreateLogger($"Dummy.{Id}.Action"));
-            Simulation = new DummyUserSimulationThread(this, loggerFactory.CreateLogger($"Dummy.{Id}.Simulation"));
+            Actions = new(this, loggerFactory.CreateLogger($"Dummy.{Id}.Action"));
+            Simulation = new(this, loggerFactory.CreateLogger($"Dummy.{Id}.Simulation"));
 
             Actions.Enabled = true;
             Simulation.Enabled = !disableSimulation;
+            
 #if DEBUG
             //Simulation.Move = new Vector3(1f, 0f);
 #endif
-            UniTask.Run(Actions.Start);
-            UniTask.Run(Simulation.Start);
+            
+            UniTask.RunOnThreadPool(Actions.Start);
+            UniTask.RunOnThreadPool(Simulation.Start);
         }
 
         public override Task PrintMessageAsync(string message)
@@ -91,9 +91,15 @@ namespace Dummy.Users
         {
             Actions.Enabled = false;
             Simulation.Enabled = false;
-            if (Session is DummyUserSession dummySession)
+            
+            if (Session == null)
             {
-                dummySession.OnSessionEnd();
+                return new();
+            }
+            
+            if (Session is UnturnedUserSession session)
+            {
+                session.OnSessionEnd();
             }
 
             return new(Session!.DisconnectAsync());
