@@ -1,8 +1,6 @@
 ﻿options:
   # Max dummies can be spawned at the same time
-  amountDummies: 1
-  # A timer to kick a dummy after the number of seconds. Setting it to 0 will disable the timer.
-  kickDummyAfterSeconds: 600
+  amountDummies: 5
   # On spawning, a dummy will be an admin
   isAdmin: false 
   # Enabling this a dummy can execute commands without admin or permission.
@@ -20,6 +18,12 @@ events:
   callOnCheckValidWithExplanation: true 
   # Before entering the server will be called an event Provider.onCheckBanStatusWithHWID
   callOnCheckBanStatusWithHWID: true 
+  
+connection:
+  # On a new connection, a dummy will create the ip and port.
+  # If it set to false then it's will use ip / port from the default section
+  randomIp: true
+  randomPort: true
 
 # Just for fun :D
 fun:
@@ -28,8 +32,7 @@ fun:
   # The X deg.
   rotateYaw: 10
 
-# On spawing dummy (/dummy spawn) it will use default configuration
-# [WIP] Skins
+# On spawning dummy (/dummy spawn) it will use default configuration
 default:
   isPro: true
   characterId: 0
@@ -49,17 +52,18 @@ default:
   faceId: 31
   markerColor: "Orange"
   isLeftHanded: false
-  # Right not is not working
+  # ID can be get in the EconInfo.json in the U3DS or Unturned root folder.
+  # (item_id)
   skins:
-    shirt: 901
+    shirt: 553
     pants: 902
-    hat: 896
+    hat: 555
     backpack: 895
     vest: 898
     mask: 737
-    glasses: 909
+    glasses: 491
   # Available skillsets:
-  # NONE FIRE POLICE ARMY FARM FISH CAMP WORK CHEF THIEF MEDIC
+  # NONE, FIRE, POLICE, ARMY, FARM, FISH, CAMP, WORK, CHEF, THIEF, MEDIC
   playerSkillset: POLICE
   language: English
   lobbyId: 0
