@@ -26,7 +26,7 @@ namespace Dummy.NetTransports
             m_Port = randomizePort
                 ? (ushort)random.Next(IPEndPoint.MinPort + 1, IPEndPoint.MaxPort + 1)
                 : configuration.GetSection("default:port").Get<ushort>();
-            m_Address = IPAddress.Parse(m_IP + ":" + m_Port);
+            m_Address = IPAddress.Parse(m_IP);
         }
 
         public void CloseConnection()
