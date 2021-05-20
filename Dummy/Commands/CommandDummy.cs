@@ -6,7 +6,8 @@ using Command = OpenMod.Core.Commands.Command;
 namespace Dummy.Commands
 {
     [Command("dummy")]
-    [CommandSyntax("[copy/create/remove/button/execute]")]
+    // ReSharper disable StringLiteralTypo
+    [CommandSyntax("<copy/create/remove/clear/tphere/button/execute/face/gesture/inputfield/jump/look>")]
     public class CommandDummy : Command
     {
         public CommandDummy(IServiceProvider serviceProvider) : base(serviceProvider)

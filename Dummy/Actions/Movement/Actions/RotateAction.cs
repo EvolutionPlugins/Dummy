@@ -17,7 +17,7 @@ namespace Dummy.Actions.Movement.Actions
 
         public Task Do(DummyUser dummy)
         {
-            // FIXME
+            dummy.Simulation.SetRotation(Yaw, Pitch, 0);
             return Task.CompletedTask;
         }
     }

@@ -22,7 +22,7 @@ namespace Dummy.Extensions
         public static UniTask<bool> TeleportToPlayerAsync(this DummyUser from, UnturnedUser to)
         {
             Transform transform;
-            return @from.TeleportToLocationAsync((transform = to.Player.Player.transform).position, transform.rotation.eulerAngles.y);
+            return from.TeleportToLocationAsync((transform = to.Player.Player.transform).position, transform.rotation.eulerAngles.y);
         }
     }
 }

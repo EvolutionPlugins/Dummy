@@ -47,11 +47,11 @@ namespace Dummy.Users
             Simulation.Enabled = !disableSimulation;
             
 #if DEBUG
-            //Simulation.Move = new Vector3(1f, 0f);
+            Simulation.Move = new Vector3(1f, 0f);
 #endif
             
-            UniTask.RunOnThreadPool(Actions.Start);
-            UniTask.RunOnThreadPool(Simulation.Start);
+            Actions.Start().Forget();
+            Simulation.Start().Forget();
         }
 
         public override Task PrintMessageAsync(string message)

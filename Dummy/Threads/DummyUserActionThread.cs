@@ -29,7 +29,7 @@ namespace Dummy.Threads
         {
             while (Enabled)
             {
-                await UniTask.SwitchToTaskPool();
+                await UniTask.SwitchToThreadPool();
                 await UniTask.DelayFrame(1, PlayerLoopTiming.FixedUpdate);
                 
                 try

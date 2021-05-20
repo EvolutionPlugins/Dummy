@@ -51,7 +51,7 @@ namespace Dummy.Events
                     $"Dummy {@event.Player.SteamId} has died. Death reason: {@event.DeathCause.ToString().ToLower()}, killer = {@event.Instigator}. Respawning...");
             }
 
-            UniTask.Run(() => Revive(dummy.Player));
+            Revive(dummy.Player).Forget();
         }
 
         private async UniTask Revive(UnturnedPlayer player)

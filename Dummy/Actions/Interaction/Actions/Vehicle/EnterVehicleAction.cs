@@ -26,11 +26,6 @@ namespace Dummy.Actions.Interaction.Actions.Vehicle
 
         public Task Do(DummyUser dummy)
         {
-            if (InteractableVehicle is null)
-            {
-                throw new NullReferenceException(nameof(InteractableVehicle));
-            }
-
             async UniTask ForceEnter()
             {
                 await UniTask.SwitchToMainThread();

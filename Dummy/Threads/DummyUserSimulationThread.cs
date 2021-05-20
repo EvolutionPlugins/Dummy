@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
@@ -13,6 +14,21 @@ namespace Dummy.Threads
 {
     public class DummyUserSimulationThread
     {
+        private const float c_Swim = 3f;
+        private const float c_Jump = 7f;
+        private const float c_MinAngleSit = 60f;
+        private const float c_MaxAngleSit = 120f;
+        private const float c_MinAngleClimb = 45f;
+        private const float c_MaxAngleClimb = 100f;
+        private const float c_MinAngleSwim = 45f;
+        private const float c_MaxAngleSwim = 135f;
+        private const float c_MinAngleStand = 0f;
+        private const float c_MaxAngleStand = 180f;
+        private const float c_MinAngleCrouch = 20f;
+        private const float c_MaxAngleCrouch = 160f;
+        private const float c_MinAngleProne = 60f;
+        private const float c_MaxAngleProne = 120f;
+
         private static readonly FieldInfo s_ServerSidePacketsField = typeof(PlayerInput).GetField("serversidePackets",
             BindingFlags.NonPublic | BindingFlags.Instance)!;
 
@@ -20,45 +36,69 @@ namespace Dummy.Threads
             typeof(PlayerMovement).GetProperty(nameof(PlayerMovement.fall),
                 BindingFlags.Instance | BindingFlags.Public)!;
 
-        private static readonly float SWIM = 3f;
-        private static readonly float JUMP = 7f;
-
-        public bool Enabled { get; set; }
-        public uint Simulation { get; private set; }
-        public Vector3 Move { get; set; } // set only X and Y props
-        public bool Jump { get; set; } // will be jumping until consume all stamina
-        public bool Sprint { get; set; } // will be sprinting until consume all stamina
-
-        private uint Count { get; set; }
-        private uint Buffer { get; set; }
-        private uint Consumed { get; set; }
-        private ushort[] Flags { get; }
-        private Vector3 Direction { get; set; }
-        private float Slope { get; set; }
-        private float Fall2 { get; set; }
-        private List<PlayerInputPacket> PlayerInputPackets { get; }
+        private readonly ushort[] m_Flags;
+        private readonly List<PlayerInputPacket> m_PlayerInputPackets;
         private readonly DummyUser m_PlayerDummy;
         private readonly ILogger m_Logger;
 
+        private uint m_Count;
+        private uint m_Buffer;
+        private uint m_Consumed;
+        private Vector3 m_Direction;
+        private float m_Slope;
+        private float m_Fall2;
+        private float m_Yaw;
+        private float m_Pitch;
+        private float m_TimeLerp;
+
         private Player Player => m_PlayerDummy.Player.Player;
+
+        public bool Enabled { get; set; }
+        public Vector2 Move { get; set; } // set only X and Y props at int range [-1;1]
+        public bool Jump { get; set; } // will be jumping until consume all stamina
+        public bool Sprint { get; set; } // will be sprinting until consume all stamina
 
         public DummyUserSimulationThread(DummyUser playerDummy, ILogger logger)
         {
             m_PlayerDummy = playerDummy;
             m_Logger = logger;
 
-            Count = 0;
-            Buffer = 0;
-            Simulation = 0;
-            Consumed = 0;
-            Move = Vector3.zero;
+            m_Count = 0;
+            m_Buffer = 0;
+            m_Consumed = 0;
+            Move = Vector2.zero;
             Jump = false;
-            PlayerInputPackets = new();
-            Flags = new ushort[9 + ControlsSettings.NUM_PLUGIN_KEYS];
+            m_PlayerInputPackets = new();
+            m_Flags = new ushort[9 + ControlsSettings.NUM_PLUGIN_KEYS];
             for (byte b = 0; b < 9 + ControlsSettings.NUM_PLUGIN_KEYS; b++)
             {
-                Flags[b] = (ushort)(1 << b);
+                m_Flags[b] = (ushort)(1 << b);
             }
+        }
+
+        public void SetRotation(float yaw, float pitch, float time)
+        {
+            if (!yaw.IsFinite())
+            {
+                yaw = 0;
+            }
+
+            if (!pitch.IsFinite())
+            {
+                pitch = 0;
+            }
+
+            if (!time.IsFinite() || time <= 0)
+            {
+                time = 1f;
+            }
+
+            m_Yaw = yaw;
+            m_Pitch = pitch;
+            m_TimeLerp = time;
+            
+            ClampPitch();
+            ClampYaw();
         }
 
         public async UniTask Start()
@@ -70,14 +110,19 @@ namespace Dummy.Threads
             {
                 await UniTask.WaitForFixedUpdate();
 
-                if (Count % PlayerInput.SAMPLES == 0)
+                var clampedVector = Move;
+                clampedVector.x = Mathf.Clamp((int)clampedVector.x, -1, 1);
+                clampedVector.y = Mathf.Clamp((int)clampedVector.y, -1, 1);
+                Move = clampedVector;
+
+                if (m_Count % PlayerInput.SAMPLES == 0)
                 {
-                    Player.input.keys[0] = Player.movement.jump || Jump;
+                    Player.input.keys[0] = Jump;
                     Player.input.keys[1] = Player.equipment.primary;
                     Player.input.keys[2] = Player.equipment.secondary;
                     Player.input.keys[3] = Player.stance.crouch;
                     Player.input.keys[4] = Player.stance.prone;
-                    Player.input.keys[5] = Player.stance.sprint || Sprint;
+                    Player.input.keys[5] = Sprint;
                     Player.input.keys[6] = Player.animator.leanLeft;
                     Player.input.keys[7] = Player.animator.leanRight;
                     Player.input.keys[8] = false;
@@ -102,17 +147,17 @@ namespace Dummy.Threads
                     switch (stance)
                     {
                         case EPlayerStance.CLIMB:
-                            s_FallProperty.SetValue(movement, JUMP);
-                            Direction = normalizedMove * speed / 2;
-                            controller.CheckedMove(Vector3.up * Direction.z * delta, landscapeHoleVolume != null);
+                            s_FallProperty.SetValue(movement, c_Jump);
+                            m_Direction = normalizedMove * speed / 2;
+                            controller.CheckedMove(Vector3.up * m_Direction.z * delta, landscapeHoleVolume != null);
                             break;
                         case EPlayerStance.SWIM:
                         {
-                            Direction = normalizedMove * speed * 1.5f;
-                            if (Player.stance.isSubmerged || Player.look.pitch > 110 && Move.z > 0.1f)
+                            m_Direction = normalizedMove * speed * 1.5f;
+                            if (Player.stance.isSubmerged || Player.look.pitch > 110 && Move.y > 0.1f)
                             {
                                 var fall = Jump
-                                    ? SWIM * movement.pluginJumpMultiplier
+                                    ? c_Swim * movement.pluginJumpMultiplier
                                     : movement.fall + Physics.gravity.y * delta / 7f;
                                 if (fall < Physics.gravity.y / 7f)
                                 {
@@ -121,13 +166,13 @@ namespace Dummy.Threads
 
                                 s_FallProperty.SetValue(movement, fall);
                                 controller.CheckedMove(
-                                    Player.look.aim.rotation * Direction * delta + Vector3.up * fall * delta,
+                                    Player.look.aim.rotation * m_Direction * delta + Vector3.up * fall * delta,
                                     landscapeHoleVolume != null);
                             }
                             else
                             {
                                 controller.CheckedMove(
-                                    rotation * Direction * delta + Vector3.up * movement.fall * delta,
+                                    rotation * m_Direction * delta + Vector3.up * movement.fall * delta,
                                     landscapeHoleVolume != null);
                             }
 
@@ -141,52 +186,52 @@ namespace Dummy.Threads
                             {
                                 fall = Physics.gravity.y * 2f * movement.totalGravityMultiplier;
                             }
-                            
+
                             var jumpMastery = Player.skills.mastery(0, 6);
 
                             if (Jump && movement.isGrounded && !Player.life.isBroken &&
                                 Player.life.stamina >= 10f * (1f - jumpMastery * 0.5f) &&
                                 stance is EPlayerStance.STAND or EPlayerStance.SPRINT)
                             {
-                                fall = JUMP * (1f + jumpMastery * movement.pluginJumpMultiplier);
+                                fall = c_Jump * (1f + jumpMastery * movement.pluginJumpMultiplier);
                                 Player.life.askTire((byte)(10f * (1f - jumpMastery * 0.5f)));
                             }
-                            
+
                             s_FallProperty.SetValue(movement, fall);
 
                             if (movement.isGrounded && movement.ground.transform != null &&
                                 movement.ground.normal.y > 0)
                             {
-                                Slope = Mathf.Lerp(Slope, Mathf.Max(movement.ground.normal.y, 0.01f), delta);
+                                m_Slope = Mathf.Lerp(m_Slope, Mathf.Max(movement.ground.normal.y, 0.01f), delta);
                             }
                             else
                             {
-                                Slope = Mathf.Lerp(Slope, 1f, delta);
+                                m_Slope = Mathf.Lerp(m_Slope, 1f, delta);
                             }
 
                             // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
                             switch (material)
                             {
                                 case EPhysicsMaterial.ICE_STATIC:
-                                    Direction = Vector3.Lerp(Direction,
-                                        rotation * normalizedMove * speed * Slope * delta,
+                                    m_Direction = Vector3.Lerp(m_Direction,
+                                        rotation * normalizedMove * speed * m_Slope * delta,
                                         delta);
                                     break;
                                 case EPhysicsMaterial.METAL_SLIP:
                                 {
-                                    var num2 = Slope < 0.75f ? 0f : Mathf.Lerp(0f, 1f, (Slope - 0.75f) * 4f);
+                                    var num2 = m_Slope < 0.75f ? 0f : Mathf.Lerp(0f, 1f, (m_Slope - 0.75f) * 4f);
 
-                                    Direction = Vector3.Lerp(Direction,
-                                        rotation * normalizedMove * speed * Slope * delta * 2f,
+                                    m_Direction = Vector3.Lerp(m_Direction,
+                                        rotation * normalizedMove * speed * m_Slope * delta * 2f,
                                         movement.isMoving ? 2f * delta : 0.5f * num2 * delta);
                                     break;
                                 }
                                 default:
-                                    Direction = rotation * normalizedMove * speed * Slope * delta;
+                                    m_Direction = rotation * normalizedMove * speed * m_Slope * delta;
                                     break;
                             }
 
-                            var vector = Direction;
+                            var vector = m_Direction;
                             if (movement.isGrounded && movement.ground.normal.y > 0)
                             {
                                 var angleSlope = Vector3.Angle(Vector3.up, movement.ground.normal);
@@ -198,19 +243,19 @@ namespace Dummy.Threads
 
                                 if (angleSlope > maxAngleSlope)
                                 {
-                                    Fall2 += 16f * delta;
-                                    if (Fall2 > 128f)
+                                    m_Fall2 += 16f * delta;
+                                    if (m_Fall2 > 128f)
                                     {
-                                        Fall2 = 128f;
+                                        m_Fall2 = 128f;
                                     }
 
                                     var a = Vector3.Cross(Vector3.Cross(Vector3.up, movement.ground.normal),
                                         movement.ground.normal);
-                                    vector += a * Fall2 * delta;
+                                    vector += a * m_Fall2 * delta;
                                 }
                                 else
                                 {
-                                    Fall2 = 0;
+                                    m_Fall2 = 0;
                                 }
                             }
 
@@ -222,34 +267,33 @@ namespace Dummy.Threads
 
                     if (Player.stance.stance == EPlayerStance.DRIVING)
                     {
-                        PlayerInputPackets.Add(new DrivingPlayerInputPacket());
+                        m_PlayerInputPackets.Add(new DrivingPlayerInputPacket());
                     }
                     else
                     {
-                        PlayerInputPackets.Add(new WalkingPlayerInputPacket());
+                        m_PlayerInputPackets.Add(new WalkingPlayerInputPacket());
                     }
 
-                    Buffer += PlayerInput.SAMPLES;
-                    Simulation++;
+                    m_Buffer += PlayerInput.SAMPLES;
                 }
 
-                if (Consumed < Buffer)
+                if (m_Consumed < m_Buffer)
                 {
-                    Consumed++;
+                    m_Consumed++;
                 }
 
-                if (Consumed == Buffer && PlayerInputPackets.Count > 0)
+                if (m_Consumed == m_Buffer && m_PlayerInputPackets.Count > 0)
                 {
                     ushort compressedKeys = 0;
                     for (byte b = 0; b < Player.input.keys.Length; b++)
                     {
                         if (Player.input.keys[b])
                         {
-                            compressedKeys |= Flags[b];
+                            compressedKeys |= m_Flags[b];
                         }
                     }
 
-                    var playerInputPacket2 = PlayerInputPackets.Last();
+                    var playerInputPacket2 = m_PlayerInputPackets.Last();
                     playerInputPacket2.keys = compressedKeys;
 
                     switch (playerInputPacket2)
@@ -270,29 +314,35 @@ namespace Dummy.Threads
                                 drivingPlayerInputPacket.speed = (byte)(Mathf.Clamp(vehicle.speed, -100f, 100f) + 128f);
                                 drivingPlayerInputPacket.physicsSpeed =
                                     (byte)(Mathf.Clamp(vehicle.physicsSpeed, -100f, 100f) + 128f);
-                                drivingPlayerInputPacket.turn = (byte)(vehicle.turn + 1);
+                                drivingPlayerInputPacket.turn = (byte)(Move.x + 1);
                             }
 
                             break;
                         }
                         case WalkingPlayerInputPacket walkingPlayerInputPacket:
+                            var horizontal = (byte)Move.x + 1;
+                            var vertical = (byte)Move.y + 1;
+                            
+                            Console.WriteLine(Mathf.Lerp(Player.look.yaw, m_Yaw, m_TimeLerp));
+                            Console.WriteLine(Mathf.Lerp(Player.look.pitch, m_Pitch, m_TimeLerp));
+
                             walkingPlayerInputPacket!.analog =
-                                (byte)(Player.movement.horizontal << 4 | Player.movement.vertical);
+                                (byte)(horizontal << 4 | vertical);
                             walkingPlayerInputPacket.position = Player.transform.position;
-                            walkingPlayerInputPacket.yaw = Player.look.yaw;
-                            walkingPlayerInputPacket.pitch = Player.look.pitch;
+                            walkingPlayerInputPacket.yaw = Mathf.Lerp(Player.look.yaw, m_Yaw, m_TimeLerp);
+                            walkingPlayerInputPacket.pitch = Mathf.Lerp(Player.look.pitch, m_Pitch, m_TimeLerp);
                             break;
                     }
 
-                    foreach (var playerInputPacket3 in PlayerInputPackets)
+                    foreach (var playerInputPacket3 in m_PlayerInputPackets)
                     {
                         queue.Enqueue(playerInputPacket3);
                     }
 
-                    PlayerInputPackets.Clear();
+                    m_PlayerInputPackets.Clear();
                 }
 
-                Count++;
+                m_Count++;
             }
         }
 
@@ -318,6 +368,78 @@ namespace Dummy.Threads
             return movement.ground.transform.CompareTag("Ground")
                 ? PhysicsTool.checkMaterial(Player.transform.position)
                 : PhysicsTool.checkMaterial(movement.ground.collider);
+        }
+
+        private void ClampPitch()
+        {
+            var vehicleSeat = Player.movement.getVehicleSeat();
+            var min = 0f;
+            var max = 180f;
+
+            if (vehicleSeat != null)
+            {
+                if (vehicleSeat.turret != null)
+                {
+                    min = vehicleSeat.turret.pitchMin;
+                    max = vehicleSeat.turret.pitchMax;
+                }
+                else
+                {
+                    min = c_MinAngleSit;
+                    max = c_MaxAngleSit;
+                }
+            }
+            else
+                switch (Player.stance.stance)
+                {
+                    case EPlayerStance.STAND or EPlayerStance.SPRINT:
+                        min = c_MinAngleStand;
+                        max = c_MaxAngleStand;
+                        break;
+                    case EPlayerStance.CLIMB:
+                        min = c_MinAngleClimb;
+                        max = c_MaxAngleClimb;
+                        break;
+                    case EPlayerStance.SWIM:
+                        min = c_MinAngleSwim;
+                        max = c_MaxAngleSwim;
+                        break;
+                    case EPlayerStance.CROUCH:
+                        min = c_MinAngleCrouch;
+                        max = c_MaxAngleCrouch;
+                        break;
+                    case EPlayerStance.PRONE:
+                        min = c_MinAngleProne;
+                        max = c_MaxAngleProne;
+                        break;
+                }
+
+            m_Pitch = Mathf.Clamp(m_Pitch, min, max);
+        }
+
+        private void ClampYaw()
+        {
+            m_Yaw %= 360f;
+            var vehicleSeat = Player.movement.getVehicleSeat();
+            if (vehicleSeat == null)
+            {
+                return;
+            }
+
+            var min = -90f;
+            var max = 90f;
+            if (vehicleSeat.turret != null)
+            {
+                min = vehicleSeat.turret.yawMin;
+                max = vehicleSeat.turret.yawMax;
+            }
+            else if (Player.stance.stance == EPlayerStance.DRIVING)
+            {
+                min = -160f;
+                max = 160f;
+            }
+
+            m_Yaw = Mathf.Clamp(m_Yaw, min, max);
         }
     }
 }
