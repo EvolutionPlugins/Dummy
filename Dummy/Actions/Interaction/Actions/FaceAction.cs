@@ -27,7 +27,7 @@ namespace Dummy.Actions.Interaction.Actions
             {
                 await UniTask.SwitchToMainThread();
                 // todo: bypass Nelson index checking
-                dummy.Player.Player.clothing.ServerSetFace(Index);
+                dummy.Player.Player.clothing.ReceiveSwapFaceRequest(Index);
             }
 
             return SetFace().AsTask();

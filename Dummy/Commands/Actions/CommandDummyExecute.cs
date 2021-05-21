@@ -8,6 +8,7 @@ using Dummy.Users;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using Microsoft.Extensions.Localization;
 using OpenMod.API.Commands;
+using OpenMod.API.Eventing;
 using OpenMod.Core.Commands;
 
 namespace Dummy.Commands.Actions
@@ -21,13 +22,17 @@ namespace Dummy.Commands.Actions
     {
         private readonly ICommandExecutor m_CommandExecutor;
         private readonly IStringLocalizer m_StringLocalizer;
+        private readonly IEventBus m_EventBus;
+        private readonly Dummy m_Plugin;
 
         public CommandDummyExecute(IServiceProvider serviceProvider, IDummyProvider dummyProvider,
-            ICommandExecutor commandExecutor, IStringLocalizer stringLocalizer) : base(serviceProvider, dummyProvider,
-            stringLocalizer)
+            ICommandExecutor commandExecutor, IStringLocalizer stringLocalizer, IEventBus eventBus, Dummy plugin) :
+            base(serviceProvider, dummyProvider, stringLocalizer)
         {
             m_CommandExecutor = commandExecutor;
             m_StringLocalizer = stringLocalizer;
+            m_EventBus = eventBus;
+            m_Plugin = plugin;
         }
 
         protected override async UniTask ExecuteDummyAsync(DummyUser playerDummy)
@@ -41,12 +46,14 @@ namespace Dummy.Commands.Actions
             Exception? exception = null;
             var command = Context.Parameters.Skip(1).ToArray();
 
-            playerDummy.Actions.Actions.Enqueue(new ExecuteCommandAction(m_CommandExecutor, command, e =>
-            {
-                exception = e;
-                wait = true;
-            }));
+            playerDummy.Actions.Actions.Enqueue(new ExecuteCommandAction(m_CommandExecutor, command, m_Plugin,
+                m_EventBus, context =>
+                {
+                    wait = true;
+                    exception = context.Exception;
+                }));
             await UniTask.WaitUntil(() => wait);
+            
             if (exception != null)
             {
                 await PrintAsync(m_StringLocalizer["commands:actions:execute:fail",

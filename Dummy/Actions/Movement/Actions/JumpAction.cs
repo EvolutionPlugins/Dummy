@@ -1,21 +1,22 @@
-using System.Reflection;
 using System.Threading.Tasks;
-using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
-using HarmonyLib;
-using SDG.Unturned;
 
 namespace Dummy.Actions.Movement.Actions
 {
     public class JumpAction : IAction
     {
-        public async Task Do(DummyUser dummy)
-        {
-            dummy.Simulation.Jump = true;
+        public bool IsJumping { get; }
 
-            await UniTask.DelayFrame(5, PlayerLoopTiming.FixedUpdate);
-            dummy.Simulation.Jump = false;
+        public JumpAction(bool isJumping)
+        {
+            IsJumping = isJumping;
+        }
+
+        public Task Do(DummyUser dummy)
+        {
+            dummy.Simulation.Jump = IsJumping;
+            return Task.CompletedTask;
         }
     }
 }

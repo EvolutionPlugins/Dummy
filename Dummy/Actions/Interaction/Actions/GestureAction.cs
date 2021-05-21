@@ -20,7 +20,7 @@ namespace Dummy.Actions.Interaction.Actions
             async UniTask SetGesture()
             {
                 await UniTask.SwitchToMainThread();
-                dummy.Player.Player.animator.sendGesture(Gesture, false);
+                dummy.Player.Player.animator.ReceiveGestureRequest(Gesture);
             }
 
             return SetGesture().AsTask();

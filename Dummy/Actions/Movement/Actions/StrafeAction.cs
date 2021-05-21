@@ -21,11 +21,18 @@ namespace Dummy.Actions.Movement.Actions
         {
             var move = Dir switch
             {
-                StrafeDirection.Left => new Vector3(-1, 0),
+                StrafeDirection.None => new Vector2(0, 0),
+                StrafeDirection.Left => new(-1, 0),
                 StrafeDirection.Right => new(1, 0),
+                StrafeDirection.Forward => new(0, 1),
+                StrafeDirection.Backward => new(0, -1),
+                StrafeDirection.ForwardLeft => new(-1, 1),
+                StrafeDirection.ForwardRight => new(1, 1),
+                StrafeDirection.BackwardLeft => new(-1, -1),
+                StrafeDirection.BackwardRight => new(1, -1),
                 _ => throw new ArgumentOutOfRangeException(nameof(Dir), Dir, "Tried to strafe to wrong direction")
             };
-            
+
             dummy.Simulation.Move = move;
             return Task.CompletedTask;
         }

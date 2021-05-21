@@ -322,9 +322,6 @@ namespace Dummy.Threads
                         case WalkingPlayerInputPacket walkingPlayerInputPacket:
                             var horizontal = (byte)Move.x + 1;
                             var vertical = (byte)Move.y + 1;
-                            
-                            Console.WriteLine(Mathf.Lerp(Player.look.yaw, m_Yaw, m_TimeLerp));
-                            Console.WriteLine(Mathf.Lerp(Player.look.pitch, m_Pitch, m_TimeLerp));
 
                             walkingPlayerInputPacket!.analog =
                                 (byte)(horizontal << 4 | vertical);

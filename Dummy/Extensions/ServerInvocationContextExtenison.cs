@@ -1,6 +1,7 @@
 ﻿extern alias JetBrainsAnnotations;
 using System;
 using System.Reflection;
+using Dummy.Users;
 using HarmonyLib;
 using SDG.NetPak;
 using SDG.Unturned;
@@ -17,7 +18,7 @@ namespace Dummy.Extensions
                     typeof(ServerMethodInfo)
                 });
 
-        public static ServerInvocationContext GetContext(SteamPlayer steamPlayer)
+        public static ServerInvocationContext GetContext(this SteamPlayer steamPlayer)
         {
             if (steamPlayer is null)
             {
@@ -30,6 +31,11 @@ namespace Dummy.Extensions
                 ServerInvocationContext.EOrigin.Obsolete, steamPlayer, null!, null!
             });
             return context;
+        }
+        
+        public static ServerInvocationContext GetContext(this DummyUser dummyUser)
+        {
+            return GetContext(dummyUser.SteamPlayer);
         }
     }
 }

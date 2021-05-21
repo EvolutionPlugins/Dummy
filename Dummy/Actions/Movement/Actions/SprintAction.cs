@@ -1,23 +1,25 @@
 ﻿extern alias JetBrainsAnnotations;
 using System.Threading.Tasks;
-using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
 using JetBrainsAnnotations::JetBrains.Annotations;
-using SDG.Unturned;
-using UnityEngine;
 
 namespace Dummy.Actions.Movement.Actions
 {
     [UsedImplicitly]
     public class SprintAction : IAction
     {
-        public async Task Do(DummyUser dummy)
-        {
-            dummy.Simulation.Sprint = true;
+        public bool IsSprinting { get; }
 
-            await UniTask.DelayFrame(5, PlayerLoopTiming.FixedUpdate);
-            dummy.Simulation.Sprint = false;
+        public SprintAction(bool isSprinting)
+        {
+            IsSprinting = isSprinting;
+        }
+
+        public Task Do(DummyUser dummy)
+        {
+            dummy.Simulation.Sprint = IsSprinting;
+            return Task.CompletedTask;
         }
     }
 }

@@ -6,6 +6,7 @@ using JetBrainsAnnotations::JetBrains.Annotations;
 using SDG.Unturned;
 using System;
 using System.Threading.Tasks;
+using Dummy.Extensions;
 
 namespace Dummy.Actions.Interaction.Actions.Vehicle
 {
@@ -29,7 +30,10 @@ namespace Dummy.Actions.Interaction.Actions.Vehicle
             async UniTask ForceEnter()
             {
                 await UniTask.SwitchToMainThread();
-                VehicleManager.ServerForcePassengerIntoVehicle(dummy.Player.Player, InteractableVehicle);
+                var context = dummy.GetContext();
+
+                VehicleManager.ReceiveEnterVehicleRequest(in context, InteractableVehicle.instanceID,
+                    InteractableVehicle.asset.hash, (byte)InteractableVehicle.asset.engine);
             }
 
             return ForceEnter().AsTask();

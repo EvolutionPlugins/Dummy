@@ -3,6 +3,7 @@ using Dummy.API;
 using Dummy.Users;
 using SDG.Unturned;
 using System.Threading.Tasks;
+using Dummy.Extensions;
 
 namespace Dummy.Actions.Interaction.Actions.UI
 {
@@ -22,7 +23,9 @@ namespace Dummy.Actions.Interaction.Actions.UI
             async UniTask EffectTextCommitted()
             {
                 await UniTask.SwitchToMainThread();
-                EffectManager.onEffectTextCommitted(dummy.Player.Player, InputFieldName, InputtedText);
+                var context = dummy.GetContext();
+                
+                EffectManager.ReceiveEffectTextCommitted(in context, InputFieldName, InputtedText);
             }
             return EffectTextCommitted().AsTask();
         }
