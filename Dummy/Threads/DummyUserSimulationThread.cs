@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Resources;
 using Cysharp.Threading.Tasks;
+using Dummy.Actions.Interaction;
 using Dummy.Users;
 using SDG.Framework.Water;
 using SDG.Unturned;
@@ -37,6 +37,7 @@ namespace Dummy.Threads
                 BindingFlags.Instance | BindingFlags.Public)!;
 
         private readonly ushort[] m_Flags;
+        private readonly bool[] m_Keys;
         private readonly List<PlayerInputPacket> m_PlayerInputPackets;
         private readonly DummyUser m_PlayerDummy;
         private readonly ILogger m_Logger;
@@ -54,9 +55,98 @@ namespace Dummy.Threads
         private Player Player => m_PlayerDummy.Player.Player;
 
         public bool Enabled { get; set; }
+
         public Vector2 Move { get; set; } // set only X and Y props at int range [-1;1]
-        public bool Jump { get; set; } // will be jumping until consume all stamina
-        public bool Sprint { get; set; } // will be sprinting until consume all stamina
+
+        public bool Jump // will be jumping until consume all stamina
+        {
+            get => m_Keys[0];
+            set => m_Keys[0] = value;
+        }
+
+        public MouseState MouseState
+        {
+            get
+            {
+                var left = m_Keys[1] ? 1 : 0;
+                var right = m_Keys[2] ? 2 : 0;
+
+                return (MouseState)(left + right);
+            }
+            set
+            {
+                if (value is > MouseState.LeftRight or < MouseState.None)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(MouseState));
+                }
+
+                var left = (value & MouseState.Left) != 0;
+                var right = (value & MouseState.Right) != 0;
+
+                m_Keys[1] = left;
+                m_Keys[2] = right;
+            }
+        }
+
+        public bool Crouch
+        {
+            get => m_Keys[3];
+            set => m_Keys[3] = value;
+        }
+
+        public bool Prone
+        {
+            get => m_Keys[4];
+            set => m_Keys[4] = value;
+        }
+
+        public bool Sprint // will be sprinting until consume all stamina
+        {
+            get => m_Keys[5];
+            set => m_Keys[5] = value;
+        }
+
+        public bool LeanLeft
+        {
+            get => m_Keys[6];
+            set => m_Keys[6] = value;
+        }
+
+        public bool LeanRight
+        {
+            get => m_Keys[7];
+            set => m_Keys[7] = value;
+        }
+
+        public bool PluginKey1
+        {
+            get => m_Keys[9];
+            set => m_Keys[9] = value;
+        }
+
+        public bool PluginKey2
+        {
+            get => m_Keys[10];
+            set => m_Keys[10] = value;
+        }
+
+        public bool PluginKey3
+        {
+            get => m_Keys[11];
+            set => m_Keys[11] = value;
+        }
+
+        public bool PluginKey4
+        {
+            get => m_Keys[12];
+            set => m_Keys[12] = value;
+        }
+
+        public bool PluginKey5
+        {
+            get => m_Keys[13];
+            set => m_Keys[13] = value;
+        }
 
         public DummyUserSimulationThread(DummyUser playerDummy, ILogger logger)
         {
@@ -69,6 +159,8 @@ namespace Dummy.Threads
             Move = Vector2.zero;
             Jump = false;
             m_PlayerInputPackets = new();
+            m_Keys = new bool[9 + ControlsSettings.NUM_PLUGIN_KEYS];
+
             m_Flags = new ushort[9 + ControlsSettings.NUM_PLUGIN_KEYS];
             for (byte b = 0; b < 9 + ControlsSettings.NUM_PLUGIN_KEYS; b++)
             {
@@ -96,7 +188,7 @@ namespace Dummy.Threads
             m_Yaw = yaw;
             m_Pitch = pitch;
             m_TimeLerp = time;
-            
+
             ClampPitch();
             ClampYaw();
         }
@@ -117,20 +209,9 @@ namespace Dummy.Threads
 
                 if (m_Count % PlayerInput.SAMPLES == 0)
                 {
-                    Player.input.keys[0] = Jump;
-                    Player.input.keys[1] = Player.equipment.primary;
-                    Player.input.keys[2] = Player.equipment.secondary;
-                    Player.input.keys[3] = Player.stance.crouch;
-                    Player.input.keys[4] = Player.stance.prone;
-                    Player.input.keys[5] = Sprint;
-                    Player.input.keys[6] = Player.animator.leanLeft;
-                    Player.input.keys[7] = Player.animator.leanRight;
-                    Player.input.keys[8] = false;
-
-                    for (var i = 0; i < ControlsSettings.NUM_PLUGIN_KEYS; i++)
+                    for (var i = 0; i < m_Keys.Length; i++)
                     {
-                        var num = Player.input.keys.Length - ControlsSettings.NUM_PLUGIN_KEYS + i;
-                        Player.input.keys[num] = false; // todo
+                        Player.input.keys[i] = m_Keys[i];
                     }
 
                     var movement = Player.movement;
@@ -154,11 +235,11 @@ namespace Dummy.Threads
                         case EPlayerStance.SWIM:
                         {
                             m_Direction = normalizedMove * speed * 1.5f;
-                            if (Player.stance.isSubmerged || Player.look.pitch > 110 && Move.y > 0.1f)
+                            if (Player.stance.isSubmerged || (Player.look.pitch > 110 && Move.y > 0.1f))
                             {
                                 var fall = Jump
                                     ? c_Swim * movement.pluginJumpMultiplier
-                                    : movement.fall + Physics.gravity.y * delta / 7f;
+                                    : movement.fall + (Physics.gravity.y * delta / 7f);
                                 if (fall < Physics.gravity.y / 7f)
                                 {
                                     fall = Physics.gravity.y / 7f;
@@ -166,13 +247,13 @@ namespace Dummy.Threads
 
                                 s_FallProperty.SetValue(movement, fall);
                                 controller.CheckedMove(
-                                    Player.look.aim.rotation * m_Direction * delta + Vector3.up * fall * delta,
+                                    (Player.look.aim.rotation * m_Direction * delta) + (Vector3.up * fall * delta),
                                     landscapeHoleVolume != null);
                             }
                             else
                             {
                                 controller.CheckedMove(
-                                    rotation * m_Direction * delta + Vector3.up * movement.fall * delta,
+                                    (rotation * m_Direction * delta) + (Vector3.up * movement.fall * delta),
                                     landscapeHoleVolume != null);
                             }
 
@@ -180,8 +261,8 @@ namespace Dummy.Threads
                         }
                         default:
                         {
-                            var fall = movement.fall + Physics.gravity.y *
-                                (movement.fall <= 0f ? movement.totalGravityMultiplier : 1f) * delta * 3f;
+                            var fall = movement.fall + (Physics.gravity.y *
+                                (movement.fall <= 0f ? movement.totalGravityMultiplier : 1f) * delta * 3f);
                             if (fall < Physics.gravity.y * 2f * movement.totalGravityMultiplier)
                             {
                                 fall = Physics.gravity.y * 2f * movement.totalGravityMultiplier;
@@ -190,11 +271,11 @@ namespace Dummy.Threads
                             var jumpMastery = Player.skills.mastery(0, 6);
 
                             if (Jump && movement.isGrounded && !Player.life.isBroken &&
-                                Player.life.stamina >= 10f * (1f - jumpMastery * 0.5f) &&
+                                Player.life.stamina >= 10f * (1f - (jumpMastery * 0.5f)) &&
                                 stance is EPlayerStance.STAND or EPlayerStance.SPRINT)
                             {
-                                fall = c_Jump * (1f + jumpMastery * movement.pluginJumpMultiplier);
-                                Player.life.askTire((byte)(10f * (1f - jumpMastery * 0.5f)));
+                                fall = c_Jump * (1f + (jumpMastery * movement.pluginJumpMultiplier));
+                                Player.life.askTire((byte)(10f * (1f - (jumpMastery * 0.5f))));
                             }
 
                             s_FallProperty.SetValue(movement, fall);
@@ -285,9 +366,9 @@ namespace Dummy.Threads
                 if (m_Consumed == m_Buffer && m_PlayerInputPackets.Count > 0)
                 {
                     ushort compressedKeys = 0;
-                    for (byte b = 0; b < Player.input.keys.Length; b++)
+                    for (var b = 0; b < m_Keys.Length; b++)
                     {
-                        if (Player.input.keys[b])
+                        if (m_Keys[b])
                         {
                             compressedKeys |= m_Flags[b];
                         }
@@ -387,6 +468,7 @@ namespace Dummy.Threads
                 }
             }
             else
+            {
                 switch (Player.stance.stance)
                 {
                     case EPlayerStance.STAND or EPlayerStance.SPRINT:
@@ -410,6 +492,7 @@ namespace Dummy.Threads
                         max = c_MaxAngleProne;
                         break;
                 }
+            }
 
             m_Pitch = Mathf.Clamp(m_Pitch, min, max);
         }

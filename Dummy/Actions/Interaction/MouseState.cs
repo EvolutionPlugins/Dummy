@@ -1,8 +1,13 @@
-﻿namespace Dummy.Actions.Interaction
+﻿using System;
+
+namespace Dummy.Actions.Interaction
 {
+    [Flags]
     public enum MouseState
     {
-        Left,
-        Right
+        None = 0,
+        Left = 1,
+        Right = 1 << 1,
+        LeftRight = Left | Right
     }
 }

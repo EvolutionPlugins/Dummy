@@ -1,5 +1,8 @@
+using System;
+
 namespace Dummy.Actions
 {
+    [Flags]
     public enum StrafeDirection
     {
         None = 0,

@@ -1,9 +1,7 @@
 using System;
-using System.Reflection;
 using System.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
-using SDG.Unturned;
 using UnityEngine;
 
 namespace Dummy.Actions.Movement.Actions
@@ -19,7 +17,7 @@ namespace Dummy.Actions.Movement.Actions
 
         public Task Do(DummyUser dummy)
         {
-            var move = Dir switch
+            dummy.Simulation.Move = Dir switch
             {
                 StrafeDirection.None => new Vector2(0, 0),
                 StrafeDirection.Left => new(-1, 0),
@@ -32,8 +30,6 @@ namespace Dummy.Actions.Movement.Actions
                 StrafeDirection.BackwardRight => new(1, -1),
                 _ => throw new ArgumentOutOfRangeException(nameof(Dir), Dir, "Tried to strafe to wrong direction")
             };
-
-            dummy.Simulation.Move = move;
             return Task.CompletedTask;
         }
     }
