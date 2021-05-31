@@ -45,11 +45,7 @@ namespace Dummy.Users
 
             Actions.Enabled = true;
             Simulation.Enabled = !disableSimulation;
-            
-#if DEBUG
-            Simulation.Move = new Vector3(1f, 0f);
-#endif
-            
+
             Actions.Start().Forget();
             Simulation.Start().Forget();
         }

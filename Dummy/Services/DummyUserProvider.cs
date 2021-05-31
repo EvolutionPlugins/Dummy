@@ -60,8 +60,14 @@ namespace Dummy.Services
             DummyUsers = new();
 
             SDG.Unturned.Provider.onCommenceShutdown += ProviderOnonCommenceShutdown;
+            SDG.Unturned.Provider.onServerDisconnected += OnServerDisconnected;
 
             AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
+        }
+
+        private void OnServerDisconnected(CSteamID steamID)
+        {
+            DummyUsers.RemoveWhere(x => x.SteamId == steamID);
         }
 
         private void ProviderOnonCommenceShutdown()
@@ -451,6 +457,8 @@ namespace Dummy.Services
 
             m_Disposed = true;
             SDG.Unturned.Provider.onCommenceShutdown -= ProviderOnonCommenceShutdown;
+            SDG.Unturned.Provider.onServerDisconnected -= OnServerDisconnected;
+
             if (!m_IsShuttingDown)
             {
                 foreach (var user in DummyUsers)
