@@ -8,16 +8,27 @@ namespace Dummy.Actions.Movement.Actions
 {
     public class StrafeAction : IAction
     {
-        public StrafeDirection Dir { get; }
+        private Vector2? m_Vector;
 
-        public StrafeAction(StrafeDirection dir)
+        public StrafeDirection Direction { get; }
+
+        public StrafeAction(StrafeDirection direction)
         {
-            Dir = dir;
+            Direction = direction;
+        }
+
+        public StrafeAction(int x, int y) : this(new Vector2(x, y))
+        {
+        }
+
+        public StrafeAction(Vector2 vector)
+        {
+            m_Vector = vector;
         }
 
         public Task Do(DummyUser dummy)
         {
-            dummy.Simulation.Move = Dir switch
+            dummy.Simulation.Move = m_Vector != null ? m_Vector.Value : Direction switch
             {
                 StrafeDirection.None => new Vector2(0, 0),
                 StrafeDirection.Left => new(-1, 0),
@@ -28,7 +39,7 @@ namespace Dummy.Actions.Movement.Actions
                 StrafeDirection.ForwardRight => new(1, 1),
                 StrafeDirection.BackwardLeft => new(-1, -1),
                 StrafeDirection.BackwardRight => new(1, -1),
-                _ => throw new ArgumentOutOfRangeException(nameof(Dir), Dir, "Tried to strafe to wrong direction")
+                _ => throw new ArgumentOutOfRangeException(nameof(Direction), Direction, "Tried to strafe to wrong direction")
             };
             return Task.CompletedTask;
         }

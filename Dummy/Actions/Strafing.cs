@@ -16,7 +16,7 @@ namespace Dummy.Actions
         public static void WalkingConstantOff(this DummyUser dummy, StrafeDirection direction)
         {
             dummy.Actions.ContinuousActions.RemoveAll(c =>
-                c is StrafeAction strafeAction && strafeAction.Dir == direction);
+                c is StrafeAction strafeAction && strafeAction.Direction == direction);
         }
         
         public static void Walk(this DummyUser dummy, StrafeDirection direction)

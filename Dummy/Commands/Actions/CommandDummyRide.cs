@@ -17,6 +17,7 @@ namespace Dummy.Commands.Actions
 {
     [Command("ride")]
     [CommandParent(typeof(CommandDummy))]
+    [CommandSyntax("[--exit]")]
     public class CommandDummyRide : CommandDummyAction
     {
         public CommandDummyRide(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IStringLocalizer stringLocalizer)
