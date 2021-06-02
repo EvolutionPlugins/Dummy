@@ -59,8 +59,7 @@ namespace Dummy.Events
                 return;
             }
 
-            var events = m_Configuration.Get<Configuration>().Events;
-            @event.IsCancelled = events?.AllowDamage ?? false;
+            @event.IsCancelled = !m_Configuration.GetValue("events:allowDamage", true);
         }
 
         private Task<DummyUser?> GetDummyUser(ulong id)
