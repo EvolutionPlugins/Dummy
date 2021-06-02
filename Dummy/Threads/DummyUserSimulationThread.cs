@@ -157,7 +157,6 @@ namespace Dummy.Threads
             m_Buffer = 0;
             m_Consumed = 0;
             Move = Vector2.zero;
-            Jump = false;
             m_PlayerInputPackets = new();
             m_Keys = new bool[9 + ControlsSettings.NUM_PLUGIN_KEYS];
 

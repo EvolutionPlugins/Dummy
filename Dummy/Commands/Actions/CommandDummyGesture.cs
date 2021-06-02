@@ -32,9 +32,9 @@ namespace Dummy.Commands.Actions
             {
                 throw new CommandWrongUsageException(Context);
             }
-            
+
             var gesture = Context.Parameters[1];
-            if (!Enum.TryParse<EPlayerGesture>(gesture, out var eGesture))
+            if (!Enum.TryParse<EPlayerGesture>(gesture, true, out var eGesture))
             {
                 await PrintAsync($"Unable find a gesture {gesture}");
                 await PrintAsync($"All gestures: {string.Join(", ", Enum.GetNames(typeof(EPlayerGesture)))}");

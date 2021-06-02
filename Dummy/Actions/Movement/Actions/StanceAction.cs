@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
+using SDG.Unturned;
 
 namespace Dummy.Actions.Movement.Actions
 {
@@ -10,6 +11,12 @@ namespace Dummy.Actions.Movement.Actions
         {
             WantsCrouch = wantsCrouch;
             WantsProne = wantsProne;
+        }
+
+        public StanceAction(EPlayerStance stance)
+        {
+            WantsCrouch = stance == EPlayerStance.CROUCH;
+            WantsProne = stance == EPlayerStance.PRONE;
         }
 
         public bool WantsCrouch { get; }
