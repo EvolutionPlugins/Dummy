@@ -1,7 +1,6 @@
 ﻿extern alias JetBrainsAnnotations;
 using System.Threading.Tasks;
 using Dummy.API;
-using Dummy.Models;
 using Dummy.Users;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using Microsoft.Extensions.Configuration;
