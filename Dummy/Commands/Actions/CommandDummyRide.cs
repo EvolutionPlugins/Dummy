@@ -49,7 +49,7 @@ namespace Dummy.Commands.Actions
                     vehicle1 = vehicle.Vehicle;
                 }
 
-                if (vehicle1 != null && playerUser is UnturnedUser unturnedUser)
+                if (vehicle1 == null && playerUser is UnturnedUser unturnedUser)
                 {
                     var aim = unturnedUser.Player.Player.look.aim;
                     PhysicsUtility.raycast(new(aim.position, aim.forward), out var hit, 8f, RayMasks.VEHICLE);

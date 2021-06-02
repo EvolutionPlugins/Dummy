@@ -56,7 +56,7 @@ namespace Dummy.Threads
 
         public bool Enabled { get; set; }
 
-        public Vector2 Move { get; set; } // set only X and Y props at int range [-1;1]
+        public Vector3 Move { get; set; } // set only X and Z props at int range [-1;1]
 
         public bool Jump // will be jumping until consume all stamina
         {
@@ -156,7 +156,7 @@ namespace Dummy.Threads
             m_Count = 0;
             m_Buffer = 0;
             m_Consumed = 0;
-            Move = Vector2.zero;
+            Move = Vector3.zero;
             m_PlayerInputPackets = new();
             m_Keys = new bool[9 + ControlsSettings.NUM_PLUGIN_KEYS];
 
@@ -201,10 +201,11 @@ namespace Dummy.Threads
             {
                 await UniTask.WaitForFixedUpdate();
 
-                var clampedVector = Move;
-                clampedVector.x = Mathf.Clamp((int)clampedVector.x, -1, 1);
-                clampedVector.y = Mathf.Clamp((int)clampedVector.y, -1, 1);
-                Move = clampedVector;
+                //var clampedVector = Move;
+                //clampedVector.x = Mathf.Clamp((int)clampedVector.x, -1, 1);
+                //clampedVector.y = 0;
+                //clampedVector.z = Mathf.Clamp((int)clampedVector.z, -1, 1);
+                //Move = clampedVector;
 
                 if (m_Count % PlayerInput.SAMPLES == 0)
                 {
@@ -234,7 +235,7 @@ namespace Dummy.Threads
                         case EPlayerStance.SWIM:
                         {
                             m_Direction = normalizedMove * speed * 1.5f;
-                            if (Player.stance.isSubmerged || (Player.look.pitch > 110 && Move.y > 0.1f))
+                            if (Player.stance.isSubmerged || (Player.look.pitch > 110 && Move.z > 0.1f))
                             {
                                 var fall = Jump
                                     ? c_Swim * movement.pluginJumpMultiplier
@@ -400,10 +401,10 @@ namespace Dummy.Threads
                             break;
                         }
                         case WalkingPlayerInputPacket walkingPlayerInputPacket:
-                            var horizontal = (byte)Move.x + 1;
-                            var vertical = (byte)Move.y + 1;
+                            var horizontal = (byte)(Move.x + 1);
+                            var vertical = (byte)(Move.y + 1);
 
-                            walkingPlayerInputPacket!.analog =
+                            walkingPlayerInputPacket.analog =
                                 (byte)(horizontal << 4 | vertical);
                             walkingPlayerInputPacket.position = Player.transform.position;
                             walkingPlayerInputPacket.yaw = Mathf.Lerp(Player.look.yaw, m_Yaw, m_TimeLerp);
