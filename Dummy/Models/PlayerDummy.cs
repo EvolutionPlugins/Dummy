@@ -19,7 +19,7 @@ namespace EvolutionPlugins.Dummy
         
         public PlayerDummyActionThread Actions { get; }
 
-        private Thread _actionThreadControl;
+        private readonly Thread _actionThreadControl;
 
         public PlayerDummy(PlayerDummyData data)
         {

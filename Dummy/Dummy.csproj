@@ -2,16 +2,11 @@
 
     <PropertyGroup>
         <TargetFramework>netcoreapp3.1</TargetFramework>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
         <EmbeddedResource Include="config.yaml" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-        <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Unturned\Unturned_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
-      </Reference>
     </ItemGroup>
 
     <ItemGroup>
@@ -21,7 +16,7 @@
       <PackageReference Include="OpenMod.UnityEngine" Version="2.3.8" />
       <PackageReference Include="OpenMod.UnityEngine.Redist" Version="2019.4.10" />
       <PackageReference Include="OpenMod.Unturned" Version="2.3.8" />
-      <PackageReference Include="OpenMod.Unturned.Redist" Version="3.20.14" />
+      <PackageReference Include="OpenMod.Unturned.Redist" Version="3.21.18" />
     </ItemGroup>
 
 </Project>

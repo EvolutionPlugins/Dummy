@@ -1,7 +1,4 @@
 using System.Linq;
-using EvolutionPlugins.Dummy;
-using EvolutionPlugins.Dummy.Extensions.Movement;
-using SDG.Unturned;
 
 namespace EvolutionPlugins.Dummy.Extensions.Movement
 {
@@ -15,7 +12,7 @@ namespace EvolutionPlugins.Dummy.Extensions.Movement
         public static void WalkingConstantOff(this PlayerDummy dummy, StrafeDirection direction)
         {
             dummy.Actions.ContinuousActions.Remove(dummy.Actions.ContinuousActions
-                .FirstOrDefault(c => c is StrafeAction && ((StrafeAction) c).Dir == direction));
+                .FirstOrDefault(c => c is StrafeAction action && action.Dir == direction));
         }
 
         public static void Walk(this PlayerDummy dummy, StrafeDirection direction)
