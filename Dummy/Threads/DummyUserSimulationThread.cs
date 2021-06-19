@@ -230,7 +230,7 @@ namespace Dummy.Threads
                         case EPlayerStance.SITTING:
                             break;
                         case EPlayerStance.DRIVING:
-                            SimulateVehicle();
+                            await SimulateVehicle();
                             break;
                         case EPlayerStance.CLIMB:
                             s_FallProperty.SetValue(movement, c_Jump);
@@ -549,11 +549,12 @@ namespace Dummy.Threads
         private float m_AltSpeedOutput;
         private float m_SpeedTraction;
 
-        private void SimulateVehicle()
+        private async UniTask SimulateVehicle()
         {
             // im funkin dead to make that
             // also, my VS crashed about 3 times when writing this code
 
+            await UniTask.SwitchToMainThread();
 
             var vehicle = Player.movement.getVehicle();
             if (vehicle == null)
