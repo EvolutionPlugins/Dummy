@@ -199,6 +199,7 @@ namespace Dummy.Threads
 
             while (Enabled)
             {
+                await UniTask.SwitchToMainThread();
                 await UniTask.WaitForFixedUpdate();
 
                 //var clampedVector = Move;
@@ -393,7 +394,7 @@ namespace Dummy.Threads
                                 var transform = vehicle.transform;
                                 drivingPlayerInputPacket.position = vehicle.asset.engine == EEngine.TRAIN
                                     ? new(vehicle.roadPosition, 0f, 0f)
-                                    : transform.position;
+                                    : vehicle.transform.position;
 
                                 drivingPlayerInputPacket.rotation = transform.rotation;
 
@@ -541,6 +542,8 @@ namespace Dummy.Threads
             BindingFlags.NonPublic | BindingFlags.Instance);
         private readonly static FieldInfo s_LastUpdatedPosField = typeof(InteractableVehicle).GetField("lastUpdatedPos",
             BindingFlags.NonPublic | BindingFlags.Instance);
+        private readonly static FieldInfo s_IsPhysicalField = typeof(InteractableVehicle).GetField("isPhysical",
+            BindingFlags.NonPublic | BindingFlags.Instance);
 
         private float m_Factor;
         private Rigidbody? m_Rigidbody;
@@ -612,6 +615,9 @@ namespace Dummy.Threads
             }
 
             Console.WriteLine("sim");
+            Console.WriteLine(s_IsPhysicalField.GetValue(vehicle));
+            s_SpeedField.SetValue(vehicle, 150f);
+            s_IsPhysicalField.SetValue(vehicle, true);
 
             if ((vehicle.usesFuel && vehicle.fuel == 0) || vehicle.isUnderwater || vehicle.isDead || !vehicle.isEngineOn)
             {
@@ -619,9 +625,7 @@ namespace Dummy.Threads
                 speed = 1f;
             }
 
-            s_SpeedField.SetValue(vehicle, 60f);
-
-            m_Factor = Mathf.InverseLerp(0f, vehicle.speed < 0 ? asset.speedMin : asset.speedMax, vehicle.speed);
+            m_Factor = Mathf.InverseLerp(0f, (vehicle.speed < 0) ? asset.speedMin : asset.speedMax, vehicle.speed);
             var tireOnGround = false;
 
             if (vehicle.tires != null)
@@ -629,6 +633,7 @@ namespace Dummy.Threads
                 foreach (var tire in vehicle.tires)
                 {
                     tire.simulate(Move.x, moveY, Jump /* inputBrake */, PlayerInput.RATE);
+                    tire.update(Time.deltaTime);
                     tireOnGround |= tire.isGrounded;
                 }
             }
@@ -646,6 +651,7 @@ namespace Dummy.Threads
                     {
                         Console.WriteLine(m_Rigidbody.velocity);
                         m_Rigidbody.AddForce(-vehicle.transform.up * m_Factor * 40f);
+                        m_Rigidbody.AddForce(vehicle.transform.forward * 20f);
                         Console.WriteLine(m_Rigidbody.velocity);
                     }
 
@@ -653,9 +659,9 @@ namespace Dummy.Threads
                     {
                         var lerpSteerCar = Mathf.Lerp(asset.airSteerMax, asset.airSteerMin, m_Factor);
                         var isUnderWater = WaterUtility.isPointUnderwater(vehicle.transform.position - Vector3.up);
-                        m_SpeedTraction = Mathf.Lerp(m_SpeedTraction, isUnderWater ? 1f : 0f, 4f * Time.deltaTime);
+                        m_SpeedTraction = Mathf.Lerp(m_SpeedTraction, isUnderWater ? 0f : 1f, 4f * Time.deltaTime);
 
-                        if (!MathfEx.isNearlyZero(m_SpeedTraction))
+                        if (!MathfEx.IsNearlyZero(m_SpeedTraction))
                         {
                             m_AltSpeedInput = moveY switch
                             {
