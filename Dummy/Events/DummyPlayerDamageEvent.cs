@@ -59,6 +59,9 @@ namespace Dummy.Events
                 return;
             }
 
+            // fuck those people that farm kill counter
+            @event.TrackKill = false;
+
             @event.IsCancelled = !m_Configuration.GetValue("events:allowDamage", true);
         }
 
