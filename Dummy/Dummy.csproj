@@ -42,11 +42,12 @@
         <PackageReference Include="Legacy2CPSWorkaround" Version="1.0.0">
             <PrivateAssets>All</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net461" Version="1.0.0">
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net461" Version="1.0.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="OpenMod.Unturned" Version="3.0.24" PrivateAssets="all" />
+        <PackageReference Include="OpenMod.Unturned" Version="3.2.4" PrivateAssets="all" />
+        <PackageReference Include="OpenMod.Unturned.Redist" Version="3.21.32.1" />
     </ItemGroup>
 
     <Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
