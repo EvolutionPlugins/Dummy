@@ -22,9 +22,7 @@ namespace Dummy.Threads
         public int Recov { get; }
         public uint Consumed { get; private set; }
         public uint Clock { get; private set; }
-#pragma warning disable CA1819 // Properties should not return arrays
         public ushort[] Flags { get; }
-#pragma warning restore CA1819 // Properties should not return arrays
         public float Yaw { get; set; }
         public float Pitch { get; set; }
         public List<PlayerInputPacket> PlayerInputPackets { get; }
@@ -60,7 +58,7 @@ namespace Dummy.Threads
 
         public async UniTask Start()
         {
-            await UniTask.Delay(1000); // waiting
+            /*await UniTask.Delay(1000); // waiting
             var queue = (Queue<PlayerInputPacket>)s_ServerSidePacketsField.GetValue(Player.input);
             while (Enabled)
             {
@@ -90,12 +88,21 @@ namespace Dummy.Threads
                     Yaw = Player.look.yaw;
                     Sequence++;
 
-                    var movement = Player.movement;
+                    var input_x = (int)(Player.movement.horizontal - 1);
+                    var input_y = (int)(Player.movement.vertical - 1);
+                    var jump = Player.movement.jump;
+                    var sprint = Player.stance.sprint;
+                    var look = Player.look;
+
+                    Player.movement.simulate(Simulation, 0, input_x, input_y, look.look_x, look.look_y,
+                        jump, sprint, PlayerInput.RATE);
+
+                    *//*var movement = Player.movement;
                     // it should also change direction on where is a dummy stand on (exmaple: ice)
                     var vector = movement.transform.rotation * Vector3.right.normalized * movement.speed *
                                  PlayerInput.RATE;
                     vector += Vector3.up * movement.fall;
-                    movement.controller.CheckedMove(vector, movement.landscapeHoleVolume != null);
+                    movement.controller.CheckedMove(vector, movement.landscapeHoleVolume != null);*//*
 
                     if (Player.stance.stance == EPlayerStance.DRIVING)
                     {
@@ -103,7 +110,7 @@ namespace Dummy.Threads
                     }
                     else
                     {
-                        PlayerInputPackets.Add(new WalkingPlayerInputPacket());
+                        PlayerInputPackets.Add();
                     }
 
                     var playerInputPacket = PlayerInputPackets[PlayerInputPackets.Count - 1];
@@ -171,7 +178,7 @@ namespace Dummy.Threads
                 }
 
                 Count++;
-            }
+            }*/
         }
     }
 }
