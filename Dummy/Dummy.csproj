@@ -46,8 +46,8 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="OpenMod.Unturned" Version="3.2.4" PrivateAssets="all" />
-        <PackageReference Include="OpenMod.Unturned.Redist" Version="3.21.32.1" />
+        <PackageReference Include="OpenMod.Unturned" Version="3.2.8" PrivateAssets="all" />
+        <PackageReference Include="OpenMod.Unturned.Redist" Version="3.22.1" />
     </ItemGroup>
 
     <Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">

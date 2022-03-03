@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Numerics;
 using System.Reflection;
 using Cysharp.Threading.Tasks;
 using Dummy.Users;
 using SDG.Unturned;
 using UnityEngine;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
+using Vector3 = UnityEngine.Vector3;
 
 namespace Dummy.Threads
 {
@@ -30,6 +32,7 @@ namespace Dummy.Threads
 
         private readonly DummyUser m_PlayerDummy;
         private readonly ILogger m_Logger;
+        private Vector3 m_Velocity;
 
         private Player Player => m_PlayerDummy.Player.Player;
 
@@ -58,7 +61,7 @@ namespace Dummy.Threads
 
         public async UniTask Start()
         {
-            /*await UniTask.Delay(1000); // waiting
+            await UniTask.Delay(1000); // waiting
             var queue = (Queue<PlayerInputPacket>)s_ServerSidePacketsField.GetValue(Player.input);
             while (Enabled)
             {
@@ -88,21 +91,85 @@ namespace Dummy.Threads
                     Yaw = Player.look.yaw;
                     Sequence++;
 
-                    var input_x = (int)(Player.movement.horizontal - 1);
-                    var input_y = (int)(Player.movement.vertical - 1);
+                    var input_x = Player.movement.horizontal - 1;
+                    var input_y = Player.movement.vertical - 1;
                     var jump = Player.movement.jump;
                     var sprint = Player.stance.sprint;
                     var look = Player.look;
 
-                    Player.movement.simulate(Simulation, 0, input_x, input_y, look.look_x, look.look_y,
-                        jump, sprint, PlayerInput.RATE);
+                    /*Player.movement.simulate(Simulation, 0, input_x, input_y, look.look_x, look.look_y,
+                        jump, sprint, PlayerInput.RATE);*/
 
-                    *//*var movement = Player.movement;
-                    // it should also change direction on where is a dummy stand on (exmaple: ice)
-                    var vector = movement.transform.rotation * Vector3.right.normalized * movement.speed *
-                                 PlayerInput.RATE;
-                    vector += Vector3.up * movement.fall;
-                    movement.controller.CheckedMove(vector, movement.landscapeHoleVolume != null);*//*
+                    var movement = Player.movement;
+                    var flag3 = false;
+                    var flag2 = false;
+                    if (movement.isGrounded && movement.ground.normal.y > 0)
+                    {
+                        var num2 = Vector3.Angle(Vector3.up, movement.ground.normal);
+                        var num3 = 59f;
+                        if (Level.info?.configData?.Max_Walkable_Slope > -0.5f)
+                        {
+                            num3 = Level.info.configData.Max_Walkable_Slope;
+                        }
+                        if (num2 > num3)
+                        {
+                            flag3 = true;
+                            var a = Vector3.Cross(Vector3.Cross(Vector3.up, movement.ground.normal), movement.ground.normal);
+                            m_Velocity += a * 16f * PlayerInput.RATE;
+                            flag2 = true;
+                        }
+                    }
+
+                    if (!flag3)
+                    {
+                        var vector = movement.transform.rotation * Vector3.right.normalized * movement.speed;
+
+                        if (movement.isGrounded)
+                        {
+                            vector = Vector3.Cross(Vector3.Cross(Vector3.up, vector), movement.ground.normal);
+                            vector.y = Mathf.Min(vector.y, 0f);
+
+                            // it should also change direction on where is a dummy stand on (exmaple: ice)
+                            // if (movement.material)
+
+                            m_Velocity = vector;
+                        }
+                        else
+                        {
+                            m_Velocity.y += Physics.gravity.y * ((movement.fall <= 0f) ? movement.totalGravityMultiplier : 1f) * PlayerInput.RATE * 3f;
+                            var a2 = (movement.totalGravityMultiplier < 0.99f) ? (Physics.gravity.y * 2f * movement.totalGravityMultiplier) : -100f;
+                            m_Velocity.y = Mathf.Max(a2, m_Velocity.y);
+
+                            var horizontalMagnitude = vector.GetHorizontalMagnitude();
+                            var horizontal = m_Velocity.GetHorizontal();
+                            var horizontalMagnitude2 = m_Velocity.GetHorizontalMagnitude();
+                            float maxMagnitude;
+                            if (horizontalMagnitude2 > horizontalMagnitude)
+                            {
+                                var num5 = 2f * Provider.modeConfigData.Gameplay.AirStrafing_Deceleration_Multiplier;
+                                maxMagnitude = Mathf.Max(horizontalMagnitude, horizontalMagnitude2 - num5 * PlayerInput.RATE);
+                            }
+                            else
+                            {
+                                maxMagnitude = horizontalMagnitude;
+                            }
+
+                            var a3 = vector * (4f * Provider.modeConfigData.Gameplay.AirStrafing_Acceleration_Multiplier);
+                            var vector2 = horizontal + a3 * PlayerInput.RATE;
+                            vector2 = vector2.ClampHorizontalMagnitude(maxMagnitude);
+                            m_Velocity.x = vector2.x;
+                            m_Velocity.z = vector2.z;
+                            flag2 = true;
+                        }
+                    }
+
+                    var previousPosition = movement.transform.position;
+                    movement.controller.CheckedMove(m_Velocity * PlayerInput.RATE, movement.landscapeHoleVolume != null);
+
+                    if (flag2)
+                    {
+                        m_Velocity = (movement.transform.position - previousPosition) / PlayerInput.RATE;
+                    }
 
                     if (Player.stance.stance == EPlayerStance.DRIVING)
                     {
@@ -110,12 +177,12 @@ namespace Dummy.Threads
                     }
                     else
                     {
-                        PlayerInputPackets.Add();
+                        PlayerInputPackets.Add(new WalkingPlayerInputPacket());
                     }
 
                     var playerInputPacket = PlayerInputPackets[PlayerInputPackets.Count - 1];
-                    playerInputPacket.sequence = Sequence;
                     playerInputPacket.recov = Recov;
+                    playerInputPacket.clientSimulationFrameNumber = Simulation;
 
                     Buffer += PlayerInput.SAMPLES;
                     Simulation++;
@@ -164,7 +231,7 @@ namespace Dummy.Threads
                         var walkingPlayerInputPacket = playerInputPacket2 as WalkingPlayerInputPacket;
 
                         walkingPlayerInputPacket!.analog = Analog;
-                        walkingPlayerInputPacket.position = Player.transform.position; // before: localposition
+                        walkingPlayerInputPacket.clientPosition = Player.transform.position; // before: localposition
                         walkingPlayerInputPacket.yaw = Yaw;
                         walkingPlayerInputPacket.pitch = Pitch;
                     }
@@ -178,7 +245,7 @@ namespace Dummy.Threads
                 }
 
                 Count++;
-            }*/
+            }
         }
     }
 }
