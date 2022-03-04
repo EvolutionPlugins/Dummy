@@ -81,26 +81,67 @@ namespace Dummy.Services
                 return Task.FromResult<IUser?>(null);
             }
 
-            switch (searchMode)
+            DummyUser? dummyUser = null;
+            var confidence = 0;
+
+            foreach (var user in DummyUsers)
             {
-                case UserSearchMode.FindByNameOrId:
-                case UserSearchMode.FindById:
-                    var u = DummyUsers.FirstOrDefault(x =>
-                        x.Id.Equals(searchString, StringComparison.OrdinalIgnoreCase));
+                switch (searchMode)
+                {
+                    case UserSearchMode.FindByNameOrId:
+                    case UserSearchMode.FindById:
+                        if (user.Id.Equals(searchString, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return Task.FromResult<IUser?>(user);
+                        }
 
-                    if (u == null && searchMode == UserSearchMode.FindByNameOrId)
-                    {
-                        goto case UserSearchMode.FindByName;
-                    }
+                        if (searchMode == UserSearchMode.FindByNameOrId)
+                        {
+                            goto case UserSearchMode.FindByName;
+                        }
+                        break;
 
-                    return Task.FromResult<IUser?>(u);
-                case UserSearchMode.FindByName:
-                    return Task.FromResult<IUser?>(DummyUsers.MinBy(x =>
-                        StringHelper.LevenshteinDistance(x.DisplayName, searchString)).FirstOrDefault());
-                default:
-                    return Task.FromException<IUser?>(new ArgumentOutOfRangeException(nameof(searchMode), searchMode,
-                        null));
+                    case UserSearchMode.FindByName:
+                        var currentConfidence = NameConfidence(user.DisplayName, searchString, confidence);
+                        if (currentConfidence > confidence)
+                        {
+                            dummyUser = user;
+                            confidence = currentConfidence;
+                        }
+                        break;
+                    default:
+                        return Task.FromException<IUser?>(new ArgumentOutOfRangeException(nameof(searchMode), searchMode,
+                            null));
+                }
             }
+
+            return Task.FromResult<IUser?>(dummyUser);
+        }
+
+        private int NameConfidence(string userName, string searchName, int currentConfidence = -1)
+        {
+            switch (currentConfidence)
+            {
+                case 2:
+                    if (userName.Equals(searchName, StringComparison.OrdinalIgnoreCase))
+                        return 3;
+                    goto case 1;
+
+                case 1:
+                    if (userName.StartsWith(searchName, StringComparison.OrdinalIgnoreCase))
+                        return 2;
+                    goto case 0;
+
+                case 0:
+                    if (userName.IndexOf(searchName, StringComparison.OrdinalIgnoreCase) != -1)
+                        return 1;
+                    break;
+
+                default:
+                    goto case 2;
+            }
+
+            return -1;
         }
 
         public Task<IReadOnlyCollection<IUser>> GetUsersAsync(string userType)
