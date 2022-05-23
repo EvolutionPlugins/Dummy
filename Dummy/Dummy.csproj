@@ -47,7 +47,28 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="OpenMod.Unturned" Version="3.2.8" PrivateAssets="all" />
-        <PackageReference Include="OpenMod.Unturned.Redist" Version="3.22.8.1" />
+        <PackageReference Include="OpenMod.Unturned.Redist" Version="3.22.8.1" PrivateAssets="all" ExcludeAssets="all" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Assembly-CSharp">
+        <HintPath>..\libs\Assembly-CSharp.dll</HintPath>
+      </Reference>
+      <Reference Include="com.rlabrecque.steamworks.net">
+        <HintPath>..\libs\com.rlabrecque.steamworks.net.dll</HintPath>
+      </Reference>
+      <Reference Include="SDG.NetPak.Runtime">
+        <HintPath>..\libs\SDG.NetPak.Runtime.dll</HintPath>
+      </Reference>
+      <Reference Include="SDG.NetTransport">
+        <HintPath>..\libs\SDG.NetTransport.dll</HintPath>
+      </Reference>
+      <Reference Include="SystemEx">
+        <HintPath>..\libs\SystemEx.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEx">
+        <HintPath>..\libs\UnityEx.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
     <Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
