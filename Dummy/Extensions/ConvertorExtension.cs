@@ -10,7 +10,7 @@ namespace Dummy.Extensions
             {
                 return Array.Empty<byte>();
             }
-            
+
             var length = (data.Length + 1) / 3;
             var array = new byte[length];
             for (var i = 0; i < length; i++)

@@ -118,7 +118,7 @@ namespace Dummy.Services
             return Task.FromResult<IUser?>(dummyUser);
         }
 
-        private int NameConfidence(string userName, string searchName, int currentConfidence = -1)
+        private static int NameConfidence(string userName, string searchName, int currentConfidence = -1)
         {
             switch (currentConfidence)
             {
@@ -237,7 +237,7 @@ namespace Dummy.Services
                     (ulong)userSteamPlayer.shirtItem, (ulong)userSteamPlayer.pantsItem, (ulong)userSteamPlayer.hatItem,
                     (ulong)userSteamPlayer.backpackItem, (ulong)userSteamPlayer.vestItem,
                     (ulong)userSteamPlayer.maskItem, (ulong)userSteamPlayer.glassesItem, Array.Empty<ulong>(),
-                    userSteamPlayer.skillset, userSteamPlayer.language, userSteamPlayer.lobbyID)
+                    userSteamPlayer.skillset, userSteamPlayer.language, userSteamPlayer.lobbyID, EClientPlatform.Windows)
                 {
                     hasProof = true,
                     hasGroup = true,
@@ -266,7 +266,7 @@ namespace Dummy.Services
                     settings.HairId, settings.BeardId, skinColor, color, markerColor,
                     settings.IsLeftHanded, skins.Shirt, skins.Pants, skins.Hat,
                     skins.Backpack, skins.Vest, skins.Mask, skins.Glasses, Array.Empty<ulong>(),
-                    settings.PlayerSkillset, settings.Language, settings.LobbyId)
+                    settings.PlayerSkillset, settings.Language, settings.LobbyId, EClientPlatform.Windows)
                 {
                     hasAuthentication = true,
                     hasGroup = true,

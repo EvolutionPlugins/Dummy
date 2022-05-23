@@ -32,7 +32,6 @@ namespace Dummy
         protected override UniTask OnLoadAsync()
         {
             Patch_Provider.OnNeedDummy += GiveProvider;
-            Patch_PlayerVoice.OnNeedDummy += GiveProvider;
 
             var type = AccessTools.TypeByName("SDG.Unturned.ServerMessageHandler_ReadyToConnect");
             var orgMethod = AccessTools.Method(type, "ReadMessage");
@@ -51,7 +50,7 @@ namespace Dummy
         protected override UniTask OnUnloadAsync()
         {
             Patch_Provider.OnNeedDummy -= GiveProvider;
-            Patch_PlayerVoice.OnNeedDummy -= GiveProvider;
+
             return UniTask.CompletedTask;
         }
 

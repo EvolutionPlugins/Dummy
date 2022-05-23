@@ -164,7 +164,7 @@ namespace Dummy.Threads
                     }
 
                     var previousPosition = movement.transform.position;
-                    movement.controller.CheckedMove(m_Velocity * PlayerInput.RATE, movement.landscapeHoleVolume != null);
+                    movement.controller.CheckedMove(m_Velocity * PlayerInput.RATE);
 
                     if (flag2)
                     {
