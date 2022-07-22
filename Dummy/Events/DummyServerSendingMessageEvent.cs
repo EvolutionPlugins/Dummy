@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Threading.Tasks;
 using Dummy.API;
 using JetBrainsAnnotations::JetBrains.Annotations;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Localization;
 using OpenMod.API.Eventing;
 using OpenMod.Core.Eventing;
@@ -17,20 +18,26 @@ namespace Dummy.Events
         private readonly IDummyProvider m_DummyProvider;
         private readonly IUnturnedUserDirectory m_UnturnedUserDirectory;
         private readonly IStringLocalizer m_StringLocalizer;
+        private readonly IConfiguration m_Configuration;
 
-        public DummyServerSendingMessageEvent(IDummyProvider dummyProvider,
-            IUnturnedUserDirectory unturnedUserDirectory,
-            IStringLocalizer stringLocalizer)
+        public DummyServerSendingMessageEvent(IDummyProvider dummyProvider, IUnturnedUserDirectory unturnedUserDirectory,
+            IStringLocalizer stringLocalizer, IConfiguration configuration)
         {
             m_DummyProvider = dummyProvider;
             m_UnturnedUserDirectory = unturnedUserDirectory;
             m_StringLocalizer = stringLocalizer;
+            m_Configuration = configuration;
         }
 
         [EventListener(Priority = EventListenerPriority.Monitor)]
         public async Task HandleEventAsync(object? sender, UnturnedServerSendingMessageEvent @event)
         {
             if (@event.ToPlayer is null)
+            {
+                return;
+            }
+
+            if (!m_Configuration.GetValue<bool>("logs:enableChatReceiveLog"))
             {
                 return;
             }
