@@ -12,6 +12,7 @@ using OpenMod.Unturned.Users;
 using OpenMod.Unturned.Vehicles;
 using SDG.Framework.Utilities;
 using SDG.Unturned;
+using UnityEngine;
 
 namespace Dummy.Commands.Actions
 {
@@ -52,7 +53,7 @@ namespace Dummy.Commands.Actions
                 if (vehicle1 == null && playerUser is UnturnedUser unturnedUser)
                 {
                     var aim = unturnedUser.Player.Player.look.aim;
-                    PhysicsUtility.raycast(new(aim.position, aim.forward), out var hit, 8f, RayMasks.VEHICLE);
+                    Physics.Raycast(new(aim.position, aim.forward), out var hit, 8f, RayMasks.VEHICLE);
                     if (hit.transform != null)
                     {
                         vehicle1 = DamageTool.getVehicle(hit.transform);

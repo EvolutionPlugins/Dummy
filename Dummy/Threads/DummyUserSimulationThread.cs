@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using Cysharp.Threading.Tasks;
 using Dummy.Actions.Interaction;
@@ -33,10 +34,6 @@ namespace Dummy.Threads
         private static readonly FieldInfo s_ServerSidePacketsField = typeof(PlayerInput).GetField("serversidePackets",
             BindingFlags.NonPublic | BindingFlags.Instance)!;
 
-        private static readonly PropertyInfo s_FallProperty =
-            typeof(PlayerMovement).GetProperty(nameof(PlayerMovement.fall),
-                BindingFlags.Instance | BindingFlags.Public)!;
-
         private readonly ushort[] m_Flags;
         private readonly bool[] m_Keys;
         private readonly List<PlayerInputPacket> m_PlayerInputPackets;
@@ -47,9 +44,7 @@ namespace Dummy.Threads
         private uint m_Count;
         private uint m_Buffer;
         private uint m_Consumed;
-        private Vector3 m_Direction;
-        private float m_Slope;
-        private float m_Fall2;
+        private uint m_Simulation;
         private float m_Yaw;
         private float m_Pitch;
         private float m_TimeLerp;
@@ -218,14 +213,13 @@ namespace Dummy.Threads
                     }
 
                     var movement = Player.movement;
-                    var material = GetMaterialAtPlayer();
-                    var rotation = Player.transform.rotation;
+                    var transform = Player.transform;
                     var normalizedMove = Move.normalized;
                     var speed = movement.speed;
-                    var delta = PlayerInput.RATE;
+                    var deltaTime = PlayerInput.RATE;
                     var stance = Player.stance.stance;
                     var controller = movement.controller;
-                    var landscapeHoleVolume = movement.landscapeHoleVolume;
+                    var aim = Player.look.aim;
 
                     // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
                     switch (stance)
@@ -236,133 +230,153 @@ namespace Dummy.Threads
                             await SimulateVehicle();
                             break;
                         case EPlayerStance.CLIMB:
-                            s_FallProperty.SetValue(movement, c_Jump);
-                            m_Direction = normalizedMove * speed / 2;
-                            controller.CheckedMove(Vector3.up * m_Direction.z * delta, landscapeHoleVolume != null);
+                            //s_FallProperty.SetValue(movement, c_Jump);
+                            m_Velocity = new(0, Move.z * speed * 0.5f, 0);
+                            controller.CheckedMove(m_Velocity * deltaTime);
                             break;
                         case EPlayerStance.SWIM:
-                        {
-                            m_Direction = normalizedMove * speed * 1.5f;
                             if (Player.stance.isSubmerged || (Player.look.pitch > 110 && Move.z > 0.1f))
                             {
-                                var fall = Jump
-                                    ? c_Swim * movement.pluginJumpMultiplier
-                                    : movement.fall + (Physics.gravity.y * delta / 7f);
-                                if (fall < Physics.gravity.y / 7f)
+                                m_Velocity = aim.rotation * normalizedMove * speed * 1.5f;
+
+                                if (Jump)
                                 {
-                                    fall = Physics.gravity.y / 7f;
+                                    m_Velocity.y = c_Swim * movement.pluginJumpMultiplier;
                                 }
 
-                                s_FallProperty.SetValue(movement, fall);
-                                controller.CheckedMove(
-                                    (Player.look.aim.rotation * m_Direction * delta) + (Vector3.up * fall * delta),
-                                    landscapeHoleVolume != null);
-                            }
-                            else
-                            {
-                                controller.CheckedMove(
-                                    (rotation * m_Direction * delta) + (Vector3.up * movement.fall * delta),
-                                    landscapeHoleVolume != null);
+                                controller.CheckedMove(m_Velocity * deltaTime);
+                                break;
                             }
 
+                            WaterUtility.getUnderwaterInfo(transform.position, out var _, out var surfaceElevation);
+                            m_Velocity = transform.rotation * Move.normalized * speed * 1.5f;
+                            m_Velocity.y = (surfaceElevation - 1.275f - transform.position.y) / 8f;
+                            controller.CheckedMove(m_Velocity * deltaTime);
+
                             break;
-                        }
                         default:
-                        {
-                            var fall = movement.fall + (Physics.gravity.y *
-                                (movement.fall <= 0f ? movement.totalGravityMultiplier : 1f) * delta * 3f);
-                            if (fall < Physics.gravity.y * 2f * movement.totalGravityMultiplier)
+                            var isMovementBlocked = false;
+                            var shouldUpdateVelocity = false;
+                            if (movement.isGrounded && movement.ground.normal.y > 0)
                             {
-                                fall = Physics.gravity.y * 2f * movement.totalGravityMultiplier;
+                                var slopeAngle = Vector3.Angle(Vector3.up, movement.ground.normal);
+                                var maxWalkableSlope = 59f;
+                                if (Level.info?.configData?.Max_Walkable_Slope > -0.5f)
+                                {
+                                    maxWalkableSlope = Level.info.configData.Max_Walkable_Slope;
+                                }
+
+                                if (slopeAngle > maxWalkableSlope)
+                                {
+                                    isMovementBlocked = true;
+                                    var a = Vector3.Cross(Vector3.Cross(Vector3.up, movement.ground.normal), movement.ground.normal);
+                                    m_Velocity += a * 16f * PlayerInput.RATE;
+                                    shouldUpdateVelocity = true;
+                                }
+                            }
+
+                            if (!isMovementBlocked)
+                            {
+                                var moveVector = movement.transform.rotation * normalizedMove * speed;
+
+                                if (movement.isGrounded)
+                                {
+                                    moveVector = Vector3.Cross(Vector3.Cross(Vector3.up, moveVector), movement.ground.normal);
+                                    moveVector.y = Mathf.Min(moveVector.y, 0f);
+
+                                    // it should also change direction on where is a dummy stand on (exmaple: ice)
+                                    // not possible to use because is internal and WIP (unstable to use it)
+
+                                    /* EWipDoNotUseTemp_SlipMode ewipDoNotUseTemp_SlipMode = PhysicMaterialCustomData.WipDoNotUseTemp_GetSlipMode(this.materialName);
+                                    if (ewipDoNotUseTemp_SlipMode == EWipDoNotUseTemp_SlipMode.LegacyIce)
+                                    {
+                                        this.velocity = Vector3.Lerp(this.velocity, vector2, deltaTime);
+                                    }
+                                    else if (ewipDoNotUseTemp_SlipMode == EWipDoNotUseTemp_SlipMode.LegacyMetal)
+                                    {
+                                        float num6;
+                                        if (this.ground.normal.y < 0.75f)
+                                        {
+                                            num6 = 0f;
+                                        }
+                                        else
+                                        {
+                                            num6 = Mathf.Lerp(0f, 1f, (this.ground.normal.y - 0.75f) * 4f);
+                                        }
+                                        this.velocity = Vector3.Lerp(this.velocity, vector2 * 2f, this.isMoving ? (2f * deltaTime) : (0.5f * num6 * deltaTime));
+                                    }
+                                    else
+                                    {
+                                        this.velocity = vector2;
+                                    } */
+
+                                    m_Velocity = moveVector;
+                                }
+                                else
+                                {
+                                    m_Velocity.y += Physics.gravity.y * ((movement.fall <= 0f) ? movement.totalGravityMultiplier : 1f) * deltaTime * 3f;
+                                    var maxFall = (movement.totalGravityMultiplier < 0.99f) ? (Physics.gravity.y * 2f * movement.totalGravityMultiplier) : -100f;
+                                    m_Velocity.y = Mathf.Max(maxFall, m_Velocity.y);
+
+                                    var horizontalMagnitude = moveVector.GetHorizontalMagnitude();
+                                    var horizontal = m_Velocity.GetHorizontal();
+                                    var horizontalMagnitude2 = m_Velocity.GetHorizontalMagnitude();
+                                    float maxMagnitude;
+                                    if (horizontalMagnitude2 > horizontalMagnitude)
+                                    {
+                                        var num5 = 2f * Provider.modeConfigData.Gameplay.AirStrafing_Deceleration_Multiplier;
+                                        maxMagnitude = Mathf.Max(horizontalMagnitude, horizontalMagnitude2 - (num5 * deltaTime));
+                                    }
+                                    else
+                                    {
+                                        maxMagnitude = horizontalMagnitude;
+                                    }
+
+                                    var a3 = moveVector * (4f * Provider.modeConfigData.Gameplay.AirStrafing_Acceleration_Multiplier);
+                                    var vector2 = horizontal + (a3 * deltaTime);
+                                    vector2 = vector2.ClampHorizontalMagnitude(maxMagnitude);
+                                    m_Velocity.x = vector2.x;
+                                    m_Velocity.z = vector2.z;
+                                    shouldUpdateVelocity = true;
+                                }
                             }
 
                             var jumpMastery = Player.skills.mastery(0, 6);
-
                             if (Jump && movement.isGrounded && !Player.life.isBroken &&
                                 Player.life.stamina >= 10f * (1f - (jumpMastery * 0.5f)) &&
                                 stance is EPlayerStance.STAND or EPlayerStance.SPRINT)
                             {
-                                fall = c_Jump * (1f + (jumpMastery * movement.pluginJumpMultiplier));
+                                m_Velocity.y = c_Jump * (1f + jumpMastery * 0.25f) * movement.pluginJumpMultiplier;
                                 Player.life.askTire((byte)(10f * (1f - (jumpMastery * 0.5f))));
                             }
 
-                            s_FallProperty.SetValue(movement, fall);
+                            m_Velocity += movement.pendingLaunchVelocity;
+                            movement.pendingLaunchVelocity = Vector3.zero;
 
-                            if (movement.isGrounded && movement.ground.transform != null &&
-                                movement.ground.normal.y > 0)
+                            var previousPosition = movement.transform.position;
+                            movement.controller.CheckedMove(m_Velocity * PlayerInput.RATE);
+
+                            if (shouldUpdateVelocity)
                             {
-                                m_Slope = Mathf.Lerp(m_Slope, Mathf.Max(movement.ground.normal.y, 0.01f), delta);
+                                m_Velocity = (movement.transform.position - previousPosition) / PlayerInput.RATE;
                             }
-                            else
-                            {
-                                m_Slope = Mathf.Lerp(m_Slope, 1f, delta);
-                            }
-
-                            // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
-                            switch (material)
-                            {
-                                case EPhysicsMaterial.ICE_STATIC:
-                                    m_Direction = Vector3.Lerp(m_Direction,
-                                        rotation * normalizedMove * speed * m_Slope * delta,
-                                        delta);
-                                    break;
-                                case EPhysicsMaterial.METAL_SLIP:
-                                {
-                                    var num2 = m_Slope < 0.75f ? 0f : Mathf.Lerp(0f, 1f, (m_Slope - 0.75f) * 4f);
-
-                                    m_Direction = Vector3.Lerp(m_Direction,
-                                        rotation * normalizedMove * speed * m_Slope * delta * 2f,
-                                        movement.isMoving ? 2f * delta : 0.5f * num2 * delta);
-                                    break;
-                                }
-                                default:
-                                    m_Direction = rotation * normalizedMove * speed * m_Slope * delta;
-                                    break;
-                            }
-
-                            var vector = m_Direction;
-                            if (movement.isGrounded && movement.ground.normal.y > 0)
-                            {
-                                var angleSlope = Vector3.Angle(Vector3.up, movement.ground.normal);
-                                var maxAngleSlope = 59f;
-                                if (Level.info?.configData?.Max_Walkable_Slope > -0.5f)
-                                {
-                                    maxAngleSlope = Level.info.configData.Max_Walkable_Slope;
-                                }
-
-                                if (angleSlope > maxAngleSlope)
-                                {
-                                    m_Fall2 += 16f * delta;
-                                    if (m_Fall2 > 128f)
-                                    {
-                                        m_Fall2 = 128f;
-                                    }
-
-                                    var a = Vector3.Cross(Vector3.Cross(Vector3.up, movement.ground.normal),
-                                        movement.ground.normal);
-                                    vector += a * m_Fall2 * delta;
-                                }
-                                else
-                                {
-                                    m_Fall2 = 0;
-                                }
-                            }
-
-                            vector += Vector3.up * fall * delta;
-                            controller.CheckedMove(vector, movement.landscapeHoleVolume != null);
                             break;
-                        }
                     }
 
+                    PlayerInputPacket packet;
                     if (Player.stance.stance == EPlayerStance.DRIVING)
                     {
-                        m_PlayerInputPackets.Add(new DrivingPlayerInputPacket());
+                        m_PlayerInputPackets.Add(packet = new DrivingPlayerInputPacket());
                     }
                     else
                     {
-                        m_PlayerInputPackets.Add(new WalkingPlayerInputPacket());
+                        m_PlayerInputPackets.Add(packet = new WalkingPlayerInputPacket());
                     }
 
+                    // recov can be ignored
+                    packet.clientSimulationFrameNumber = m_Simulation;
+
+                    m_Simulation++;
                     m_Buffer += PlayerInput.SAMPLES;
                 }
 
@@ -382,13 +396,12 @@ namespace Dummy.Threads
                         }
                     }
 
-                    var playerInputPacket2 = m_PlayerInputPackets.Last();
+                    var playerInputPacket2 = m_PlayerInputPackets[^1];
                     playerInputPacket2.keys = compressedKeys;
 
                     switch (playerInputPacket2)
                     {
                         case DrivingPlayerInputPacket drivingPlayerInputPacket:
-                        {
                             var vehicle = Player.movement.getVehicle();
 
                             if (vehicle != null)
@@ -407,22 +420,20 @@ namespace Dummy.Threads
                             }
 
                             break;
-                        }
                         case WalkingPlayerInputPacket walkingPlayerInputPacket:
                             var horizontal = (byte)(Move.x + 1);
                             var vertical = (byte)(Move.y + 1);
 
-                            walkingPlayerInputPacket.analog =
-                                (byte)(horizontal << 4 | vertical);
-                            walkingPlayerInputPacket.position = Player.transform.position;
+                            walkingPlayerInputPacket.analog = (byte)(horizontal << 4 | vertical);
+                            walkingPlayerInputPacket.clientPosition = Player.transform.position;
                             walkingPlayerInputPacket.yaw = Mathf.Lerp(Player.look.yaw, m_Yaw, m_TimeLerp);
                             walkingPlayerInputPacket.pitch = Mathf.Lerp(Player.look.pitch, m_Pitch, m_TimeLerp);
                             break;
                     }
 
-                    foreach (var playerInputPacket3 in m_PlayerInputPackets)
+                    foreach (var playerInputPacket in m_PlayerInputPackets)
                     {
-                        queue.Enqueue(playerInputPacket3);
+                        queue.Enqueue(playerInputPacket);
                     }
 
                     m_PlayerInputPackets.Clear();
@@ -430,30 +441,6 @@ namespace Dummy.Threads
 
                 m_Count++;
             }
-        }
-
-        private EPhysicsMaterial GetMaterialAtPlayer()
-        {
-            var movement = Player.movement;
-
-            if (Player.stance.stance == EPlayerStance.CLIMB)
-            {
-                return EPhysicsMaterial.TILE_STATIC;
-            }
-
-            if (Player.stance.stance == EPlayerStance.SWIM || WaterUtility.isPointUnderwater(Player.transform.position))
-            {
-                return EPhysicsMaterial.WATER_STATIC;
-            }
-
-            if (movement.ground.transform == null)
-            {
-                return EPhysicsMaterial.NONE;
-            }
-
-            return movement.ground.transform.CompareTag("Ground")
-                ? PhysicsTool.checkMaterial(Player.transform.position)
-                : PhysicsTool.checkMaterial(movement.ground.collider);
         }
 
         private void ClampPitch()
@@ -530,21 +517,21 @@ namespace Dummy.Threads
             m_Yaw = Mathf.Clamp(m_Yaw, min, max);
         }
 
-        private readonly static PropertyInfo s_IsBoostingProperty = typeof(InteractableVehicle).GetProperty(nameof(InteractableVehicle.isBoosting),
+        private static readonly PropertyInfo s_IsBoostingProperty = typeof(InteractableVehicle).GetProperty(nameof(InteractableVehicle.isBoosting),
             BindingFlags.Public | BindingFlags.Instance);
-        private readonly static FieldInfo s_SpeedField = typeof(InteractableVehicle).GetField("_speed",
+        private static readonly FieldInfo s_SpeedField = typeof(InteractableVehicle).GetField("_speed",
             BindingFlags.NonPublic | BindingFlags.Instance);
-        private readonly static FieldInfo s_PhysicsSpeedField = typeof(InteractableVehicle).GetField("_physicsSpeed",
+        private static readonly FieldInfo s_PhysicsSpeedField = typeof(InteractableVehicle).GetField("_physicsSpeed",
             BindingFlags.NonPublic | BindingFlags.Instance);
-        private readonly static FieldInfo s_FactorField = typeof(InteractableVehicle).GetField("_factor",
+        private static readonly FieldInfo s_FactorField = typeof(InteractableVehicle).GetField("_factor",
             BindingFlags.NonPublic | BindingFlags.Instance);
-        private readonly static FieldInfo s_BuoyancyField = typeof(InteractableVehicle).GetField("buoyancy",
+        private static readonly FieldInfo s_BuoyancyField = typeof(InteractableVehicle).GetField("buoyancy",
             BindingFlags.NonPublic | BindingFlags.Instance);
-        private readonly static FieldInfo s_SpeedTractionField = typeof(InteractableVehicle).GetField("speedTraction",
+        private static readonly FieldInfo s_SpeedTractionField = typeof(InteractableVehicle).GetField("speedTraction",
             BindingFlags.NonPublic | BindingFlags.Instance);
-        private readonly static FieldInfo s_LastUpdatedPosField = typeof(InteractableVehicle).GetField("lastUpdatedPos",
+        private static readonly FieldInfo s_LastUpdatedPosField = typeof(InteractableVehicle).GetField("lastUpdatedPos",
             BindingFlags.NonPublic | BindingFlags.Instance);
-        private readonly static FieldInfo s_IsPhysicalField = typeof(InteractableVehicle).GetField("isPhysical",
+        private static readonly FieldInfo s_IsPhysicalField = typeof(InteractableVehicle).GetField("isPhysical",
             BindingFlags.NonPublic | BindingFlags.Instance);
 
         private float m_Factor;
@@ -616,8 +603,6 @@ namespace Dummy.Threads
                 s_IsBoostingProperty.SetValue(vehicle, false);
             }
 
-            Console.WriteLine("sim");
-            Console.WriteLine(s_IsPhysicalField.GetValue(vehicle));
             s_SpeedField.SetValue(vehicle, 150f);
             s_IsPhysicalField.SetValue(vehicle, true);
 
@@ -640,21 +625,13 @@ namespace Dummy.Threads
                 }
             }
 
-            Console.WriteLine(m_Factor);
-            Console.WriteLine(moveY);
-            Console.WriteLine(speed);
-            Console.WriteLine(tireOnGround);
-            Console.WriteLine(asset.engine);
-
             switch (asset.engine)
             {
                 case EEngine.CAR:
                     if (tireOnGround)
                     {
-                        Console.WriteLine(m_Rigidbody.velocity);
                         m_Rigidbody.AddForce(-vehicle.transform.up * m_Factor * 40f);
                         m_Rigidbody.AddForce(vehicle.transform.forward * 20f);
-                        Console.WriteLine(m_Rigidbody.velocity);
                     }
 
                     if (m_Buoyancy != null)
@@ -672,9 +649,6 @@ namespace Dummy.Threads
                                 _ => Mathf.Lerp(m_AltSpeedInput, 0, PlayerInput.RATE / 8f),
                             };
                             m_AltSpeedOutput = m_AltSpeedInput * m_SpeedTraction;
-
-                            Console.WriteLine(m_AltSpeedInput);
-                            Console.WriteLine(m_AltSpeedOutput);
 
                             var forward = vehicle.transform.forward;
                             forward.y = 0;
@@ -735,9 +709,6 @@ namespace Dummy.Threads
                 EEngine.TRAIN => m_AltSpeedOutput,
                 _ => vehicle.transform.InverseTransformDirection(m_Rigidbody!.velocity).z
             };
-
-            Console.WriteLine("s:" + _speed);
-            Console.WriteLine("s:" + _physicsSpeed);
 
             s_SpeedField.SetValue(vehicle, _speed);
             s_PhysicsSpeedField.SetValue(vehicle, _physicsSpeed);

@@ -21,9 +21,7 @@ namespace Dummy.Actions.Interaction.Actions.UI
             async UniTask EffectButtonClicked()
             {
                 await UniTask.SwitchToMainThread();
-                var context = dummy.GetContext();
-                
-                EffectManager.ReceiveEffectClicked(in context, ButtonName);
+                EffectManager.onEffectButtonClicked(dummy.Player.Player, ButtonName);
             }
             return EffectButtonClicked().AsTask();
         }

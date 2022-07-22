@@ -18,9 +18,7 @@ namespace Dummy.Actions.Interaction.Actions.Vehicle
             async UniTask ExitVehicle()
             {
                 await UniTask.SwitchToMainThread();
-                var context = dummy.GetContext();
-                
-                VehicleManager.ReceiveExitVehicleRequest(in context, Vector3.down);
+                VehicleManager.forceRemovePlayer(dummy.Player.SteamId);
             }
 
             return ExitVehicle().AsTask();

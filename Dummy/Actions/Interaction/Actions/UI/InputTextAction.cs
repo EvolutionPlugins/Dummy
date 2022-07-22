@@ -23,9 +23,7 @@ namespace Dummy.Actions.Interaction.Actions.UI
             async UniTask EffectTextCommitted()
             {
                 await UniTask.SwitchToMainThread();
-                var context = dummy.GetContext();
-                
-                EffectManager.ReceiveEffectTextCommitted(in context, InputFieldName, InputtedText);
+                EffectManager.onEffectTextCommitted(dummy.Player.Player, InputFieldName, InputtedText);
             }
             return EffectTextCommitted().AsTask();
         }

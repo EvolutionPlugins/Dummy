@@ -425,8 +425,7 @@ namespace Dummy.Services
             await UniTask.SwitchToMainThread();
 
             var movement = player.Player.Player.movement;
-            var r = movement.gameObject.GetComponent<Rigidbody>();
-            Object.Destroy(r);
+            movement.transform.DestroyRigidbody();
         }
 
         private async UniTask RotateDummyTask(DummyUser player, float rotateYaw)
