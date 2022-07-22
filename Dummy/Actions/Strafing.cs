@@ -5,26 +5,29 @@ using JetBrainsAnnotations::JetBrains.Annotations;
 
 namespace Dummy.Actions
 {
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseTargetFlags.Members)]
     public static class Strafing
     {
-        [UsedImplicitly]
         public static void WalkingConstantOn(this DummyUser dummy, StrafeDirection direction)
         {
             dummy.Actions.ContinuousActions.Add(new StrafeAction(direction));
         }
-
-        [UsedImplicitly]
+        
         public static void WalkingConstantOff(this DummyUser dummy, StrafeDirection direction)
         {
             dummy.Actions.ContinuousActions.RemoveAll(c =>
-                c is StrafeAction strafeAction && strafeAction.Dir == direction);
+                c is StrafeAction strafeAction && strafeAction.Direction == direction);
         }
-
-        [UsedImplicitly]
+        
         public static void Walk(this DummyUser dummy, StrafeDirection direction)
         {
-            dummy.Actions.Actions.Enqueue(new StrafeAction(direction));
+            Sprint(dummy, direction, false);
+        }
+
+        public static void Sprint(this DummyUser dummyUser, StrafeDirection direction, bool isSprinting)
+        {
+            dummyUser.Actions.Actions.Enqueue(new StrafeAction(direction));
+            dummyUser.Actions.Actions.Enqueue(new SprintAction(isSprinting));
         }
     }
 }

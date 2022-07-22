@@ -29,7 +29,9 @@ namespace Dummy.Threads
         {
             while (Enabled)
             {
-                await UniTask.WaitForFixedUpdate();
+                await UniTask.SwitchToThreadPool();
+                await UniTask.DelayFrame(1, PlayerLoopTiming.FixedUpdate);
+                
                 try
                 {
                     foreach (var action in ContinuousActions)

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Dummy.Players;
@@ -14,6 +13,8 @@ using OpenMod.UnityEngine.Extensions;
 using OpenMod.Unturned.Users;
 using SDG.Unturned;
 using Steamworks;
+using UnityEngine;
+using Color = System.Drawing.Color;
 
 namespace Dummy.Users
 {
@@ -23,7 +24,7 @@ namespace Dummy.Users
 
         public DummyUserActionThread Actions { get; }
         public DummyUserSimulationThread Simulation { get; }
-        public DummyPlayer Player { get; }
+        public new DummyPlayer Player { get; }
         public HashSet<CSteamID> Owners { get; }
 
         public CSteamID SteamID => Player.SteamId;
@@ -35,20 +36,18 @@ namespace Dummy.Users
             ILoggerFactory loggerFactory, IStringLocalizer stringLocalizer, bool disableSimulation,
             HashSet<CSteamID>? owners = null)
             : base(userProvider, userDataStore, steamPlayer.player)
-        { 
-            //Session = new DummyUserSession(this);
-
-            Player = new DummyPlayer(steamPlayer);
+        {
+            Player = new(steamPlayer);
             m_StringLocalizer = stringLocalizer;
             Owners = owners ?? new HashSet<CSteamID>();
-            Actions = new DummyUserActionThread(this, loggerFactory.CreateLogger($"Dummy.{Id}.Action"));
-            Simulation = new DummyUserSimulationThread(this, loggerFactory.CreateLogger($"Dummy.{Id}.Simulation"));
+            Actions = new(this, loggerFactory.CreateLogger($"Dummy.{Id}.Action"));
+            Simulation = new(this, loggerFactory.CreateLogger($"Dummy.{Id}.Simulation"));
 
             Actions.Enabled = true;
             Simulation.Enabled = !disableSimulation;
 
-            UniTask.Run(Actions.Start);
-            UniTask.Run(Simulation.Start);
+            Actions.Start().Forget();
+            Simulation.Start().Forget();
         }
 
         public override Task PrintMessageAsync(string message)
@@ -61,7 +60,7 @@ namespace Dummy.Users
             return PrintMessageAsync(message, color, true, null);
         }
 
-        private Task PrintMessageAsync(string message, Color color, bool isRich, string? iconUrl)
+        private new Task PrintMessageAsync(string message, Color color, bool isRich, string? iconUrl)
         {
             async UniTask PrintMessageTask()
             {
@@ -88,9 +87,15 @@ namespace Dummy.Users
         {
             Actions.Enabled = false;
             Simulation.Enabled = false;
-            if (Session is DummyUserSession dummySession)
+            
+            if (Session == null)
             {
-                dummySession.OnSessionEnd();
+                return new();
+            }
+            
+            if (Session is UnturnedUserSession session)
+            {
+                session.OnSessionEnd();
             }
 
             return new(Session!.DisconnectAsync());

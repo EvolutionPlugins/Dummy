@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
 using SDG.Unturned;
@@ -8,22 +7,27 @@ namespace Dummy.Actions.Movement.Actions
 {
     public class StanceAction : IAction
     {
-        public StanceAction(EPlayerStance ePlayerStance)
+        public StanceAction(bool wantsCrouch, bool wantsProne)
         {
-            Stance = ePlayerStance;
+            WantsCrouch = wantsCrouch;
+            WantsProne = wantsProne;
         }
 
-        public EPlayerStance Stance { get; }
+        public StanceAction(EPlayerStance stance)
+        {
+            WantsCrouch = stance == EPlayerStance.CROUCH;
+            WantsProne = stance == EPlayerStance.PRONE;
+        }
+
+        public bool WantsCrouch { get; }
+        public bool WantsProne { get; }
 
         public Task Do(DummyUser dummy)
         {
-            async UniTask SetStance()
-            {
-                await UniTask.SwitchToMainThread();
-                dummy.Player.Player.stance.stance = Stance;
-            }
+            dummy.Simulation.Crouch = WantsCrouch;
+            dummy.Simulation.Prone = WantsProne;
 
-            return SetStance().AsTask();
+            return Task.CompletedTask;
         }
     }
 }

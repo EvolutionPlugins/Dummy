@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using Microsoft.Extensions.Configuration;
 using OpenMod.API.Plugins;
 using SDG.NetTransport;
@@ -8,13 +9,24 @@ namespace Dummy.NetTransports
 {
     public class DummyTransportConnection : ITransportConnection
     {
-        private readonly IPluginAccessor<Dummy> m_PluginAccessor;
-
-        private IConfiguration Configuration => m_PluginAccessor.Instance!.Configuration;
+        private readonly string m_IP;
+        private readonly ushort m_Port;
+        private readonly IPAddress m_Address;
 
         public DummyTransportConnection(IPluginAccessor<Dummy> pluginAccessor)
         {
-            m_PluginAccessor = pluginAccessor;
+            var random = new Random();
+            var configuration = pluginAccessor.Instance!.Configuration;
+
+            var randomizeIp = configuration.GetValue("connection:randomIp", true);
+            var randomizePort = configuration.GetValue("connection:randomPort", true);
+            m_IP = randomizeIp
+                ? $"{random.Next(1, 256)}.{random.Next(256)}.{random.Next(256)}.{random.Next(256)}"
+                : configuration["default:ip"];
+            m_Port = randomizePort
+                ? (ushort)random.Next(IPEndPoint.MinPort + 1, IPEndPoint.MaxPort + 1)
+                : configuration.GetSection("default:port").Get<ushort>();
+            m_Address = IPAddress.Parse(m_IP);
         }
 
         public void CloseConnection()
@@ -28,24 +40,24 @@ namespace Dummy.NetTransports
 
         public bool TryGetIPv4Address(out uint address)
         {
-            address = Parser.getUInt32FromIP(Configuration["default:ip"]);
+            address = Parser.getUInt32FromIP(m_IP);
             return true;
         }
 
         public bool TryGetPort(out ushort port)
         {
-            port = Configuration.GetSection("default:port").Get<ushort>();
+            port = m_Port;
             return true;
         }
 
         public IPAddress GetAddress()
         {
-            return IPAddress.Parse(Configuration["default:ip"] + ":" + Configuration["default:port"]);
+            return m_Address;
         }
 
         public string GetAddressString(bool withPort)
         {
-            return Configuration["default:ip"] + (withPort ? (":" + Configuration["default:port"]) : string.Empty);
+            return m_IP + (withPort ? ":" + m_Port : string.Empty);
         }
 
         public void Send(byte[] buffer, long size, ENetReliability sendType)

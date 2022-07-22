@@ -25,17 +25,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Remove="Commands\Actions\CommandDummyJump.cs" />
-    </ItemGroup>
-
-    <ItemGroup>
         <EmbeddedResource Include="config.yaml" />
         <EmbeddedResource Include="translations.yaml" />
     </ItemGroup>
 
     <ItemGroup>
         <None Include="..\.editorconfig" Link=".editorconfig" />
-        <None Include="Commands\Actions\CommandDummyJump.cs" />
     </ItemGroup>
 
     <ItemGroup>

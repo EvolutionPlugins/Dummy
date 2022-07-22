@@ -3,6 +3,7 @@ using Dummy.API;
 using Dummy.Users;
 using SDG.Unturned;
 using System.Threading.Tasks;
+using Dummy.Extensions;
 
 namespace Dummy.Actions.Interaction.Actions.UI
 {
@@ -20,7 +21,9 @@ namespace Dummy.Actions.Interaction.Actions.UI
             async UniTask EffectButtonClicked()
             {
                 await UniTask.SwitchToMainThread();
-                EffectManager.onEffectButtonClicked(dummy.Player.Player, ButtonName);
+                var context = dummy.GetContext();
+                
+                EffectManager.ReceiveEffectClicked(in context, ButtonName);
             }
             return EffectButtonClicked().AsTask();
         }

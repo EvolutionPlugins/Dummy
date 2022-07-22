@@ -5,10 +5,9 @@ using JetBrainsAnnotations::JetBrains.Annotations;
 
 namespace Dummy.Actions
 {
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseTargetFlags.Members)]
     public static class SwapingFace
     {
-        [UsedImplicitly]
         public static void SwapFace(this DummyUser dummy, byte index)
         {
             dummy.Actions.Actions.Enqueue(new FaceAction(index));

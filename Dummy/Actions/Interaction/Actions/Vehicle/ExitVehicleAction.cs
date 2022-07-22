@@ -5,6 +5,8 @@ using Dummy.Users;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using SDG.Unturned;
 using System.Threading.Tasks;
+using Dummy.Extensions;
+using UnityEngine;
 
 namespace Dummy.Actions.Interaction.Actions.Vehicle
 {
@@ -16,7 +18,9 @@ namespace Dummy.Actions.Interaction.Actions.Vehicle
             async UniTask ExitVehicle()
             {
                 await UniTask.SwitchToMainThread();
-                VehicleManager.forceRemovePlayer(dummy.Player.SteamId);
+                var context = dummy.GetContext();
+                
+                VehicleManager.ReceiveExitVehicleRequest(in context, Vector3.down);
             }
 
             return ExitVehicle().AsTask();

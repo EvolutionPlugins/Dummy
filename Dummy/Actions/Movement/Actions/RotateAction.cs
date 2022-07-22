@@ -17,8 +17,7 @@ namespace Dummy.Actions.Movement.Actions
 
         public Task Do(DummyUser dummy)
         {
-            dummy.Simulation.Yaw = Yaw;
-            dummy.Simulation.Pitch = Pitch;
+            dummy.Simulation.SetRotation(Yaw, Pitch, 0);
             return Task.CompletedTask;
         }
     }

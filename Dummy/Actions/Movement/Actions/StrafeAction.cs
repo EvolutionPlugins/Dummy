@@ -1,31 +1,46 @@
-using System.Reflection;
+using System;
 using System.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
-using SDG.Unturned;
+using UnityEngine;
 
 namespace Dummy.Actions.Movement.Actions
 {
     public class StrafeAction : IAction
     {
-        private static readonly FieldInfo? s_HorizontalField;
-        public StrafeDirection Dir { get; }
+        private Vector3? m_Vector;
 
-        static StrafeAction()
+        public StrafeDirection Direction { get; }
+
+        public StrafeAction(StrafeDirection direction)
         {
-            s_HorizontalField = typeof(PlayerMovement).GetField("_horizontal");
+            Direction = direction;
         }
 
-        public StrafeAction(StrafeDirection dir)
+        public StrafeAction(int x, int y) : this(new Vector2(x, y))
         {
-            Dir = dir;
+        }
+
+        public StrafeAction(Vector2 vector)
+        {
+            m_Vector = new(vector.x, 0, vector.y);
         }
 
         public Task Do(DummyUser dummy)
         {
-            //TODO: Use harmony to manually add a setter for the public property
-            var offset = Dir == StrafeDirection.Left ? 1 : -1;
-            s_HorizontalField?.SetValue(dummy.Player.Player.movement, dummy.Player.Player.movement.horizontal + offset);
+            dummy.Simulation.Move = m_Vector ?? Direction switch
+            {
+                StrafeDirection.None => new Vector3(0, 0, 0),
+                StrafeDirection.Left => new(-1, 0, 0),
+                StrafeDirection.Right => new(1, 0, 0),
+                StrafeDirection.Forward => new(0, 0, 1),
+                StrafeDirection.Backward => new(0, 0, -1),
+                StrafeDirection.ForwardLeft => new(-1, 0, 1),
+                StrafeDirection.ForwardRight => new(1, 0, 1),
+                StrafeDirection.BackwardLeft => new(-1, 0, -1),
+                StrafeDirection.BackwardRight => new(1, 0, -1),
+                _ => throw new ArgumentOutOfRangeException(nameof(Direction), Direction, "Tried to strafe to wrong direction")
+            };
             return Task.CompletedTask;
         }
     }

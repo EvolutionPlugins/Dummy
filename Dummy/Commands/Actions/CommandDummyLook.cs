@@ -12,7 +12,7 @@ namespace Dummy.Commands.Actions
 {
     [Command("look")]
     [CommandParent(typeof(CommandDummy))]
-    [CommandSyntax("<yaw> <pitch>")]
+    [CommandSyntax("<id> <yaw> <pitch>")]
     [UsedImplicitly]
     public class CommandDummyLook : CommandDummyAction
     {
@@ -23,7 +23,7 @@ namespace Dummy.Commands.Actions
 
         protected override async UniTask ExecuteDummyAsync(DummyUser playerDummy)
         {
-            if (Context.Parameters.Count is < 3 or > 3)
+            if (Context.Parameters.Count != 3)
             {
                 throw new CommandWrongUsageException(Context);
             }
