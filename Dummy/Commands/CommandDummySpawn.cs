@@ -23,8 +23,7 @@ namespace Dummy.Commands
 
         protected override async Task OnExecuteAsync()
         {
-            var id = await m_DummyProvider.GetAvailableIdAsync();
-            await m_DummyProvider.AddDummyAsync(id, new HashSet<CSteamID>());
+            await m_DummyProvider.AddDummyAsync(null, new HashSet<CSteamID>());
         }
     }
 }
