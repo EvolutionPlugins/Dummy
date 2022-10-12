@@ -11,7 +11,7 @@ namespace Dummy.Patches
 {
     // ReSharper disable InconsistentNaming
     [HarmonyPatch(typeof(Provider))]
-    public static class Patch_Provider
+    internal static class Patch_Provider
     {
         internal static event NeedDummyProvider? OnNeedDummy;
 
