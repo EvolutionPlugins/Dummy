@@ -117,32 +117,32 @@ namespace Dummy.Threads
 
         public bool PluginKey1
         {
-            get => m_Keys[9];
-            set => m_Keys[9] = value;
-        }
-
-        public bool PluginKey2
-        {
             get => m_Keys[10];
             set => m_Keys[10] = value;
         }
 
-        public bool PluginKey3
+        public bool PluginKey2
         {
             get => m_Keys[11];
             set => m_Keys[11] = value;
         }
 
-        public bool PluginKey4
+        public bool PluginKey3
         {
             get => m_Keys[12];
             set => m_Keys[12] = value;
         }
 
-        public bool PluginKey5
+        public bool PluginKey4
         {
             get => m_Keys[13];
             set => m_Keys[13] = value;
+        }
+
+        public bool PluginKey5
+        {
+            get => m_Keys[14];
+            set => m_Keys[14] = value;
         }
 
         public DummyUserSimulationThread(DummyUser playerDummy, ILogger logger)
@@ -155,10 +155,11 @@ namespace Dummy.Threads
             m_Consumed = 0;
             Move = Vector3.zero;
             m_PlayerInputPackets = new();
-            m_Keys = new bool[9 + ControlsSettings.NUM_PLUGIN_KEYS];
 
-            m_Flags = new ushort[9 + ControlsSettings.NUM_PLUGIN_KEYS];
-            for (byte b = 0; b < 9 + ControlsSettings.NUM_PLUGIN_KEYS; b++)
+            var countKeys = 10 + ControlsSettings.NUM_PLUGIN_KEYS;
+            m_Keys = new bool[countKeys];
+            m_Flags = new ushort[countKeys];
+            for (byte b = 0; b < countKeys; b++)
             {
                 m_Flags[b] = (ushort)(1 << b);
             }
@@ -196,7 +197,6 @@ namespace Dummy.Threads
 
             while (Enabled)
             {
-                await UniTask.SwitchToMainThread();
                 await UniTask.WaitForFixedUpdate();
 
                 // Do not simulate if dead
