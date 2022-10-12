@@ -16,7 +16,7 @@
         <GenerateNugetPackage>true</GenerateNugetPackage>
         <RepositoryUrl>https://github.com/EvolutionPlugins/Dummy</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <LangVersion>9.0</LangVersion>
+        <LangVersion>10.0</LangVersion>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>nullable</WarningsAsErrors>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
@@ -37,33 +37,13 @@
         <PackageReference Include="Legacy2CPSWorkaround" Version="1.0.0">
             <PrivateAssets>All</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net461" Version="1.0.2">
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net461" Version="1.0.3">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="OpenMod.Unturned" Version="3.2.8" PrivateAssets="all" />
-        <PackageReference Include="OpenMod.Unturned.Redist" Version="3.22.8.1" PrivateAssets="all" ExcludeAssets="all" />
+        <PackageReference Include="OpenMod.Unturned" Version="3.3.8" />
+        <PackageReference Include="OpenMod.Unturned.Redist" Version="3.22.16" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="Assembly-CSharp">
-        <HintPath>..\libs\Assembly-CSharp.dll</HintPath>
-      </Reference>
-      <Reference Include="com.rlabrecque.steamworks.net">
-        <HintPath>..\libs\com.rlabrecque.steamworks.net.dll</HintPath>
-      </Reference>
-      <Reference Include="SDG.NetPak.Runtime">
-        <HintPath>..\libs\SDG.NetPak.Runtime.dll</HintPath>
-      </Reference>
-      <Reference Include="SDG.NetTransport">
-        <HintPath>..\libs\SDG.NetTransport.dll</HintPath>
-      </Reference>
-      <Reference Include="SystemEx">
-        <HintPath>..\libs\SystemEx.dll</HintPath>
-      </Reference>
-      <Reference Include="UnityEx">
-        <HintPath>..\libs\UnityEx.dll</HintPath>
-      </Reference>
 
     <Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
         <ItemGroup>

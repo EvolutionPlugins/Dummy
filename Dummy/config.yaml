@@ -1,8 +1,5 @@
 ﻿options:
   # Max dummies can be spawned at the same time
-  amountDummies: 3
-  # A timer to kick a dummy after the number of seconds. Setting it to 0 will disable the timer.
-  kickDummyAfterSeconds: 600
   amountDummies: 5
   # On spawning, a dummy will be an admin
   isAdmin: false 
@@ -74,3 +71,5 @@ default:
 logs:
   # Log in the chat when dummy received a message from someone
   enableChatReceiveLog: true
+  enableDamageLog: true
+  enableDeathLog: true

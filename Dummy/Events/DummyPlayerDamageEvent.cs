@@ -33,6 +33,11 @@ namespace Dummy.Events
         [EventListener(Priority = EventListenerPriority.Monitor)]
         public async Task HandleEventAsync(object? sender, UnturnedPlayerDamagedEvent @event)
         {
+            if (!m_Configuration.GetValue<bool>("logs:enableDamageLog"))
+            {
+                return;
+            }
+
             var dummy = await GetDummyUser(@event.Player.SteamId.m_SteamID);
             if (dummy == null)
             {

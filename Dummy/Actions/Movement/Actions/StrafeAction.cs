@@ -30,7 +30,7 @@ namespace Dummy.Actions.Movement.Actions
         {
             dummy.Simulation.Move = m_Vector ?? Direction switch
             {
-                StrafeDirection.None => new Vector3(0, 0, 0),
+                StrafeDirection.None => new(0, 0, 0),
                 StrafeDirection.Left => new(-1, 0, 0),
                 StrafeDirection.Right => new(1, 0, 0),
                 StrafeDirection.Forward => new(0, 0, 1),

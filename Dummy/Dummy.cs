@@ -37,7 +37,7 @@ namespace Dummy
             var orgMethod = AccessTools.Method(type, "ReadMessage");
             var patchMethod =
                 SymbolExtensions.GetMethodInfo(() => Patch_ServerMessageHandler_ReadyToConnect.ReadMessage(null!));
-            Harmony.CreateProcessor(orgMethod).AddTranspiler(new HarmonyMethod(patchMethod));
+            Harmony.CreateProcessor(orgMethod).AddTranspiler(new HarmonyMethod(patchMethod)).Patch();
 
             m_Logger.LogInformation("Made with <3 by Evolution Plugins");
             m_Logger.LogInformation("Owner of EvolutionPlugins: DiFFoZ");

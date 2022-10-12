@@ -1,8 +1,8 @@
 extern alias JetBrainsAnnotations;
-using Dummy.Actions.Movement.Actions;
-using Dummy.Users;
 using System;
 using System.Threading.Tasks;
+using Dummy.Actions.Movement.Actions;
+using Dummy.Users;
 using JetBrainsAnnotations::JetBrains.Annotations;
 
 namespace Dummy.Actions
@@ -19,7 +19,7 @@ namespace Dummy.Actions
         {
             dummy.Actions.ContinuousActions.RemoveAll(c => c is JumpAction);
         }
-        
+
         public static void Jump(this DummyUser dummy)
         {
             dummy.Actions.Actions.Enqueue(new JumpAction(true));
@@ -29,7 +29,7 @@ namespace Dummy.Actions
                 return Task.CompletedTask;
             }));
         }
-        
+
         public static async Task TempJumpAsync(this DummyUser playerDummy, float time)
         {
             playerDummy.JumpingConstantOn();

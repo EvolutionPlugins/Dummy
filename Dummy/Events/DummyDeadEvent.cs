@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using SDG.NetTransport;
 using UnityEngine;
+using Microsoft.Extensions.Configuration;
 
 namespace Dummy.Events
 {
@@ -23,16 +24,23 @@ namespace Dummy.Events
 
         private readonly IDummyProvider m_DummyProvider;
         private readonly IUnturnedUserDirectory m_UnturnedUserDirectory;
+        private readonly IConfiguration m_Configuration;
 
-        public DummyDeadEvent(IDummyProvider dummyProvider, IUnturnedUserDirectory unturnedUserDirectory)
+        public DummyDeadEvent(IDummyProvider dummyProvider, IUnturnedUserDirectory unturnedUserDirectory, IConfiguration configuration)
         {
             m_DummyProvider = dummyProvider;
             m_UnturnedUserDirectory = unturnedUserDirectory;
+            m_Configuration = configuration;
         }
 
         [EventListener(Priority = EventListenerPriority.Monitor)]
         public async Task HandleEventAsync(object? sender, UnturnedPlayerDeathEvent @event)
         {
+            if (!m_Configuration.GetValue<bool>("logs:enableDeathLog"))
+            {
+                return;
+            }
+
             var dummy = await m_DummyProvider.FindDummyUserAsync(@event.Player.SteamId.m_SteamID);
             if (dummy == null)
             {

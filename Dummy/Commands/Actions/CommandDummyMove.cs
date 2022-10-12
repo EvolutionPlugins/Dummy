@@ -12,7 +12,7 @@ namespace Dummy.Commands.Actions
 {
     [Command("move")]
     [CommandParent(typeof(CommandDummy))]
-    [CommandSyntax("<direction>")]
+    [CommandSyntax("<id> <direction>")]
     public class CommandDummyMove : CommandDummyAction
     {
         public CommandDummyMove(IServiceProvider serviceProvider, IDummyProvider dummyProvider, IStringLocalizer stringLocalizer)
