@@ -3,7 +3,7 @@
     <PropertyGroup>
         <PackageId>EvolutionPlugins.Dummy</PackageId>
         <PackageDescription>Creates a dummy to help with debugging plugins</PackageDescription>
-        <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Authors>DiFFoZ</Authors>
         <TargetFramework>net461</TargetFramework>
         <Version>0.0.0</Version>
