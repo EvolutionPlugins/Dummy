@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
@@ -7,9 +9,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Dummy.Threads
 {
-    public class DummyUserActionThread
+    public class DummyUserActionThread : IAsyncDisposable
     {
-        public Queue<IAction?> Actions { get; }
+        public ConcurrentQueue<IAction?> Actions { get; }
         public List<IAction?> ContinuousActions { get; }
 
         private readonly DummyUser m_Dummy;
@@ -17,8 +19,8 @@ namespace Dummy.Threads
 
         public DummyUserActionThread(DummyUser dummy, ILogger logger)
         {
-            Actions = new();
-            ContinuousActions = new();
+            Actions = new ConcurrentQueue<IAction?>();
+            ContinuousActions = new List<IAction?>();
             m_Dummy = dummy;
             m_Logger = logger;
         }
@@ -31,35 +33,36 @@ namespace Dummy.Threads
             {
                 await UniTask.SwitchToThreadPool();
                 await UniTask.DelayFrame(1, PlayerLoopTiming.FixedUpdate);
-                
+
                 try
                 {
                     foreach (var action in ContinuousActions)
                     {
                         if (action == null)
-                        {
                             continue;
-                        }
 
                         await action.Do(m_Dummy);
                     }
 
-                    if (Actions.Count > 0)
+                    if (!Actions.IsEmpty)
                     {
-                        var action = Actions.Dequeue();
-                        if (action == null)
-                        {
+                        if (!Actions.TryDequeue(out IAction? action) || action == null)
                             continue;
-                        }
 
                         await action.Do(m_Dummy);
                     }
                 }
                 catch (Exception e)
                 {
-                    m_Logger.LogError(e, "Action thread catch the exception");
+                    m_Logger.LogError(e, "Exception on Dummy action thread");
                 }
             }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            Enabled = false;
+            GC.SuppressFinalize(this);
         }
     }
 }
