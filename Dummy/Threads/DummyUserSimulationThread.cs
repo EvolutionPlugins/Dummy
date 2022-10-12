@@ -199,6 +199,10 @@ namespace Dummy.Threads
                 await UniTask.SwitchToMainThread();
                 await UniTask.WaitForFixedUpdate();
 
+                // Do not simulate if dead
+                if (Player.life.isDead)
+                    continue;
+
                 //var clampedVector = Move;
                 //clampedVector.x = Mathf.Clamp((int)clampedVector.x, -1, 1);
                 //clampedVector.y = 0;
