@@ -83,14 +83,14 @@ namespace Dummy.Users
             return PrintMessageTask().AsTask();
         }
 
-        public ValueTask DisposeAsync()
+        public async ValueTask DisposeAsync()
         {
-            Actions.Enabled = false;
+            await Actions.DisposeAsync();
             Simulation.Enabled = false;
             
             if (Session == null)
             {
-                return new();
+                return;
             }
             
             if (Session is UnturnedUserSession session)
@@ -98,7 +98,7 @@ namespace Dummy.Users
                 session.OnSessionEnd();
             }
 
-            return new(Session!.DisconnectAsync());
+            await Session!.DisconnectAsync();
         }
 
         public bool Equals(DummyUser other)

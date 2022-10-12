@@ -59,10 +59,11 @@ namespace Dummy.Threads
             }
         }
 
-        public async ValueTask DisposeAsync()
+        public ValueTask DisposeAsync()
         {
             Enabled = false;
             GC.SuppressFinalize(this);
+            return new();
         }
     }
 }
