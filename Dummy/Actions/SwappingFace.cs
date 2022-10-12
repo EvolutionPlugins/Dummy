@@ -6,7 +6,7 @@ using JetBrainsAnnotations::JetBrains.Annotations;
 namespace Dummy.Actions
 {
     [UsedImplicitly(ImplicitUseTargetFlags.Members)]
-    public static class SwapingFace
+    public static class SwappingFace
     {
         public static void SwapFace(this DummyUser dummy, byte index)
         {
