@@ -47,30 +47,23 @@
 
     <ItemGroup>
       <Reference Include="Assembly-CSharp">
-        <HintPath>G:\SteamLibrary\steamapps\common\Unturned\Unturned_Data\Managed\Assembly-CSharp.dll</HintPath>
+        <HintPath>..\libs\Assembly-CSharp.dll</HintPath>
       </Reference>
       <Reference Include="com.rlabrecque.steamworks.net">
-        <HintPath>G:\SteamLibrary\steamapps\common\Unturned\Unturned_Data\Managed\com.rlabrecque.steamworks.net.dll</HintPath>
+        <HintPath>..\libs\com.rlabrecque.steamworks.net.dll</HintPath>
       </Reference>
       <Reference Include="SDG.NetPak.Runtime">
-        <HintPath>G:\SteamLibrary\steamapps\common\Unturned\Unturned_Data\Managed\SDG.NetPak.Runtime.dll</HintPath>
+        <HintPath>..\libs\SDG.NetPak.Runtime.dll</HintPath>
       </Reference>
       <Reference Include="SDG.NetTransport">
-        <HintPath>G:\SteamLibrary\steamapps\common\Unturned\Unturned_Data\Managed\SDG.NetTransport.dll</HintPath>
+        <HintPath>..\libs\SDG.NetTransport.dll</HintPath>
       </Reference>
       <Reference Include="SystemEx">
         <HintPath>..\libs\SystemEx.dll</HintPath>
       </Reference>
-      <Reference Include="UnityEngine">
-        <HintPath>G:\SteamLibrary\steamapps\common\Unturned\Unturned_Data\Managed\UnityEngine.dll</HintPath>
-      </Reference>
-      <Reference Include="UnityEngine.CoreModule">
-        <HintPath>G:\SteamLibrary\steamapps\common\Unturned\Unturned_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-      </Reference>
       <Reference Include="UnityEx">
         <HintPath>..\libs\UnityEx.dll</HintPath>
       </Reference>
-    </ItemGroup>
 
     <Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
         <ItemGroup>
