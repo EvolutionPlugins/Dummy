@@ -102,7 +102,7 @@ namespace Dummy.Users
 
         public async ValueTask DisposeAsync()
         {
-            Simulation.Enabled = false;
+            await Simulation.DisposeAsync();
             await Actions.DisposeAsync();
 
             if (Session == null)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Dummy.Actions.Interaction;
 using Dummy.Patches;
@@ -12,7 +13,7 @@ using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Dummy.Threads
 {
-    public partial class DummyUserSimulationThread
+    public partial class DummyUserSimulationThread : IAsyncDisposable
     {
         private const float c_Swim = 3f;
         private const float c_Jump = 7f;
@@ -36,7 +37,6 @@ namespace Dummy.Threads
         private readonly bool[] m_Keys;
         private readonly DummyUser m_PlayerDummy;
         private readonly ILogger m_Logger;
-
 
         private PlayerInputPacket m_PlayerInputPacket;
         private uint m_Count;
@@ -494,6 +494,14 @@ namespace Dummy.Threads
             }
 
             m_Yaw = Mathf.Clamp(m_Yaw, min, max);
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            Enabled = false;
+
+            Player.onPlayerTeleported -= OnPlayerTeleported;
+            return new();
         }
     }
 }
