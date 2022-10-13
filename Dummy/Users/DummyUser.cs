@@ -83,24 +83,6 @@ namespace Dummy.Users
             return PrintMessageTask().AsTask();
         }
 
-        public async ValueTask DisposeAsync()
-        {
-            await Actions.DisposeAsync();
-            Simulation.Enabled = false;
-            
-            if (Session == null)
-            {
-                return;
-            }
-            
-            if (Session is UnturnedUserSession session)
-            {
-                session.OnSessionEnd();
-            }
-
-            await Session!.DisconnectAsync();
-        }
-
         public bool Equals(DummyUser other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -116,6 +98,24 @@ namespace Dummy.Users
         public override int GetHashCode()
         {
             return Player.GetHashCode();
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            Simulation.Enabled = false;
+            await Actions.DisposeAsync();
+
+            if (Session == null)
+            {
+                return;
+            }
+
+            if (Session is UnturnedUserSession session)
+            {
+                session.OnSessionEnd();
+            }
+
+            await Session.DisconnectAsync();
         }
     }
 }

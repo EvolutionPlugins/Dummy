@@ -8,7 +8,6 @@ using Cysharp.Threading.Tasks;
 using Dummy.ConfigurationEx;
 using Dummy.Extensions;
 using Dummy.Models;
-using Dummy.NetTransports;
 using Dummy.Users;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using Microsoft.Extensions.Configuration;
@@ -18,7 +17,6 @@ using MoreLinq;
 using OpenMod.API.Plugins;
 using OpenMod.API.Users;
 using OpenMod.Core.Helpers;
-using OpenMod.Core.Ioc;
 using OpenMod.Core.Localization;
 using OpenMod.Core.Users;
 using OpenMod.Unturned.Users;
@@ -27,7 +25,6 @@ using SDG.Unturned;
 using Steamworks;
 using UnityEngine;
 using Color = System.Drawing.Color;
-using Object = UnityEngine.Object;
 using UColor = UnityEngine.Color;
 
 namespace Dummy.Services
@@ -67,7 +64,27 @@ namespace Dummy.Services
 
         private void OnServerDisconnected(CSteamID steamID)
         {
-            DummyUsers.RemoveWhere(x => x.SteamId == steamID);
+            var dummy = DummyUsers.FirstOrDefault(x => x.SteamId == steamID);
+            if (dummy == null)
+            {
+                return;
+            }
+
+            if (DummyUsers.Remove(dummy))
+            {
+                dummy.Actions.Enabled = false;
+                dummy.Simulation.Enabled = false;
+
+                // Because DummyUser.DisposeAsync() calls Session.DisconnectAsync with will call Provider.kick it will throw exception that clients list was modified in kick method.
+                // So we will dispose it on frame later. But simulation and actions will be already disabled.
+                DelayDispose(dummy).Forget();
+            }
+        }
+
+        private static async UniTaskVoid DelayDispose(DummyUser dummy)
+        {
+            await UniTask.NextFrame();
+            await dummy.DisposeAsync();
         }
 
         private void ProviderOnonCommenceShutdown()
@@ -184,7 +201,7 @@ namespace Dummy.Services
             {
                 return false;
             }
-            
+
             reason ??= "No reason provided";
             endTime ??= DateTime.MaxValue;
             if (!ulong.TryParse(instigator?.Id, out var instigatorId))

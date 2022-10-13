@@ -48,13 +48,14 @@ namespace Dummy.Services
 
         public async Task<bool> RemoveDummyAsync(CSteamID id)
         {
+            await UniTask.SwitchToMainThread();
+
             var playerDummy = await FindDummyUserAsync(id);
             if (playerDummy == null)
             {
                 return false;
             }
-
-            await UniTask.SwitchToMainThread();
+            
             await playerDummy.DisposeAsync();
             m_Provider.DummyUsers.Remove(playerDummy);
 
@@ -63,6 +64,8 @@ namespace Dummy.Services
 
         public async Task ClearDummiesAsync()
         {
+            await UniTask.SwitchToMainThread();
+
             for (var i = m_Provider.DummyUsers.Count - 1; i >= 0; i--)
             {
                 var user = m_Provider.DummyUsers.ElementAt(i);
