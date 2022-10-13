@@ -27,7 +27,7 @@ namespace Dummy.Threads
 
         public bool Enabled { get; set; }
 
-        public async UniTask Start()
+        public async UniTaskVoid Start()
         {
             while (Enabled)
             {

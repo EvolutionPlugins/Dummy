@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Dummy.Actions.Interaction;
+using Dummy.Patches;
 using Dummy.Users;
 using SDG.Framework.Water;
 using SDG.Unturned;
 using UnityEngine;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
-using Vector3 = UnityEngine.Vector3;
 
 namespace Dummy.Threads
 {
-    public partial class DummyUserSimulationThread
+    public partial class DummyUserSimulationThread : IAsyncDisposable
     {
         private const float c_Swim = 3f;
         private const float c_Jump = 7f;
@@ -34,11 +35,10 @@ namespace Dummy.Threads
 
         private readonly ushort[] m_Flags;
         private readonly bool[] m_Keys;
-        private readonly List<PlayerInputPacket> m_PlayerInputPackets;
         private readonly DummyUser m_PlayerDummy;
         private readonly ILogger m_Logger;
-        private Vector3 m_Velocity;
 
+        private PlayerInputPacket m_PlayerInputPacket;
         private uint m_Count;
         private uint m_Buffer;
         private uint m_Consumed;
@@ -46,6 +46,8 @@ namespace Dummy.Threads
         private float m_Yaw;
         private float m_Pitch;
         private float m_TimeLerp;
+        private Vector3 m_Velocity;
+        private Vector3 m_OldPosition;
 
         private Player Player => m_PlayerDummy.Player.Player;
 
@@ -155,7 +157,7 @@ namespace Dummy.Threads
             m_Buffer = 0;
             m_Consumed = 0;
             Move = Vector3.zero;
-            m_PlayerInputPackets = new();
+            m_PlayerInputPacket = new();
 
             var countKeys = 10 + ControlsSettings.NUM_PLUGIN_KEYS;
             m_Keys = new bool[countKeys];
@@ -163,6 +165,16 @@ namespace Dummy.Threads
             for (byte b = 0; b < countKeys; b++)
             {
                 m_Flags[b] = (ushort)(1 << b);
+            }
+
+            Player.onPlayerTeleported += OnPlayerTeleported;
+        }
+
+        private void OnPlayerTeleported(Player player, Vector3 point)
+        {
+            if (m_PlayerInputPacket is WalkingPlayerInputPacket walking)
+            {
+                walking.clientPosition = point;
             }
         }
 
@@ -191,37 +203,28 @@ namespace Dummy.Threads
             ClampYaw();
         }
 
-        public async UniTask Start()
+        /* Simulate (0) [m_Count % PlayerInput.SAMPLES == 0]
+         * 3 FU 
+         * Send (3) [m_Consumed == m_Buffer]
+         * Simulate (4)
+         * 3 FU
+         * Send (7)
+         * ...
+         */
+
+        public async UniTaskVoid Start()
         {
-            await UniTask.DelayFrame(5, PlayerLoopTiming.FixedUpdate);
+            await UniTask.DelayFrame(2, PlayerLoopTiming.FixedUpdate);
             var queue = (Queue<PlayerInputPacket>)s_ServerSidePacketsField.GetValue(Player.input);
 
             while (Enabled)
             {
-                await UniTask.WaitForFixedUpdate();
-                if (!Enabled)
-                {
-                    // force exit
-                    return;
-                }
-
                 // Do not simulate if dead
                 if (Player.life.isDead)
                     continue;
 
-                //var clampedVector = Move;
-                //clampedVector.x = Mathf.Clamp((int)clampedVector.x, -1, 1);
-                //clampedVector.y = 0;
-                //clampedVector.z = Mathf.Clamp((int)clampedVector.z, -1, 1);
-                //Move = clampedVector;
-
                 if (m_Count % PlayerInput.SAMPLES == 0)
                 {
-                    for (var i = 0; i < m_Keys.Length; i++)
-                    {
-                        Player.input.keys[i] = m_Keys[i];
-                    }
-
                     var movement = Player.movement;
                     var transform = Player.transform;
                     var normalizedMove = Move.normalized;
@@ -230,6 +233,8 @@ namespace Dummy.Threads
                     var stance = Player.stance.stance;
                     var controller = movement.controller;
                     var aim = Player.look.aim;
+
+                    m_OldPosition = transform.position;
 
                     // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
                     switch (stance)
@@ -259,7 +264,7 @@ namespace Dummy.Threads
                             }
 
                             WaterUtility.getUnderwaterInfo(transform.position, out var _, out var surfaceElevation);
-                            m_Velocity = transform.rotation * Move.normalized * speed * 1.5f;
+                            m_Velocity = transform.rotation * normalizedMove * speed * 1.5f;
                             m_Velocity.y = (surfaceElevation - 1.275f - transform.position.y) / 8f;
                             controller.CheckedMove(m_Velocity * deltaTime);
 
@@ -280,7 +285,7 @@ namespace Dummy.Threads
                                 {
                                     isMovementBlocked = true;
                                     var a = Vector3.Cross(Vector3.Cross(Vector3.up, movement.ground.normal), movement.ground.normal);
-                                    m_Velocity += a * 16f * PlayerInput.RATE;
+                                    m_Velocity += a * 16f * deltaTime;
                                     shouldUpdateVelocity = true;
                                 }
                             }
@@ -294,7 +299,7 @@ namespace Dummy.Threads
                                     moveVector = Vector3.Cross(Vector3.Cross(Vector3.up, moveVector), movement.ground.normal);
                                     moveVector.y = Mathf.Min(moveVector.y, 0f);
 
-                                    // it should also change direction on where is a dummy stand on (exmaple: ice)
+                                    // it should also change direction on where is a dummy stand on (example: ice)
                                     // not possible to use because is internal and WIP (unstable to use it)
 
                                     m_Velocity = moveVector;
@@ -334,14 +339,13 @@ namespace Dummy.Threads
                                 stance is EPlayerStance.STAND or EPlayerStance.SPRINT)
                             {
                                 m_Velocity.y = c_Jump * (1f + (jumpMastery * 0.25f)) * movement.pluginJumpMultiplier;
-                                Player.life.askTire((byte)(10f * (1f - (jumpMastery * 0.5f))));
                             }
 
                             m_Velocity += movement.pendingLaunchVelocity;
                             movement.pendingLaunchVelocity = Vector3.zero;
 
                             var previousPosition = movement.transform.position;
-                            movement.controller.CheckedMove(m_Velocity * deltaTime);
+                            controller.CheckedMove(m_Velocity * deltaTime);
 
                             if (shouldUpdateVelocity)
                             {
@@ -350,21 +354,31 @@ namespace Dummy.Threads
                             break;
                     }
 
-                    PlayerInputPacket packet;
-                    if (Player.stance.stance == EPlayerStance.DRIVING)
+                    if (stance is EPlayerStance.DRIVING)
                     {
-                        m_PlayerInputPackets.Add(packet = new DrivingPlayerInputPacket());
+                        m_PlayerInputPacket = new DrivingPlayerInputPacket();
                     }
                     else
                     {
-                        m_PlayerInputPackets.Add(packet = new WalkingPlayerInputPacket());
+                        var horizontal = (byte)(Move.x + 1);
+                        var vertical = (byte)(Move.z + 1);
+
+                        m_PlayerInputPacket = new WalkingPlayerInputPacket
+                        {
+                            analog = (byte)((horizontal << 4) | vertical),
+                            clientPosition = Player.transform.position,
+                            pitch = Mathf.Lerp(Player.look.pitch, m_Pitch, m_TimeLerp),
+                            yaw = Mathf.Lerp(Player.look.yaw, m_Yaw, m_TimeLerp)
+                        };
                     }
 
-                    // recov can be ignored
-                    packet.clientSimulationFrameNumber = m_Simulation;
+                    m_PlayerInputPacket.clientSimulationFrameNumber = m_Simulation;
+                    m_PlayerInputPacket.recov = Player.input.recov;
 
                     m_Simulation++;
                     m_Buffer += PlayerInput.SAMPLES;
+
+                    transform.position = m_OldPosition;
                 }
 
                 if (m_Consumed < m_Buffer)
@@ -372,61 +386,39 @@ namespace Dummy.Threads
                     m_Consumed++;
                 }
 
-                if (m_Consumed == m_Buffer && m_PlayerInputPackets.Count > 0)
+                if (m_Consumed == m_Buffer)
                 {
                     ushort compressedKeys = 0;
-                    for (var b = 0; b < m_Keys.Length; b++)
+                    for (var b = 0; b < m_Keys.Length && m_Keys[b]; b++)
                     {
-                        if (m_Keys[b])
+                        compressedKeys |= m_Flags[b];
+                    }
+                    m_PlayerInputPacket.keys = compressedKeys;
+
+                    if (m_PlayerInputPacket is DrivingPlayerInputPacket drivingPlayerInputPacket)
+                    {
+                        var vehicle = Player.movement.getVehicle();
+
+                        if (vehicle != null)
                         {
-                            compressedKeys |= m_Flags[b];
+                            var transform = vehicle.transform;
+                            drivingPlayerInputPacket.position = vehicle.asset.engine is EEngine.TRAIN
+                                ? Patch_InteractableVehicle.PackRoadPositionOriginal(vehicle.roadPosition)
+                                : vehicle.transform.position;
+
+                            drivingPlayerInputPacket.rotation = transform.rotation;
+
+                            drivingPlayerInputPacket.speed = (byte)(Mathf.Clamp(vehicle.speed, -100f, 100f) + 128f);
+                            drivingPlayerInputPacket.physicsSpeed = (byte)(Mathf.Clamp(vehicle.physicsSpeed, -100f, 100f) + 128f);
+                            drivingPlayerInputPacket.turn = (byte)(Move.x + 1);
                         }
                     }
 
-                    var playerInputPacket2 = m_PlayerInputPackets[^1];
-                    playerInputPacket2.keys = compressedKeys;
-
-                    switch (playerInputPacket2)
-                    {
-                        case DrivingPlayerInputPacket drivingPlayerInputPacket:
-                            var vehicle = Player.movement.getVehicle();
-
-                            if (vehicle != null)
-                            {
-                                var transform = vehicle.transform;
-                                drivingPlayerInputPacket.position = vehicle.asset.engine == EEngine.TRAIN
-                                    ? new(vehicle.roadPosition, 0f, 0f)
-                                    : vehicle.transform.position;
-
-                                drivingPlayerInputPacket.rotation = transform.rotation;
-
-                                drivingPlayerInputPacket.speed = (byte)(Mathf.Clamp(vehicle.speed, -100f, 100f) + 128f);
-                                drivingPlayerInputPacket.physicsSpeed =
-                                    (byte)(Mathf.Clamp(vehicle.physicsSpeed, -100f, 100f) + 128f);
-                                drivingPlayerInputPacket.turn = (byte)(Move.x + 1);
-                            }
-
-                            break;
-                        case WalkingPlayerInputPacket walkingPlayerInputPacket:
-                            var horizontal = (byte)(Move.x + 1);
-                            var vertical = (byte)(Move.y + 1);
-
-                            walkingPlayerInputPacket.analog = (byte)((horizontal << 4) | vertical);
-                            walkingPlayerInputPacket.clientPosition = Player.transform.position;
-                            walkingPlayerInputPacket.yaw = Mathf.Lerp(Player.look.yaw, m_Yaw, m_TimeLerp);
-                            walkingPlayerInputPacket.pitch = Mathf.Lerp(Player.look.pitch, m_Pitch, m_TimeLerp);
-                            break;
-                    }
-
-                    foreach (var playerInputPacket in m_PlayerInputPackets)
-                    {
-                        queue.Enqueue(playerInputPacket);
-                    }
-
-                    m_PlayerInputPackets.Clear();
+                    queue.Enqueue(m_PlayerInputPacket);
                 }
 
                 m_Count++;
+                await UniTask.WaitForFixedUpdate();
             }
         }
 
@@ -502,6 +494,14 @@ namespace Dummy.Threads
             }
 
             m_Yaw = Mathf.Clamp(m_Yaw, min, max);
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            Enabled = false;
+
+            Player.onPlayerTeleported -= OnPlayerTeleported;
+            return new();
         }
     }
 }
