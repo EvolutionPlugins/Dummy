@@ -62,6 +62,27 @@ namespace Dummy.NetTransports
 
         public void Send(byte[] buffer, long size, ENetReliability sendType)
         {
+            var invokableReader = NetMessages.GetInvokableReader();
+            invokableReader.SetBufferSegmentCopy(buffer, Provider.buffer, (int)size);
+            invokableReader.Reset();
+            invokableReader.ReadEnum(out EClientMessage eclientMessage);
+            if (eclientMessage is not EClientMessage.InvokeMethod)
+            {
+                return;
+            }
+
+            invokableReader.ReadBits(NetReflection.clientMethodsBitCount, out var num);
+            if (num >= NetReflection.clientMethodsLength)
+                return;
+
+            var method = NetReflection.clientMethods[num];
+
+            if (method.declaringType == typeof(PlayerInput)
+                && method.debugName.Contains("ReceiveSimulateMispredictedInputs"))
+            {
+                var cic = new ClientInvocationContext(ClientInvocationContext.EOrigin.Remote, invokableReader, method);
+                method.readMethod(in cic);
+            }
         }
     }
 }

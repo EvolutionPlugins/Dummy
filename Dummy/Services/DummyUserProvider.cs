@@ -38,7 +38,7 @@ namespace Dummy.Services
         private readonly ILoggerFactory m_LoggerFactory;
         private readonly ILifetimeScope m_LifetimeScope;
 
-        private UnturnedUserProvider Provider => m_LifetimeScope.Resolve<IUserManager>().UserProviders
+        private UnturnedUserProvider UserProvider => m_LifetimeScope.Resolve<IUserManager>().UserProviders
             .OfType<UnturnedUserProvider>().FirstOrDefault()!;
 
         public HashSet<DummyUser> DummyUsers { get; }
@@ -56,8 +56,8 @@ namespace Dummy.Services
             m_LifetimeScope = lifetimeScope;
             DummyUsers = new();
 
-            SDG.Unturned.Provider.onCommenceShutdown += ProviderOnonCommenceShutdown;
-            SDG.Unturned.Provider.onServerDisconnected += OnServerDisconnected;
+            Provider.onCommenceShutdown += ProviderOnonCommenceShutdown;
+            Provider.onServerDisconnected += OnServerDisconnected;
 
             AsyncHelper.Schedule("Do not auto kick a dummies", DontAutoKickTask);
         }
@@ -320,7 +320,7 @@ namespace Dummy.Services
                 var options = config.Options ?? throw new ArgumentNullException(nameof(config.Options));
                 var fun = config.Fun ?? throw new ArgumentNullException(nameof(config.Fun));
 
-                var dummyUser = new DummyUser(Provider, m_UserDataStore, probDummyPlayer, m_LoggerFactory, localizer,
+                var dummyUser = new DummyUser(UserProvider, m_UserDataStore, probDummyPlayer, m_LoggerFactory, localizer,
                     options.DisableSimulations, owners);
 
                 PostAddDummy(dummyUser, options, fun);

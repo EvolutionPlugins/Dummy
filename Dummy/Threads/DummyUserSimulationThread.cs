@@ -38,7 +38,7 @@ namespace Dummy.Threads
         private readonly DummyUser m_PlayerDummy;
         private readonly ILogger m_Logger;
 
-        private PlayerInputPacket m_PlayerInputPacket;
+        private PlayerInputPacket m_Packet;
         private uint m_Count;
         private uint m_Buffer;
         private uint m_Consumed;
@@ -46,8 +46,6 @@ namespace Dummy.Threads
         private float m_Yaw;
         private float m_Pitch;
         private float m_TimeLerp;
-        private Vector3 m_Velocity;
-        private Vector3 m_OldPosition;
 
         private Player Player => m_PlayerDummy.Player.Player;
 
@@ -157,7 +155,7 @@ namespace Dummy.Threads
             m_Buffer = 0;
             m_Consumed = 0;
             Move = Vector3.zero;
-            m_PlayerInputPacket = new();
+            m_Packet = new();
 
             var countKeys = 10 + ControlsSettings.NUM_PLUGIN_KEYS;
             m_Keys = new bool[countKeys];
@@ -172,10 +170,12 @@ namespace Dummy.Threads
 
         private void OnPlayerTeleported(Player player, Vector3 point)
         {
-            if (m_PlayerInputPacket is WalkingPlayerInputPacket walking)
+            m_OldPosition = point;
+
+            /*if (m_Packet is WalkingPlayerInputPacket walking)
             {
                 walking.clientPosition = point;
-            }
+            }*/
         }
 
         public void SetRotation(float yaw, float pitch, float time)
@@ -214,7 +214,7 @@ namespace Dummy.Threads
 
         public async UniTaskVoid Start()
         {
-            await UniTask.DelayFrame(2, PlayerLoopTiming.FixedUpdate);
+            await UniTask.DelayFrame(1, PlayerLoopTiming.FixedUpdate);
             var queue = (Queue<PlayerInputPacket>)s_ServerSidePacketsField.GetValue(Player.input);
 
             while (Enabled)
@@ -225,160 +225,7 @@ namespace Dummy.Threads
 
                 if (m_Count % PlayerInput.SAMPLES == 0)
                 {
-                    var movement = Player.movement;
-                    var transform = Player.transform;
-                    var normalizedMove = Move.normalized;
-                    var speed = movement.speed;
-                    var deltaTime = PlayerInput.RATE;
-                    var stance = Player.stance.stance;
-                    var controller = movement.controller;
-                    var aim = Player.look.aim;
-
-                    m_OldPosition = transform.position;
-
-                    // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
-                    switch (stance)
-                    {
-                        case EPlayerStance.SITTING:
-                            break;
-                        case EPlayerStance.DRIVING:
-                            SimulateVehicle();
-                            break;
-                        case EPlayerStance.CLIMB:
-                            //s_FallProperty.SetValue(movement, c_Jump);
-                            m_Velocity = new(0, Move.z * speed * 0.5f, 0);
-                            controller.CheckedMove(m_Velocity * deltaTime);
-                            break;
-                        case EPlayerStance.SWIM:
-                            if (Player.stance.isSubmerged || (Player.look.pitch > 110 && Move.z > 0.1f))
-                            {
-                                m_Velocity = aim.rotation * normalizedMove * speed * 1.5f;
-
-                                if (Jump)
-                                {
-                                    m_Velocity.y = c_Swim * movement.pluginJumpMultiplier;
-                                }
-
-                                controller.CheckedMove(m_Velocity * deltaTime);
-                                break;
-                            }
-
-                            WaterUtility.getUnderwaterInfo(transform.position, out var _, out var surfaceElevation);
-                            m_Velocity = transform.rotation * normalizedMove * speed * 1.5f;
-                            m_Velocity.y = (surfaceElevation - 1.275f - transform.position.y) / 8f;
-                            controller.CheckedMove(m_Velocity * deltaTime);
-
-                            break;
-                        default:
-                            var isMovementBlocked = false;
-                            var shouldUpdateVelocity = false;
-                            if (movement.isGrounded && movement.ground.normal.y > 0)
-                            {
-                                var slopeAngle = Vector3.Angle(Vector3.up, movement.ground.normal);
-                                var maxWalkableSlope = 59f;
-                                if (Level.info?.configData?.Max_Walkable_Slope > -0.5f)
-                                {
-                                    maxWalkableSlope = Level.info.configData.Max_Walkable_Slope;
-                                }
-
-                                if (slopeAngle > maxWalkableSlope)
-                                {
-                                    isMovementBlocked = true;
-                                    var a = Vector3.Cross(Vector3.Cross(Vector3.up, movement.ground.normal), movement.ground.normal);
-                                    m_Velocity += a * 16f * deltaTime;
-                                    shouldUpdateVelocity = true;
-                                }
-                            }
-
-                            if (!isMovementBlocked)
-                            {
-                                var moveVector = movement.transform.rotation * normalizedMove * speed;
-
-                                if (movement.isGrounded)
-                                {
-                                    moveVector = Vector3.Cross(Vector3.Cross(Vector3.up, moveVector), movement.ground.normal);
-                                    moveVector.y = Mathf.Min(moveVector.y, 0f);
-
-                                    // it should also change direction on where is a dummy stand on (example: ice)
-                                    // not possible to use because is internal and WIP (unstable to use it)
-
-                                    m_Velocity = moveVector;
-                                }
-                                else
-                                {
-                                    m_Velocity.y += Physics.gravity.y * ((movement.fall <= 0f) ? movement.totalGravityMultiplier : 1f) * deltaTime * 3f;
-                                    var maxFall = (movement.totalGravityMultiplier < 0.99f) ? (Physics.gravity.y * 2f * movement.totalGravityMultiplier) : -100f;
-                                    m_Velocity.y = Mathf.Max(maxFall, m_Velocity.y);
-
-                                    var horizontalMagnitude = moveVector.GetHorizontalMagnitude();
-                                    var horizontal = m_Velocity.GetHorizontal();
-                                    var horizontalMagnitude2 = m_Velocity.GetHorizontalMagnitude();
-                                    float maxMagnitude;
-                                    if (horizontalMagnitude2 > horizontalMagnitude)
-                                    {
-                                        var num5 = 2f * Provider.modeConfigData.Gameplay.AirStrafing_Deceleration_Multiplier;
-                                        maxMagnitude = Mathf.Max(horizontalMagnitude, horizontalMagnitude2 - (num5 * deltaTime));
-                                    }
-                                    else
-                                    {
-                                        maxMagnitude = horizontalMagnitude;
-                                    }
-
-                                    var a3 = moveVector * (4f * Provider.modeConfigData.Gameplay.AirStrafing_Acceleration_Multiplier);
-                                    var vector2 = horizontal + (a3 * deltaTime);
-                                    vector2 = vector2.ClampHorizontalMagnitude(maxMagnitude);
-                                    m_Velocity.x = vector2.x;
-                                    m_Velocity.z = vector2.z;
-                                    shouldUpdateVelocity = true;
-                                }
-                            }
-
-                            var jumpMastery = Player.skills.mastery(0, 6);
-                            if (Jump && movement.isGrounded && !Player.life.isBroken &&
-                                Player.life.stamina >= 10f * (1f - (jumpMastery * 0.5f)) &&
-                                stance is EPlayerStance.STAND or EPlayerStance.SPRINT)
-                            {
-                                m_Velocity.y = c_Jump * (1f + (jumpMastery * 0.25f)) * movement.pluginJumpMultiplier;
-                            }
-
-                            m_Velocity += movement.pendingLaunchVelocity;
-                            movement.pendingLaunchVelocity = Vector3.zero;
-
-                            var previousPosition = movement.transform.position;
-                            controller.CheckedMove(m_Velocity * deltaTime);
-
-                            if (shouldUpdateVelocity)
-                            {
-                                m_Velocity = (movement.transform.position - previousPosition) / deltaTime;
-                            }
-                            break;
-                    }
-
-                    if (stance is EPlayerStance.DRIVING)
-                    {
-                        m_PlayerInputPacket = new DrivingPlayerInputPacket();
-                    }
-                    else
-                    {
-                        var horizontal = (byte)(Move.x + 1);
-                        var vertical = (byte)(Move.z + 1);
-
-                        m_PlayerInputPacket = new WalkingPlayerInputPacket
-                        {
-                            analog = (byte)((horizontal << 4) | vertical),
-                            clientPosition = Player.transform.position,
-                            pitch = Mathf.Lerp(Player.look.pitch, m_Pitch, m_TimeLerp),
-                            yaw = Mathf.Lerp(Player.look.yaw, m_Yaw, m_TimeLerp)
-                        };
-                    }
-
-                    m_PlayerInputPacket.clientSimulationFrameNumber = m_Simulation;
-                    m_PlayerInputPacket.recov = Player.input.recov;
-
-                    m_Simulation++;
-                    m_Buffer += PlayerInput.SAMPLES;
-
-                    transform.position = m_OldPosition;
+                    SimulateAsClient();
                 }
 
                 if (m_Consumed < m_Buffer)
@@ -393,9 +240,9 @@ namespace Dummy.Threads
                     {
                         compressedKeys |= m_Flags[b];
                     }
-                    m_PlayerInputPacket.keys = compressedKeys;
+                    m_Packet.keys = compressedKeys;
 
-                    if (m_PlayerInputPacket is DrivingPlayerInputPacket drivingPlayerInputPacket)
+                    if (m_Packet is DrivingPlayerInputPacket drivingPlayerInputPacket)
                     {
                         var vehicle = Player.movement.getVehicle();
 
@@ -414,7 +261,7 @@ namespace Dummy.Threads
                         }
                     }
 
-                    queue.Enqueue(m_PlayerInputPacket);
+                    queue.Enqueue(m_Packet);
                 }
 
                 m_Count++;
