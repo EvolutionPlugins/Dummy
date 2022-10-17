@@ -6,9 +6,11 @@ using Dummy.Users;
 using Microsoft.Extensions.Localization;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
+using OpenMod.Core.Ioc;
 
 namespace Dummy.Commands
 {
+    [DontAutoRegister]
     public abstract class CommandDummyAction : Command
     {
         private readonly IDummyProvider m_DummyProvider;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
 using OpenMod.UnityEngine.Extensions;
@@ -18,11 +19,17 @@ namespace Dummy.Actions.Movement.Actions
 
         public Task Do(DummyUser dummy)
         {
-            Vector3 dir = (m_Pos - dummy.Player.Transform.Position.ToUnityVector()).normalized;
-            float yaw = (float) Math.Atan2(dir.x, dir.y);
-            float pitch = (float) Math.Atan2(dir.z, Math.Sqrt((dir.x * dir.x) + (dir.y * dir.y)));
-            RotateAction rotation = new RotateAction(yaw, pitch);
-            return rotation.Do(dummy);
+            async UniTask Task()
+            {
+                await UniTask.SwitchToMainThread();
+                Vector3 dir = (m_Pos - dummy.Player.Transform.Position.ToUnityVector()).normalized;
+                float yaw = (float)Math.Atan2(dir.x, dir.y);
+                float pitch = (float)Math.Atan2(dir.z, Math.Sqrt((dir.x * dir.x) + (dir.y * dir.y)));
+                RotateAction rotation = new(yaw, pitch);
+                await rotation.Do(dummy);
+            }
+
+            return Task().AsTask();
         }
     }
 }
