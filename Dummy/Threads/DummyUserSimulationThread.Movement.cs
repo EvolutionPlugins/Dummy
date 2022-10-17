@@ -10,8 +10,6 @@ public partial class DummyUserSimulationThread
 	private Vector3 m_Velocity;
 	private Vector3 m_OldPosition;
 
-	private Vector3 m_Test;
-
 	private float fall => m_Velocity.y;
 
 	public void SimulateAsClient()
@@ -35,7 +33,6 @@ public partial class DummyUserSimulationThread
 
 			m_Velocity = Player.input.clientResimulationVelocity;
 
-			m_Logger.LogInformation("Received resim request oldPos {OldPos} reqSim {ReqSim}", m_Test, Player.input.clientResimulationPosition);
 			m_OldPosition = transform.position;
 			goto ForceCreatePacket;
 		}
@@ -208,8 +205,6 @@ public partial class DummyUserSimulationThread
 				pitch = Mathf.Lerp(Player.look.pitch, m_Pitch, m_TimeLerp),
 				yaw = Mathf.Lerp(Player.look.yaw, m_Yaw, m_TimeLerp)
 			};
-
-			m_Test = ((WalkingPlayerInputPacket)m_Packet).clientPosition;
 		}
 
 		m_Packet.clientSimulationFrameNumber = m_Simulation;
