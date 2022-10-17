@@ -215,13 +215,23 @@ namespace Dummy.Threads
         public async UniTaskVoid Start()
         {
             await UniTask.DelayFrame(1, PlayerLoopTiming.FixedUpdate);
+            if (Player == null)
+            {
+                return;
+            }
+
+            if (Player.transform.TryGetComponent<Rigidbody>(out var rigidbody))
+            {
+                UnityEngine.Object.Destroy(rigidbody);
+            }
+
             var queue = (Queue<PlayerInputPacket>)s_ServerSidePacketsField.GetValue(Player.input);
 
             while (Enabled)
             {
                 // Do not simulate if dead
                 if (Player.life.isDead)
-                    continue;
+                    goto Exit;
 
                 if (m_Count % PlayerInput.SAMPLES == 0)
                 {
@@ -264,6 +274,7 @@ namespace Dummy.Threads
                     queue.Enqueue(m_Packet);
                 }
 
+                Exit:
                 m_Count++;
                 await UniTask.WaitForFixedUpdate();
             }

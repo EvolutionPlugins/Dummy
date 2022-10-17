@@ -62,11 +62,10 @@ namespace Dummy.Events
             Revive(dummy.Player).Forget();
         }
 
-        private async UniTask Revive(UnturnedPlayer player)
+        private static async UniTaskVoid Revive(UnturnedPlayer player)
         {
             await UniTask.Delay(1500);
-            await UniTask.SwitchToMainThread();
-            if (player.IsAlive)
+            if (player.Player == null || player.IsAlive)
             {
                 return;
             }
