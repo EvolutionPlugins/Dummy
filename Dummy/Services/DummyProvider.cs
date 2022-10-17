@@ -55,9 +55,9 @@ namespace Dummy.Services
             {
                 return false;
             }
-            
-            await playerDummy.DisposeAsync();
+
             m_Provider.DummyUsers.Remove(playerDummy);
+            await playerDummy.DisposeAsync();
 
             return true;
         }
@@ -70,8 +70,8 @@ namespace Dummy.Services
             {
                 var user = m_Provider.DummyUsers.ElementAt(i);
 
-                await user.DisposeAsync();
                 m_Provider.DummyUsers.Remove(user);
+                await user.DisposeAsync();
             }
         }
 

@@ -24,6 +24,11 @@
         <NoWarn>$(NoWarn);NU1701;NU1702;CS0436</NoWarn>
     </PropertyGroup>
 
+	<ItemGroup Condition="'$(Configuration)' == 'Release'">
+		<Compile Remove="Commands/Tests/*" />
+		<None Include="Commands/Tests/*" />
+	</ItemGroup>
+	
     <ItemGroup>
         <EmbeddedResource Include="config.yaml" />
         <EmbeddedResource Include="translations.yaml" />
@@ -38,7 +43,7 @@
 	</ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Krafs.Publicizer" Version="2.0.1">
+		<PackageReference Include="Krafs.Publicizer" Version="2.0.1">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
