@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using Cysharp.Threading.Tasks;
-using SDG.Framework.Water;
+﻿using SDG.Framework.Water;
 using SDG.Unturned;
 using UnityEngine;
 
@@ -8,23 +6,6 @@ namespace Dummy.Threads
 {
 	public partial class DummyUserSimulationThread
 	{
-		private static readonly PropertyInfo s_IsBoostingProperty = typeof(InteractableVehicle).GetProperty(nameof(InteractableVehicle.isBoosting),
-			BindingFlags.Public | BindingFlags.Instance);
-		private static readonly FieldInfo s_SpeedField = typeof(InteractableVehicle).GetField("_speed",
-			BindingFlags.NonPublic | BindingFlags.Instance);
-		private static readonly FieldInfo s_PhysicsSpeedField = typeof(InteractableVehicle).GetField("_physicsSpeed",
-			BindingFlags.NonPublic | BindingFlags.Instance);
-		private static readonly FieldInfo s_FactorField = typeof(InteractableVehicle).GetField("_factor",
-			BindingFlags.NonPublic | BindingFlags.Instance);
-		private static readonly FieldInfo s_BuoyancyField = typeof(InteractableVehicle).GetField("buoyancy",
-			BindingFlags.NonPublic | BindingFlags.Instance);
-		private static readonly FieldInfo s_SpeedTractionField = typeof(InteractableVehicle).GetField("speedTraction",
-			BindingFlags.NonPublic | BindingFlags.Instance);
-		private static readonly FieldInfo s_LastUpdatedPosField = typeof(InteractableVehicle).GetField("lastUpdatedPos",
-			BindingFlags.NonPublic | BindingFlags.Instance);
-		private static readonly FieldInfo s_IsPhysicalField = typeof(InteractableVehicle).GetField("isPhysical",
-			BindingFlags.NonPublic | BindingFlags.Instance);
-
 		private float m_Factor;
 		private Rigidbody? m_Rigidbody;
 		private Transform? m_Buoyancy;
@@ -47,12 +28,12 @@ namespace Dummy.Threads
 			}
 
 			var asset = vehicle.asset;
-			m_Factor = (float)s_FactorField.GetValue(vehicle);
-			m_SpeedTraction = (float)s_SpeedTractionField.GetValue(vehicle);
+			m_Factor = vehicle.factor;
+			m_SpeedTraction = vehicle.speedTraction;
 
 			if (!m_Buoyancy)
 			{
-				m_Buoyancy = (Transform)s_BuoyancyField.GetValue(vehicle);
+				m_Buoyancy = vehicle.buoyancy;
 			}
 
 			if (!m_Rigidbody)
@@ -75,22 +56,22 @@ namespace Dummy.Threads
 			{
 				if (Sprint && vehicle.passengers[0]?.player?.player.life.stamina > 0)
 				{
-					s_IsBoostingProperty.SetValue(vehicle, true);
+					vehicle.isBoosting = true;
 				}
 				else
 				{
-					s_IsBoostingProperty.SetValue(vehicle, false);
-					moveY *= asset.staminaBoost;
+                    vehicle.isBoosting = false;
+                    moveY *= asset.staminaBoost;
 					speed *= asset.staminaBoost;
 				}
 			}
 			else
 			{
-				s_IsBoostingProperty.SetValue(vehicle, false);
-			}
+                vehicle.isBoosting = false;
+            }
 
-			s_SpeedField.SetValue(vehicle, 150f);
-			s_IsPhysicalField.SetValue(vehicle, true);
+			vehicle._speed = 150f;
+			vehicle.isPhysical = true;
 
 			if ((vehicle.usesFuel && vehicle.fuel == 0) || vehicle.isUnderwater || vehicle.isDead || !vehicle.isEngineOn)
 			{
@@ -196,11 +177,10 @@ namespace Dummy.Threads
 				_ => vehicle.transform.InverseTransformDirection(m_Rigidbody!.velocity).z
 			};
 
-			s_SpeedField.SetValue(vehicle, _speed);
-			s_PhysicsSpeedField.SetValue(vehicle, _physicsSpeed);
-			s_FactorField.SetValue(vehicle, m_Factor);
-			s_SpeedTractionField.SetValue(vehicle, m_SpeedTraction);
-			s_LastUpdatedPosField.SetValue(vehicle, vehicle.transform.position);
+			vehicle._speed = _speed;
+			vehicle._physicsSpeed = _physicsSpeed;
+			vehicle._factor = m_Factor;
+			vehicle.speedTraction = m_SpeedTraction;
 		}
 	}
 }
