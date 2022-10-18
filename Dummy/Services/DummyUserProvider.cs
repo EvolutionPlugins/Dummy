@@ -215,7 +215,7 @@ namespace Dummy.Services
 
             await UniTask.SwitchToMainThread();
             var ip = dummy.SteamPlayer.getIPv4AddressOrZero();
-            return SDG.Unturned.Provider.requestBanPlayer((CSteamID)instigatorId, dummy.SteamID, ip, reason, banDuration);
+            return Provider.requestBanPlayer((CSteamID)instigatorId, dummy.SteamID, ip, dummy.SteamPlayer.playerID.GetHwids(), reason, banDuration);
         }
 
         public async Task<bool> KickAsync(IUser user, string? reason = null)
@@ -299,19 +299,19 @@ namespace Dummy.Services
 
             PrepareInventoryDetails(pending, userCopy != null);
 
-            await PreAddDummyAsync(pending!, config.Events!);
+            await PreAddDummyAsync(pending, config.Events!);
             try
             {
                 await UniTask.SwitchToMainThread();
 
-                SDG.Unturned.Provider.accept(playerID, pending!.assignedPro, pending.assignedAdmin, pending.face,
+                Provider.accept(playerID, pending!.assignedPro, pending.assignedAdmin, pending.face,
                     pending.hair, pending.beard, pending.skin, pending.color, pending.markerColor, pending.hand,
                     pending.shirtItem, pending.pantsItem, pending.hatItem, pending.backpackItem, pending.vestItem,
                     pending.maskItem, pending.glassesItem, pending.skinItems, pending.skinTags,
                     pending.skinDynamicProps, pending.skillset, pending.language, pending.lobbyID);
 
-                var probDummyPlayer = SDG.Unturned.Provider.clients.LastOrDefault();
-                if (probDummyPlayer?.playerID.steamID != playerID!.steamID)
+                var probDummyPlayer = Provider.clients.LastOrDefault();
+                if (probDummyPlayer?.playerID.steamID != playerID.steamID)
                 {
                     throw new DummyCanceledSpawnException(
                         $"Plugin or Game rejected connection of a dummy {pending.playerID.steamID}");
@@ -328,15 +328,15 @@ namespace Dummy.Services
             }
             catch (DummyCanceledSpawnException)
             {
-                SDG.Unturned.Provider.pending.Remove(pending);
+                Provider.pending.Remove(pending);
                 throw;
             }
             catch
             {
-                var i = SDG.Unturned.Provider.clients.FindIndex(x => x.playerID == playerID);
+                var i = Provider.clients.FindIndex(x => x.playerID == playerID);
                 if (i >= 0)
                 {
-                    SDG.Unturned.Provider.clients.RemoveAt(SDG.Unturned.Provider.clients.FindIndex(x => x.playerID == playerID));
+                    Provider.clients.RemoveAt(Provider.clients.FindIndex(x => x.playerID == playerID));
                 }
 
                 throw;
@@ -347,7 +347,7 @@ namespace Dummy.Services
         {
             await UniTask.SwitchToMainThread();
 
-            SDG.Unturned.Provider.pending.Add(pending);
+            Provider.pending.Add(pending);
 
             if (events.CallOnCheckBanStatusWithHwid)
             {
@@ -355,7 +355,7 @@ namespace Dummy.Services
                 var isBanned = false;
                 var banReason = string.Empty;
                 var banRemainingDuration = 0U;
-                if (SteamBlacklist.checkBanned(pending.playerID.steamID, ip, out var steamBlacklistID))
+                if (SteamBlacklist.checkBanned(pending.playerID.steamID, ip, pending.playerID.GetHwids(), out var steamBlacklistID))
                 {
                     isBanned = true;
                     banReason = steamBlacklistID!.reason;
@@ -364,7 +364,7 @@ namespace Dummy.Services
 
                 try
                 {
-                    SDG.Unturned.Provider.onCheckBanStatusWithHWID?.Invoke(pending.playerID, ip, ref isBanned, ref banReason,
+                    Provider.onCheckBanStatusWithHWID?.Invoke(pending.playerID, ip, ref isBanned, ref banReason,
                         ref banRemainingDuration);
                 }
                 catch (Exception e)
@@ -374,7 +374,7 @@ namespace Dummy.Services
 
                 if (isBanned)
                 {
-                    SDG.Unturned.Provider.pending.Remove(pending);
+                    Provider.pending.Remove(pending);
                     throw new DummyCanceledSpawnException(
                         $"Dummy {pending.playerID.steamID} is banned! Ban reason: {banReason}, duration: {banRemainingDuration}");
                 }
@@ -386,7 +386,7 @@ namespace Dummy.Services
                 var explanation = string.Empty;
                 try
                 {
-                    SDG.Unturned.Provider.onCheckValidWithExplanation(new()
+                    Provider.onCheckValidWithExplanation(new()
                     {
                         m_SteamID = pending.playerID.steamID,
                         m_eAuthSessionResponse = EAuthSessionResponse.k_EAuthSessionResponseOK,
@@ -400,7 +400,7 @@ namespace Dummy.Services
 
                 if (!isValid)
                 {
-                    SDG.Unturned.Provider.pending.Remove(pending);
+                    Provider.pending.Remove(pending);
                     throw new DummyCanceledSpawnException(
                         $"Plugin reject connection of a dummy {pending.playerID.steamID}. Reason: {explanation}");
                 }
@@ -427,27 +427,17 @@ namespace Dummy.Services
 
         private void PostAddDummy(DummyUser playerDummy, ConfigurationOptions options, ConfigurationFun fun)
         {
-            UniTask.Run(() => DelayedRemoveRigidbody(playerDummy));
             if (fun.AlwaysRotate)
             {
-                UniTask.Run(() => RotateDummyTask(playerDummy, fun.RotateYaw));
+                RotateDummyTask(playerDummy, fun.RotateYaw).Forget();
             }
 
             DummyUsers.Add(playerDummy);
         }
 
-        private async UniTask DelayedRemoveRigidbody(DummyUser player)
+        private async UniTaskVoid RotateDummyTask(DummyUser player, float rotateYaw)
         {
-            await UniTask.DelayFrame(1);
-            await UniTask.SwitchToMainThread();
-
-            var movement = player.Player.Player.movement;
-            movement.transform.DestroyRigidbody();
-        }
-
-        private async UniTask RotateDummyTask(DummyUser player, float rotateYaw)
-        {
-            while (!m_Disposed)
+            while (!m_Disposed && player.Simulation.Enabled)
             {
                 await UniTask.Delay(1);
                 player.Simulation.SetRotation(player.Player.Player.look.yaw + rotateYaw, player.Player.Player.look.pitch, 1f);
@@ -461,7 +451,7 @@ namespace Dummy.Services
                             NullStringLocalizer.Instance;
             var configuration = m_PluginAccessor.Instance?.Configuration ?? NullConfiguration.Instance;
 
-            if (SDG.Unturned.Provider.clients.Any(x => x.playerID.steamID == id))
+            if (Provider.clients.Any(x => x.playerID.steamID == id))
             {
                 throw new DummyContainsException(localizer, id.m_SteamID); // or id is taken
             }
@@ -475,7 +465,7 @@ namespace Dummy.Services
 
         private async Task DontAutoKickTask()
         {
-            var time = (int)Math.Floor(SDG.Unturned.Provider.configData.Server.Timeout_Game_Seconds * 0.5f);
+            var time = (int)Math.Floor(Provider.configData.Server.Timeout_Game_Seconds * 0.5f);
 
             while (!m_Disposed)
             {
@@ -513,8 +503,8 @@ namespace Dummy.Services
             }
 
             m_Disposed = true;
-            SDG.Unturned.Provider.onCommenceShutdown -= ProviderOnonCommenceShutdown;
-            SDG.Unturned.Provider.onServerDisconnected -= OnServerDisconnected;
+            Provider.onCommenceShutdown -= ProviderOnonCommenceShutdown;
+            Provider.onServerDisconnected -= OnServerDisconnected;
 
             if (!m_IsShuttingDown)
             {

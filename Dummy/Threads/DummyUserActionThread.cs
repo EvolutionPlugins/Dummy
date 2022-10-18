@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Dummy.API;
 using Dummy.Users;
 using Microsoft.Extensions.Logging;
+using SDG.Unturned;
 
 namespace Dummy.Threads
 {
@@ -29,11 +31,10 @@ namespace Dummy.Threads
 
         public async UniTaskVoid Start()
         {
+            await UniTask.SwitchToThreadPool();
+
             while (Enabled)
             {
-                await UniTask.SwitchToThreadPool();
-                await UniTask.DelayFrame(1, PlayerLoopTiming.FixedUpdate);
-
                 try
                 {
                     foreach (var action in ContinuousActions)
@@ -51,18 +52,25 @@ namespace Dummy.Threads
 
                         await action.Do(m_Dummy);
                     }
+
+                    if (Thread.CurrentThread.IsGameThread())
+                    {
+                        m_Logger.LogWarning("Action loop is on main thread!");
+                        await UniTask.SwitchToThreadPool();
+                    }
                 }
                 catch (Exception e)
                 {
                     m_Logger.LogError(e, "Exception on Dummy action thread");
                 }
+
+                await Task.Delay(100);
             }
         }
 
         public ValueTask DisposeAsync()
         {
             Enabled = false;
-            GC.SuppressFinalize(this);
             return new();
         }
     }
