@@ -1,18 +1,17 @@
 ﻿extern alias JetBrainsAnnotations;
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Dummy.API;
+using JetBrainsAnnotations::JetBrains.Annotations;
+using Microsoft.Extensions.Configuration;
 using OpenMod.API.Eventing;
 using OpenMod.Core.Eventing;
-using OpenMod.UnityEngine.Extensions;
 using OpenMod.Unturned.Players;
 using OpenMod.Unturned.Players.Life.Events;
 using OpenMod.Unturned.Users;
-using SDG.Unturned;
-using System.Threading.Tasks;
-using JetBrainsAnnotations::JetBrains.Annotations;
 using SDG.NetTransport;
+using SDG.Unturned;
 using UnityEngine;
-using Microsoft.Extensions.Configuration;
 
 namespace Dummy.Events
 {
@@ -36,27 +35,26 @@ namespace Dummy.Events
         [EventListener(Priority = EventListenerPriority.Monitor)]
         public async Task HandleEventAsync(object? sender, UnturnedPlayerDeathEvent @event)
         {
-            if (!m_Configuration.GetValue<bool>("logs:enableDeathLog"))
-            {
-                return;
-            }
-
             var dummy = await m_DummyProvider.FindDummyUserAsync(@event.Player.SteamId.m_SteamID);
             if (dummy == null)
             {
                 return;
             }
 
-            foreach (var owner in dummy.Owners)
+            if (m_Configuration.GetValue<bool>("logs:enableDeathLog"))
             {
-                var player = m_UnturnedUserDirectory.FindUser(owner);
-                if (player == null)
+                foreach (var owner in dummy.Owners)
                 {
-                    continue;
-                }
+                    var player = m_UnturnedUserDirectory.FindUser(owner);
+                    if (player == null)
+                    {
+                        continue;
+                    }
 
-                await player.PrintMessageAsync(
-                    $"Dummy {@event.Player.SteamId} has died. Death reason: {@event.DeathCause.ToString().ToLower()}, killer = {@event.Instigator}. Respawning...");
+                    await player.PrintMessageAsync(
+                        $"Dummy {@event.Player.SteamId} has died. Death reason: {@event.DeathCause.ToString().ToLower()}, killer = {@event.Instigator}. Respawning...");
+                }
+                return;
             }
 
             Revive(dummy.Player).Forget();
