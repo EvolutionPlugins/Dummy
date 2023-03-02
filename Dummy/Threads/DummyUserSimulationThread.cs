@@ -272,6 +272,9 @@ namespace Dummy.Threads
                 }
 
                 Exit:
+                // simulate dummy ping
+                Player.channel.owner.lag(Time.unscaledDeltaTime);
+
                 m_Count++;
                 await UniTask.WaitForFixedUpdate();
             }
