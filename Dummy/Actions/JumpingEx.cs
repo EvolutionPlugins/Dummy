@@ -23,11 +23,7 @@ namespace Dummy.Actions
         public static void Jump(this DummyUser dummy)
         {
             dummy.Actions.Actions.Enqueue(new JumpAction(true));
-            dummy.Actions.Actions.Enqueue(new CustomAction(user =>
-            {
-                user.Actions.Actions.Enqueue(new JumpAction(false));
-                return Task.CompletedTask;
-            }));
+            dummy.Actions.Actions.Enqueue(new JumpAction(false));
         }
 
         public static async Task TempJumpAsync(this DummyUser playerDummy, float time)

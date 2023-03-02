@@ -7,6 +7,7 @@ using Dummy.Actions.Interaction;
 using Dummy.Patches;
 using Dummy.Users;
 using SDG.Framework.Water;
+using SDG.NetPak;
 using SDG.Unturned;
 using UnityEngine;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
@@ -30,7 +31,6 @@ namespace Dummy.Threads
         private const float c_MinAngleProne = 60f;
         private const float c_MaxAngleProne = 120f;
 
-        private readonly ushort[] m_Flags;
         private readonly bool[] m_Keys;
         private readonly DummyUser m_PlayerDummy;
         private readonly ILogger m_Logger;
@@ -151,16 +151,12 @@ namespace Dummy.Threads
             m_Count = 0;
             m_Buffer = 0;
             m_Consumed = 0;
+            m_Pitch = 90f;
             Move = Vector3.zero;
             m_Packet = new();
 
             var countKeys = 10 + ControlsSettings.NUM_PLUGIN_KEYS;
             m_Keys = new bool[countKeys];
-            m_Flags = new ushort[countKeys];
-            for (byte b = 0; b < countKeys; b++)
-            {
-                m_Flags[b] = (ushort)(1 << b);
-            }
 
             Player.onPlayerTeleported += OnPlayerTeleported;
         }
@@ -232,7 +228,10 @@ namespace Dummy.Threads
 
                 if (m_Count % PlayerInput.SAMPLES == 0)
                 {
+                    await m_PlayerDummy.Actions.ExecuteActions();
+
                     SimulateAsClient();
+                    SimulateEquipment();
                 }
 
                 if (m_Consumed < m_Buffer)
@@ -243,9 +242,10 @@ namespace Dummy.Threads
                 if (m_Consumed == m_Buffer)
                 {
                     ushort compressedKeys = 0;
-                    for (var b = 0; b < m_Keys.Length && m_Keys[b]; b++)
+                    for (var b = 0; b < m_Keys.Length; b++)
                     {
-                        compressedKeys |= m_Flags[b];
+                        if (m_Keys[b])
+                            compressedKeys |= Player.input.flags[b];
                     }
                     m_Packet.keys = compressedKeys;
 
@@ -267,6 +267,17 @@ namespace Dummy.Threads
                             drivingPlayerInputPacket.turn = (byte)(Move.x + 1);
                         }
                     }
+
+                    var netWriter = NetMessages.GetInvokableWriter();
+                    netWriter.Reset();
+                    m_Packet.write(netWriter);
+                    netWriter.Flush();
+
+                    var netRead = NetMessages.GetInvokableReader();
+                    netRead.SetBufferSegment(netWriter.buffer, netWriter.writeByteIndex);
+                    netRead.Reset();
+
+                    m_Packet.read(Player.channel, netRead);
 
                     queue.Enqueue(m_Packet);
                 }

@@ -29,42 +29,34 @@ namespace Dummy.Threads
 
         public bool Enabled { get; set; }
 
-        public async UniTaskVoid Start()
+        internal async UniTask ExecuteActions()
         {
-            await UniTask.SwitchToThreadPool();
-
-            while (Enabled)
+            if (!Enabled)
             {
-                try
+                return;
+            }
+
+            try
+            {
+                foreach (var action in ContinuousActions)
                 {
-                    foreach (var action in ContinuousActions)
-                    {
-                        if (action == null)
-                            continue;
+                    if (action == null)
+                        continue;
 
-                        await action.Do(m_Dummy);
-                    }
-
-                    if (!Actions.IsEmpty)
-                    {
-                        if (!Actions.TryDequeue(out IAction? action) || action == null)
-                            continue;
-
-                        await action.Do(m_Dummy);
-                    }
-
-                    if (Thread.CurrentThread.IsGameThread())
-                    {
-                        m_Logger.LogWarning("Action loop is on main thread!");
-                        await UniTask.SwitchToThreadPool();
-                    }
-                }
-                catch (Exception e)
-                {
-                    m_Logger.LogError(e, "Exception on Dummy action thread");
+                    await action.Do(m_Dummy);
                 }
 
-                await Task.Delay(100);
+                if (!Actions.IsEmpty)
+                {
+                    if (!Actions.TryDequeue(out var action) || action == null)
+                        return;
+
+                    await action.Do(m_Dummy);
+                }
+            }
+            catch (Exception e)
+            {
+                m_Logger.LogError(e, "Exception on Dummy action thread");
             }
         }
 

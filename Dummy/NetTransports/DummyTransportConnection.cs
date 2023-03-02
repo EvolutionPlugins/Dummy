@@ -62,10 +62,11 @@ namespace Dummy.NetTransports
         public void Send(byte[] buffer, long size, ENetReliability sendType)
         {
             var invokableReader = NetMessages.GetInvokableReader();
-            invokableReader.SetBufferSegmentCopy(buffer, Provider.buffer, (int)size);
+            invokableReader.SetBufferSegment(buffer, (int)size);
             invokableReader.Reset();
-            invokableReader.ReadEnum(out EClientMessage eclientMessage);
-            if (eclientMessage is not EClientMessage.InvokeMethod)
+
+            invokableReader.ReadEnum(out EClientMessage clientMessage);
+            if (clientMessage is not EClientMessage.InvokeMethod)
             {
                 return;
             }

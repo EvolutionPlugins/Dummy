@@ -46,7 +46,6 @@ namespace Dummy.Users
             Actions.Enabled = true;
             Simulation.Enabled = !disableSimulation;
 
-            Actions.Start().Forget();
             Simulation.Start().Forget();
         }
 

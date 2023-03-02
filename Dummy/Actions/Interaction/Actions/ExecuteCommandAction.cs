@@ -34,21 +34,26 @@ namespace Dummy.Actions.Interaction.Actions
             m_CommandExecutedHandler = commandExecutedHandler;
         }
 
-        public async Task Do(DummyUser dummy)
+        public Task Do(DummyUser dummy)
         {
-            m_User = dummy;
-            IDisposable iEvent = NullDisposable.Instance;
-            if (m_EventBus != null && m_Component != null)
+            AsyncHelper.Schedule("dummy-execute-command", async () =>
             {
-                iEvent = m_EventBus.Subscribe<CommandExecutedEvent>(m_Component, OnCommandExecutedEvent);
-            }
+                m_User = dummy;
+                IDisposable iEvent = NullDisposable.Instance;
+                if (m_EventBus != null && m_Component != null)
+                {
+                    iEvent = m_EventBus.Subscribe<CommandExecutedEvent>(m_Component, OnCommandExecutedEvent);
+                }
 
-            var commandContext = await m_CommandExecutor.ExecuteAsync(dummy, Arguments, string.Empty);
-            commandContext.Exception =
-                commandContext.Exception != null && m_ExceptionHandled ? null : commandContext.Exception;
-            iEvent.Dispose();
+                var commandContext = await m_CommandExecutor.ExecuteAsync(dummy, Arguments, string.Empty);
+                commandContext.Exception =
+                    commandContext.Exception != null && m_ExceptionHandled ? null : commandContext.Exception;
+                iEvent.Dispose();
 
-            m_CommandExecutedHandler?.Invoke(commandContext);
+                m_CommandExecutedHandler?.Invoke(commandContext);
+            });
+
+            return Task.CompletedTask;
         }
 
         [EventListener(Priority = EventListenerPriority.Monitor)]

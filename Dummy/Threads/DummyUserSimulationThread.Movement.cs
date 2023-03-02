@@ -1,4 +1,5 @@
-﻿using SDG.Framework.Water;
+﻿using System;
+using SDG.Framework.Water;
 using SDG.Unturned;
 using UnityEngine;
 
@@ -11,7 +12,7 @@ public partial class DummyUserSimulationThread
 
     private float fall => m_Velocity.y;
 
-    public void SimulateAsClient()
+    private void SimulateAsClient()
     {
         var movement = Player.movement;
         var transform = Player.transform;
@@ -201,8 +202,8 @@ public partial class DummyUserSimulationThread
             {
                 analog = (byte)((horizontal << 4) | vertical),
                 clientPosition = transform.position,
-                pitch = Mathf.Lerp(Player.look.pitch, m_Pitch, m_TimeLerp),
-                yaw = Mathf.Lerp(Player.look.yaw, m_Yaw, m_TimeLerp)
+                pitch = m_Pitch,
+                yaw = m_Yaw
             };
         }
 
