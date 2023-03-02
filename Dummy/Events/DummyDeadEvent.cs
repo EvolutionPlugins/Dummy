@@ -54,7 +54,6 @@ namespace Dummy.Events
                     await player.PrintMessageAsync(
                         $"Dummy {@event.Player.SteamId} has died. Death reason: {@event.DeathCause.ToString().ToLower()}, killer = {@event.Instigator}. Respawning...");
                 }
-                return;
             }
 
             Revive(dummy.Player).Forget();
