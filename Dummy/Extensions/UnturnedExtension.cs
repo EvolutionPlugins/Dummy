@@ -16,13 +16,6 @@ namespace Dummy.Extensions
             return true;
         }
 
-        public static async UniTask<bool> TeleportToLocationAsync(this DummyUser dummyUser, Vector3 position)
-        {
-            await UniTask.SwitchToMainThread();
-
-            return await dummyUser.TeleportToLocationAsync(position, dummyUser.Player.Player.transform.eulerAngles.y);
-        }
-
         public static async UniTask<bool> TeleportToPlayerAsync(this DummyUser from, UnturnedUser to)
         {
             await UniTask.SwitchToMainThread();

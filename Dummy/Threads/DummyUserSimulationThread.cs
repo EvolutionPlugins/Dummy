@@ -30,9 +30,6 @@ namespace Dummy.Threads
         private const float c_MinAngleProne = 60f;
         private const float c_MaxAngleProne = 120f;
 
-        private static readonly FieldInfo s_ServerSidePacketsField = typeof(PlayerInput).GetField("serversidePackets",
-            BindingFlags.NonPublic | BindingFlags.Instance)!;
-
         private readonly ushort[] m_Flags;
         private readonly bool[] m_Keys;
         private readonly DummyUser m_PlayerDummy;
@@ -225,7 +222,7 @@ namespace Dummy.Threads
                 UnityEngine.Object.Destroy(rigidbody);
             }
 
-            var queue = (Queue<PlayerInputPacket>)s_ServerSidePacketsField.GetValue(Player.input);
+            var queue = Player.input.serversidePackets;
 
             while (Enabled)
             {

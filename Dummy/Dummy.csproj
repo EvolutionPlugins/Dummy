@@ -16,7 +16,7 @@
         <GenerateNugetPackage>true</GenerateNugetPackage>
         <RepositoryUrl>https://github.com/EvolutionPlugins/Dummy</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <LangVersion>10.0</LangVersion>
+        <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>nullable</WarningsAsErrors>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
@@ -32,10 +32,6 @@
     <ItemGroup>
         <EmbeddedResource Include="config.yaml" />
         <EmbeddedResource Include="translations.yaml" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Include="..\.editorconfig" Link=".editorconfig" />
     </ItemGroup>
 
 	<ItemGroup>

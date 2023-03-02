@@ -35,7 +35,7 @@ namespace Dummy.Events
         [EventListener(Priority = EventListenerPriority.Monitor)]
         public async Task HandleEventAsync(object? sender, UnturnedPlayerDeathEvent @event)
         {
-            var dummy = await m_DummyProvider.FindDummyUserAsync(@event.Player.SteamId.m_SteamID);
+            var dummy = await m_DummyProvider.FindDummyUserAsync(@event.Player.SteamId);
             if (dummy == null)
             {
                 return;

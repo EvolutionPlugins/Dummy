@@ -1,4 +1,5 @@
 ﻿extern alias JetBrainsAnnotations;
+using Dummy.Models;
 using Dummy.Users;
 using JetBrainsAnnotations::JetBrains.Annotations;
 using Microsoft.Extensions.Configuration;
@@ -12,11 +13,21 @@ namespace Dummy.Permissions
     [UsedImplicitly]
     public class DummyPermissionCheckProvider : AlwaysGrantPermissionCheckProvider
     {
-        public DummyPermissionCheckProvider(IPluginAccessor<Dummy> pluginAccessor) : base(actor =>
-            actor is DummyUser dummy
-            && (pluginAccessor.Instance!.Configuration.GetSection("options:canExecuteCommands").Get<bool>()
-                || pluginAccessor.Instance!.Configuration.GetSection("options:isAdmin").Get<bool>()
-                || dummy.SteamPlayer.isAdmin))
+        public DummyPermissionCheckProvider(IPluginAccessor<Dummy> pluginAccessor) : base((actor) =>
+        {
+            if (actor is not DummyUser user)
+            {
+                return false;
+            }
+
+            if (user.SteamPlayer.isAdmin)
+            {
+                return true;
+            }
+
+            var options = pluginAccessor.Instance!.Configuration.GetValue<ConfigurationOptions>("options");
+            return options.CanExecuteCommands || options.IsAdmin;
+        })
         {
         }
     }

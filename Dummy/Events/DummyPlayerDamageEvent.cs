@@ -38,7 +38,7 @@ namespace Dummy.Events
                 return;
             }
 
-            var dummy = await GetDummyUser(@event.Player.SteamId.m_SteamID);
+            var dummy = await m_DummyProvider.FindDummyUserAsync(@event.Player.SteamId);
             if (dummy == null)
             {
                 return;
@@ -57,7 +57,7 @@ namespace Dummy.Events
         [EventListener(Priority = EventListenerPriority.Normal)]
         public async Task HandleEventAsync(object? sender, UnturnedPlayerDamagingEvent @event)
         {
-            var dummy = await GetDummyUser(@event.Player.SteamId.m_SteamID);
+            var dummy = await m_DummyProvider.FindDummyUserAsync(@event.Player.SteamId);
             if (dummy == null)
             {
                 return;
@@ -65,11 +65,6 @@ namespace Dummy.Events
 
             @event.TrackKill = false;
             @event.IsCancelled = !m_Configuration.GetValue("events:allowDamage", true);
-        }
-
-        private Task<DummyUser?> GetDummyUser(ulong id)
-        {
-            return m_DummyProvider.FindDummyUserAsync(id);
         }
     }
 }

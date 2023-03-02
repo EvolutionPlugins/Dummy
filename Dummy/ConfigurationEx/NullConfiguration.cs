@@ -6,7 +6,7 @@ using Microsoft.Extensions.Primitives;
 
 namespace Dummy.ConfigurationEx
 {
-    public class NullConfiguration : IConfiguration
+    public sealed class NullConfiguration : IConfiguration
     {
         public static NullConfiguration Instance { get; } = new();
 
