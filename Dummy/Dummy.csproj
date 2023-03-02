@@ -43,7 +43,7 @@
 	</ItemGroup>
 
     <ItemGroup>
-		<PackageReference Include="Krafs.Publicizer" Version="2.0.1">
+		<PackageReference Include="Krafs.Publicizer" Version="2.2.1">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -54,8 +54,8 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="OpenMod.Unturned" Version="3.3.8" />
-        <PackageReference Include="OpenMod.Unturned.Redist" Version="3.22.16" />
+        <PackageReference Include="OpenMod.Unturned" Version="3.3.9" />
+        <PackageReference Include="OpenMod.Unturned.Redist" Version="3.22.21.4" />
     </ItemGroup>
 
     <Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
