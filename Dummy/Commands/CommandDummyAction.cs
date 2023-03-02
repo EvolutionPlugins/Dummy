@@ -30,14 +30,19 @@ namespace Dummy.Commands
                 throw new CommandWrongUsageException(Context);
             }
 
-            var id = await Context.Parameters.GetAsync<ulong>(0);
-
-            var dummy = await m_DummyProvider.FindDummyUserAsync(id);
-            if (dummy == null)
+            if (Context.Parameters[0].Equals("all", StringComparison.OrdinalIgnoreCase))
             {
-                throw new UserFriendlyException(m_StringLocalizer["commands:dummyNotFound", new { Id = id }]);
+                foreach (var dummyUser in m_DummyProvider.Dummies)
+                {
+                    await ExecuteDummyAsync(dummyUser);
+                }
+                return;
             }
 
+            var id = await Context.Parameters.GetAsync<ulong>(0);
+
+            var dummy = await m_DummyProvider.FindDummyUserAsync(id)
+                ?? throw new UserFriendlyException(m_StringLocalizer["commands:dummyNotFound", new { Id = id }]);
             await ExecuteDummyAsync(dummy);
         }
 
