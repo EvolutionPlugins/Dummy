@@ -1,5 +1,4 @@
 ﻿extern alias JetBrainsAnnotations;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -46,6 +45,11 @@ namespace Dummy.Services
             return m_Provider.AddDummyAsync(id, owners, settings: settings);
         }
 
+        public Task<DummyUser> AddDummyAsync(CSteamID? id, HashSet<CSteamID>? owners = null, UnturnedUser? userCopy = null, ConfigurationSettings? settings = null)
+        {
+            return m_Provider.AddDummyAsync(id, owners, userCopy: userCopy, settings: settings);
+        }
+
         public async Task<bool> RemoveDummyAsync(CSteamID id)
         {
             await UniTask.SwitchToMainThread();
@@ -78,11 +82,6 @@ namespace Dummy.Services
         public Task<DummyUser?> FindDummyUserAsync(CSteamID id)
         {
             return Task.FromResult<DummyUser?>(Dummies.FirstOrDefault(x => x.SteamID == id));
-        }
-
-        public Task<CSteamID> GetAvailableIdAsync()
-        {
-            return Task.FromResult(m_Provider.GetAvailableId());
         }
 
         public Task<DummyUser?> FindDummyUserAsync(ulong id)

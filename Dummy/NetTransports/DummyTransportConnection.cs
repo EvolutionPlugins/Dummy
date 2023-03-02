@@ -1,5 +1,5 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
+using Dummy.Models;
 using Microsoft.Extensions.Configuration;
 using OpenMod.API.Plugins;
 using SDG.NetTransport;
@@ -15,18 +15,17 @@ namespace Dummy.NetTransports
 
         public DummyTransportConnection(IPluginAccessor<Dummy> pluginAccessor)
         {
-            var random = new Random();
-            var configuration = pluginAccessor.Instance!.Configuration;
+            var random = new System.Random();
+            var config = pluginAccessor.Instance!.Configuration.Get<Configuration>();
 
-            var randomizeIp = configuration.GetValue("connection:randomIp", true);
-            var randomizePort = configuration.GetValue("connection:randomPort", true);
-            m_IP = randomizeIp
+            m_IP = config.Connection.RandomIp || config.Default.IP == null
                 ? $"{random.Next(1, 256)}.{random.Next(256)}.{random.Next(256)}.{random.Next(256)}"
-                : configuration["default:ip"];
-            m_Port = randomizePort
+                : (m_Address = config.Default.IP).ToString();
+            m_Address ??= IPAddress.Parse(m_IP);
+
+            m_Port = config.Connection.RandomPort
                 ? (ushort)random.Next(IPEndPoint.MinPort + 1, IPEndPoint.MaxPort + 1)
-                : configuration.GetSection("default:port").Get<ushort>();
-            m_Address = IPAddress.Parse(m_IP);
+                : config.Default.Port;
         }
 
         public void CloseConnection()

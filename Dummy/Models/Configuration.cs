@@ -6,10 +6,10 @@ namespace Dummy.Models
     [UsedImplicitly]
     public class Configuration
     {
-        public ConfigurationOptions? Options { get; set; }
-        public ConfigurationEvents? Events { get; set; }
-        public ConfigurationConnection? Connection { get; set; }
-        public ConfigurationFun? Fun { get; set; }
-        public ConfigurationSettings? Default { get; set; }
+        public ConfigurationOptions Options { get; set; } = new();
+        public ConfigurationEvents Events { get; set; } = new();
+        public ConfigurationConnection Connection { get; set; } = new();
+        public ConfigurationFun Fun { get; set; } = new();
+        public ConfigurationSettings Default { get; set; } = new();
     }
 }

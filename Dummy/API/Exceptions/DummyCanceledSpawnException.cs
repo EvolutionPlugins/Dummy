@@ -1,6 +1,6 @@
 ﻿using OpenMod.API.Commands;
 
-namespace Dummy.Services
+namespace Dummy.API.Exceptions
 {
     public class DummyCanceledSpawnException : UserFriendlyException
     {

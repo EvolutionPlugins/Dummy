@@ -2,9 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Autofac;
 using Cysharp.Threading.Tasks;
+using Dummy.API.Exceptions;
 using Dummy.ConfigurationEx;
 using Dummy.Extensions;
 using Dummy.Models;
@@ -237,7 +239,6 @@ namespace Dummy.Services
             var configuration = m_PluginAccessor.Instance?.Configuration ?? NullConfiguration.Instance;
             var config = configuration.Get<Configuration>();
 
-            //id ??= GetAvailableId();
             owners ??= new();
 
             var sId = id ?? GetAvailableId();
@@ -249,10 +250,15 @@ namespace Dummy.Services
 
             if (userCopy != null)
             {
+                // settings should be in priority
+
                 var userSteamPlayer = userCopy.Player.SteamPlayer;
                 var uPlayerID = userCopy.Player.SteamPlayer.playerID;
-                playerID = new(sId, uPlayerID.characterID, uPlayerID.playerName, uPlayerID.characterName,
-                    uPlayerID.nickName, uPlayerID.group);
+                playerID = new(sId, settings?.CharacterId ?? uPlayerID.characterID,
+                    settings?.PlayerName ?? uPlayerID.playerName,
+                    settings?.CharacterName ?? uPlayerID.characterName,
+                    settings?.NickName ?? uPlayerID.nickName,
+                    settings?.SteamGroupId ?? uPlayerID.group);
 
                 pending = new(GetTransportConnection(), playerID, userSteamPlayer.isPro,
                     userSteamPlayer.face, userSteamPlayer.hair, userSteamPlayer.beard, userSteamPlayer.skin,
@@ -276,17 +282,25 @@ namespace Dummy.Services
                 }
 
                 var skins = settings.Skins ?? throw new ArgumentException(nameof(settings.Skins));
-                // var options = config.Options ?? throw new ArgumentException(nameof(config.Options));
 
-                var skinColor = settings.SkinColor?.ToColor() ?? UColor.white;
-                var color = settings.Color?.ToColor() ?? UColor.white;
-                var markerColor = settings.MarkerColor?.ToColor() ?? UColor.white;
+                var skinColor = settings.SkinColor;
+                var hairColor = settings.HairColor;
+                var markerColor = settings.MarkerColor;
+                var hwid = settings.Hwid.GetBytes();
+
+                if (hwid.Length != 20)
+                {
+                    hwid = new byte[20];
+
+                    using var rng = RandomNumberGenerator.Create();
+                    rng.GetBytes(hwid);
+                }
 
                 playerID = new(sId, settings.CharacterId, settings.PlayerName,
                     settings.CharacterName, settings.NickName, settings.SteamGroupId, settings.Hwid.GetBytes());
 
                 pending = new(GetTransportConnection(), playerID, settings.IsPro, settings.FaceId,
-                    settings.HairId, settings.BeardId, skinColor, color, markerColor,
+                    settings.HairId, settings.BeardId, skinColor, hairColor, markerColor,
                     settings.IsLeftHanded, skins.Shirt, skins.Pants, skins.Hat,
                     skins.Backpack, skins.Vest, skins.Mask, skins.Glasses, Array.Empty<ulong>(),
                     settings.PlayerSkillset, settings.Language, settings.LobbyId, EClientPlatform.Windows)
@@ -297,7 +311,7 @@ namespace Dummy.Services
                 };
             }
 
-            PrepareInventoryDetails(pending, userCopy != null);
+            PrepareInventoryDetails(pending);
 
             await PreAddDummyAsync(pending, config.Events!);
             try
@@ -308,7 +322,7 @@ namespace Dummy.Services
                     pending.hair, pending.beard, pending.skin, pending.color, pending.markerColor, pending.hand,
                     pending.shirtItem, pending.pantsItem, pending.hatItem, pending.backpackItem, pending.vestItem,
                     pending.maskItem, pending.glassesItem, pending.skinItems, pending.skinTags,
-                    pending.skinDynamicProps, pending.skillset, pending.language, pending.lobbyID);
+                    pending.skinDynamicProps, pending.skillset, pending.language, pending.lobbyID, EClientPlatform.Windows);
 
                 var probDummyPlayer = Provider.clients.LastOrDefault();
                 if (probDummyPlayer?.playerID.steamID != playerID.steamID)
@@ -323,7 +337,7 @@ namespace Dummy.Services
                 var dummyUser = new DummyUser(UserProvider, m_UserDataStore, probDummyPlayer, m_LoggerFactory, localizer,
                     options.DisableSimulations, owners);
 
-                PostAddDummy(dummyUser, options, fun);
+                PostAddDummy(dummyUser, fun);
                 return dummyUser;
             }
             catch (DummyCanceledSpawnException)
@@ -336,7 +350,7 @@ namespace Dummy.Services
                 var i = Provider.clients.FindIndex(x => x.playerID == playerID);
                 if (i >= 0)
                 {
-                    Provider.clients.RemoveAt(Provider.clients.FindIndex(x => x.playerID == playerID));
+                    Provider.clients.RemoveAt(i);
                 }
 
                 throw;
@@ -407,7 +421,7 @@ namespace Dummy.Services
             }
         }
 
-        private void PrepareInventoryDetails(SteamPending pending, bool isPlayer)
+        private static void PrepareInventoryDetails(SteamPending pending)
         {
             pending.shirtItem = (int)pending.packageShirt;
             pending.pantsItem = (int)pending.packagePants;
@@ -416,16 +430,12 @@ namespace Dummy.Services
             pending.vestItem = (int)pending.packageVest;
             pending.maskItem = (int)pending.packageMask;
             pending.glassesItem = (int)pending.packageGlasses;
-            pending.skinItems = new int[]
-            {
-                pending.shirtItem, pending.pantsItem, pending.hatItem, pending.backpackItem, pending.vestItem,
-                pending.maskItem, pending.glassesItem
-            };
+            pending.skinItems = Array.Empty<int>();
             pending.skinTags = Array.Empty<string>();
             pending.skinDynamicProps = Array.Empty<string>();
         }
 
-        private void PostAddDummy(DummyUser playerDummy, ConfigurationOptions options, ConfigurationFun fun)
+        private void PostAddDummy(DummyUser playerDummy, ConfigurationFun fun)
         {
             if (fun.AlwaysRotate)
             {
@@ -469,7 +479,7 @@ namespace Dummy.Services
 
             while (!m_Disposed)
             {
-                foreach (var dummy in DummyUsers)
+                foreach (var dummy in DummyUsers.ToArray())
                 {
                     dummy.SteamPlayer.timeLastPacketWasReceivedFromClient = Time.realtimeSinceStartup;
                 }

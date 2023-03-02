@@ -1,7 +1,10 @@
 ﻿extern alias JetBrainsAnnotations;
 using System;
+using System.ComponentModel;
+using System.Net;
 using Cysharp.Threading.Tasks;
 using Dummy.API;
+using Dummy.ConfigurationEx;
 using Dummy.Patches;
 using HarmonyLib;
 using JetBrainsAnnotations::JetBrains.Annotations;
@@ -31,6 +34,9 @@ namespace Dummy
 
         protected override UniTask OnLoadAsync()
         {
+            TypeDescriptor.AddAttributes(typeof(UnityEngine.Color), new TypeConverterAttribute(typeof(ColorTypeConverter)));
+            TypeDescriptor.AddAttributes(typeof(IPAddress), new TypeConverterAttribute(typeof(IPAddressTypeConverter)));
+
             Patch_Provider.OnNeedDummy += GiveProvider;
 
             var type = AccessTools.TypeByName("SDG.Unturned.ServerMessageHandler_ReadyToConnect");

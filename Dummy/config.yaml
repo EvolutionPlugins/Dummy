@@ -8,7 +8,6 @@
   # [WARNING] Disabling this option can break plugin but if your host-server is slow then disable (takes about ~2-5% of CPU each a dummy)
   disableSimulations: false 
 
-
 # Configuration for events (helpful for developers)
 # With those events, you can check if a dummy can enter to the server (like a real player)
 events:
@@ -44,7 +43,6 @@ default:
   hwid: 13FA0C5BD7554B2CBDB2AEAC8D9B06B8
   steamGroupId: 0
   skinColor: "#94764B"
-  color: "#ffffff"
   beardId: 5
   beardColor: "#FFFFFF"
   hairId: 9

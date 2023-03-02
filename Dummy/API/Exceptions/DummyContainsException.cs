@@ -2,7 +2,7 @@
 using OpenMod.API.Commands;
 using System;
 
-namespace Dummy.Services
+namespace Dummy.API.Exceptions
 {
     [Serializable]
     public class DummyContainsException : UserFriendlyException
