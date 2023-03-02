@@ -69,5 +69,9 @@ default:
 logs:
   # Log in the chat when dummy received a message from someone
   enableChatReceiveLog: true
+  # Log in the chat when dummy takes damage
   enableDamageLog: true
+  # Log in the chat when dummy died
   enableDeathLog: true
+  # Log in console when dummy spawns
+  enableJoinLeaveLog: false

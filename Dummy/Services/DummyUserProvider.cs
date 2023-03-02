@@ -313,7 +313,9 @@ namespace Dummy.Services
 
             PrepareInventoryDetails(pending);
 
-            await PreAddDummyAsync(pending, config.Events!);
+            var logJoinLeave = configuration.GetSection("logs:enableJoinLeaveLog").Get<bool>();
+
+            await PreAddDummyAsync(pending, config.Events!, logJoinLeave);
             try
             {
                 await UniTask.SwitchToMainThread();
@@ -337,7 +339,7 @@ namespace Dummy.Services
                 var dummyUser = new DummyUser(UserProvider, m_UserDataStore, probDummyPlayer, m_LoggerFactory, localizer,
                     options.DisableSimulations, owners);
 
-                PostAddDummy(dummyUser, fun);
+                PostAddDummy(dummyUser, fun, logJoinLeave);
                 return dummyUser;
             }
             catch (DummyCanceledSpawnException)
@@ -357,11 +359,14 @@ namespace Dummy.Services
             }
         }
 
-        private async UniTask PreAddDummyAsync(SteamPending pending, ConfigurationEvents events)
+        private async UniTask PreAddDummyAsync(SteamPending pending, ConfigurationEvents events, bool logJoinLeave)
         {
             await UniTask.SwitchToMainThread();
 
             Provider.pending.Add(pending);
+
+            if (CommandWindow.shouldLogJoinLeave && !logJoinLeave)
+                CommandWindow.shouldLogJoinLeave = logJoinLeave;
 
             if (events.CallOnCheckBanStatusWithHwid)
             {
@@ -435,12 +440,15 @@ namespace Dummy.Services
             pending.skinDynamicProps = Array.Empty<string>();
         }
 
-        private void PostAddDummy(DummyUser playerDummy, ConfigurationFun fun)
+        private void PostAddDummy(DummyUser playerDummy, ConfigurationFun fun, bool logJoinLeave)
         {
             if (fun.AlwaysRotate)
             {
                 RotateDummyTask(playerDummy, fun.RotateYaw).Forget();
             }
+
+            if (!CommandWindow.shouldLogJoinLeave && !logJoinLeave)
+                CommandWindow.shouldLogJoinLeave = true;
 
             DummyUsers.Add(playerDummy);
         }
