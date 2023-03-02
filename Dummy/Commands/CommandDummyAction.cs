@@ -7,6 +7,7 @@ using Microsoft.Extensions.Localization;
 using OpenMod.API.Commands;
 using OpenMod.Core.Commands;
 using OpenMod.Core.Ioc;
+using Steamworks;
 
 namespace Dummy.Commands
 {
@@ -39,7 +40,7 @@ namespace Dummy.Commands
                 return;
             }
 
-            var id = await Context.Parameters.GetAsync<ulong>(0);
+            var id = await Context.Parameters.GetAsync<CSteamID>(0);
 
             var dummy = await m_DummyProvider.FindDummyUserAsync(id)
                 ?? throw new UserFriendlyException(m_StringLocalizer["commands:dummyNotFound", new { Id = id }]);
