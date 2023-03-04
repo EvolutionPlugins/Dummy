@@ -284,7 +284,10 @@ namespace Dummy.Threads
 
                 Exit:
                 // simulate dummy ping
-                Player.channel.owner.lag(Time.unscaledDeltaTime);
+                if (m_Count % 50 == 0)
+                {
+                    Player.channel.owner.lag(1000f / Provider.debugUPS / 1000f);
+                }
 
                 m_Count++;
                 await UniTask.WaitForFixedUpdate();
