@@ -28,7 +28,7 @@
 		<Compile Remove="Commands/Tests/*" />
 		<None Include="Commands/Tests/*" />
 	</ItemGroup>
-	
+
     <ItemGroup>
         <EmbeddedResource Include="config.yaml" />
         <EmbeddedResource Include="translations.yaml" />
@@ -50,8 +50,8 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="OpenMod.Unturned" Version="3.3.9" />
-        <PackageReference Include="OpenMod.Unturned.Redist" Version="3.22.21.4" />
+        <PackageReference Include="OpenMod.Unturned" Version="3.7.4" />
+        <PackageReference Include="OpenMod.Unturned.Redist" Version="3.23.12.3" />
     </ItemGroup>
 
     <Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
