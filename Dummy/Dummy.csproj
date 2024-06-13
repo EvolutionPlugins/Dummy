@@ -33,6 +33,10 @@
     <EmbeddedResource Include="translations.yaml"/>
   </ItemGroup>
 
+  <PropertyGroup>
+    <PublicizerRuntimeStrategies>Unsafe</PublicizerRuntimeStrategies>
+  </PropertyGroup>
+
   <ItemGroup>
     <Publicize Include="Assembly-CSharp" IncludeCompilerGeneratedMembers="false"/>
   </ItemGroup>
@@ -43,6 +47,15 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="OpenMod.Unturned" Version="3.8.7"/>
-    <PackageReference Include="OpenMod.Unturned.Redist" Version="3.23.12.3"/>
+    <PackageReference Include="OpenMod.Unturned.Redist" Version="*-*"/>
   </ItemGroup>
+
+  <Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
+    <ItemGroup>
+      <ReferencePath Condition="'%(FileName)' == 'JetBrains.Annotations'">
+        <Aliases>JetBrainsAnnotations</Aliases>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
+  
 </Project>
