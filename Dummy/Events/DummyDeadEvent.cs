@@ -67,12 +67,14 @@ namespace Dummy.Events
                 return;
             }
 
+            // todo rewrite to revive and then teleport it back(?)
+
             var life = player.Player.life;
             var transform = life.transform;
             life.sendRevive();
 
             s_SendRevive.InvokeAndLoopback(life.GetNetId(), ENetReliability.Reliable,
-                Provider.EnumerateClients_Remote(), transform.position,
+                Provider.GatherRemoteClientConnections(), transform.position,
                 MeasurementTool.angleToByte(transform.rotation.eulerAngles.y));
         }
     }

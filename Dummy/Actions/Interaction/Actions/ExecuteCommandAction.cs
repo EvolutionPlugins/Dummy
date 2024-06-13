@@ -1,5 +1,4 @@
-﻿extern alias JetBrainsAnnotations;
-using Dummy.API;
+﻿using Dummy.API;
 using Dummy.Users;
 using OpenMod.API.Commands;
 using System;

@@ -26,7 +26,7 @@ namespace Dummy.Players
             return other.SteamID.Equals(SteamId);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is DummyPlayer other) return Equals(other);
             else return false;

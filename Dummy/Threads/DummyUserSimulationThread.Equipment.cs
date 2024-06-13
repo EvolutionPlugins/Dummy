@@ -12,7 +12,7 @@ public partial class DummyUserSimulationThread
 
     private void SimulateEquipment()
     {
-        if (Player.equipment.isSelected)
+        if (Player.equipment.HasValidUseable)
         {
             // todo: simulate useable
             return;

@@ -262,7 +262,7 @@ namespace Dummy.Services
 
                 pending = new(GetTransportConnection(), playerID, userSteamPlayer.isPro,
                     userSteamPlayer.face, userSteamPlayer.hair, userSteamPlayer.beard, userSteamPlayer.skin,
-                    userSteamPlayer.color, userSteamPlayer.markerColor, userSteamPlayer.hand,
+                    userSteamPlayer.color, userSteamPlayer.markerColor, userSteamPlayer.IsLeftHanded,
                     (ulong)userSteamPlayer.shirtItem, (ulong)userSteamPlayer.pantsItem, (ulong)userSteamPlayer.hatItem,
                     (ulong)userSteamPlayer.backpackItem, (ulong)userSteamPlayer.vestItem,
                     (ulong)userSteamPlayer.maskItem, (ulong)userSteamPlayer.glassesItem, Array.Empty<ulong>(),
@@ -275,7 +275,7 @@ namespace Dummy.Services
             }
             else
             {
-                settings ??= config.Default;
+                settings ??= config!.Default;
                 if (settings is null)
                 {
                     throw new ArgumentNullException(nameof(settings));
@@ -315,7 +315,7 @@ namespace Dummy.Services
 
             var logJoinLeave = configuration.GetSection("logs:enableJoinLeaveLog").Get<bool>();
 
-            await PreAddDummyAsync(pending, config.Events!, logJoinLeave);
+            await PreAddDummyAsync(pending, config!.Events!, logJoinLeave);
             try
             {
                 await UniTask.SwitchToMainThread();
@@ -474,7 +474,7 @@ namespace Dummy.Services
                 throw new DummyContainsException(localizer, id.m_SteamID); // or id is taken
             }
 
-            var amountDummiesConfig = configuration.Get<Configuration>().Options?.AmountDummies ?? 0;
+            var amountDummiesConfig = configuration.Get<Configuration>()!.Options?.AmountDummies ?? 0;
             if (amountDummiesConfig != 0 && DummyUsers.Count + 1 > amountDummiesConfig)
             {
                 throw new DummyOverflowsException(localizer, (byte)DummyUsers.Count, amountDummiesConfig);

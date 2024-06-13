@@ -18,7 +18,7 @@ namespace Dummy.NetTransports
             var random = new System.Random();
             var config = pluginAccessor.Instance!.Configuration.Get<Configuration>();
 
-            m_IP = config.Connection.RandomIp || config.Default.IP == null
+            m_IP = config!.Connection.RandomIp || config.Default.IP == null
                 ? $"{random.Next(1, 256)}.{random.Next(256)}.{random.Next(256)}.{random.Next(256)}"
                 : (m_Address = config.Default.IP).ToString();
             m_Address ??= IPAddress.Parse(m_IP);
@@ -75,7 +75,7 @@ namespace Dummy.NetTransports
             if (num >= NetReflection.clientMethodsLength)
                 return;
 
-            var method = NetReflection.clientMethods[num];
+            var method = NetReflection.clientMethods[(int)num];
 
             if (method.declaringType == typeof(PlayerInput)
                 && method.debugName.Contains("ReceiveSimulateMispredictedInputs"))

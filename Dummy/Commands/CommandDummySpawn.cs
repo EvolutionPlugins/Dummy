@@ -27,7 +27,7 @@ namespace Dummy.Commands
 
         protected override async Task OnExecuteAsync()
         {
-            var settings = m_Configuration.Get<Configuration>().Default;
+            var settings = m_Configuration.Get<Configuration>()!.Default;
             var name = CommandDummy.s_NameArgument.GetArgument(Context.Parameters);
             if (!string.IsNullOrEmpty(name))
             {

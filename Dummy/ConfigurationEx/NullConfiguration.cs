@@ -29,10 +29,10 @@ namespace Dummy.ConfigurationEx
             return NullChangeToken.Singleton;
         }
 
-        public string this[string key]
+        public string? this[string key]
         {
             get => default!;
-            set {}
+            set { }
         }
     }
 }

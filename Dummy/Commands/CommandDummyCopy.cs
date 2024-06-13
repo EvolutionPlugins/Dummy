@@ -41,7 +41,7 @@ namespace Dummy.Commands
             {
                 settings = m_Configuration.GetSection("default").Get<ConfigurationSettings>();
 
-                settings.CharacterName = name!;
+                settings!.CharacterName = name!;
                 settings.NickName = name!;
                 settings.PlayerName = name!;
             }
