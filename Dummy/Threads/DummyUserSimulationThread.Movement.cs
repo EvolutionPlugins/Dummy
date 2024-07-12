@@ -43,9 +43,6 @@ public partial class DummyUserSimulationThread
         {
             case EPlayerStance.SITTING:
                 break;
-            case EPlayerStance.DRIVING:
-                SimulateVehicle();
-                break;
             case EPlayerStance.CLIMB:
                 //s_FallProperty.SetValue(movement, c_Jump);
                 m_Velocity = new(0, Move.z * speed * 0.5f, 0);
@@ -138,7 +135,7 @@ public partial class DummyUserSimulationThread
                         m_Velocity.y = Mathf.Max(maxFall, m_Velocity.y);
 
                         var moveHorizontalMagnitude = moveVector.GetHorizontalMagnitude();
-                        var horizontal = m_Velocity.GetHorizontal();
+                        var horizontalVelocity = m_Velocity.GetHorizontal();
                         var horizontalMagnitude2 = m_Velocity.GetHorizontalMagnitude();
                         float maxMagnitude;
                         if (horizontalMagnitude2 > moveHorizontalMagnitude)
@@ -152,7 +149,7 @@ public partial class DummyUserSimulationThread
                         }
 
                         var a3 = moveVector * (4f * Provider.modeConfigData.Gameplay.AirStrafing_Acceleration_Multiplier);
-                        var vector2 = horizontal + (a3 * deltaTime);
+                        var vector2 = horizontalVelocity + (a3 * deltaTime);
                         vector2 = vector2.ClampHorizontalMagnitude(maxMagnitude);
                         m_Velocity.x = vector2.x;
                         m_Velocity.z = vector2.z;
@@ -186,26 +183,19 @@ public partial class DummyUserSimulationThread
         }
 
         ForceCreatePacket:
-        if (stance is EPlayerStance.DRIVING)
-        {
-            m_Packet = new DrivingPlayerInputPacket();
-        }
-        else
-        {
-            var x = (int)Move.x;
-            var z = (int)Move.z;
+        var x = (int)Move.x;
+        var z = (int)Move.z;
 
-            var horizontal = (byte)(x + 1);
-            var vertical = (byte)(z + 1);
+        var horizontal = (byte)(x + 1);
+        var vertical = (byte)(z + 1);
 
-            m_Packet = new WalkingPlayerInputPacket
-            {
-                analog = (byte)((horizontal << 4) | vertical),
-                clientPosition = transform.position,
-                pitch = m_Pitch,
-                yaw = m_Yaw
-            };
-        }
+        m_Packet = new WalkingPlayerInputPacket
+        {
+            analog = (byte)((horizontal << 4) | vertical),
+            clientPosition = transform.position,
+            pitch = m_Pitch,
+            yaw = m_Yaw
+        };
 
         m_Packet.clientSimulationFrameNumber = m_Simulation;
         m_Packet.recov = Player.input.recov;

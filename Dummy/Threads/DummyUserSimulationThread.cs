@@ -249,25 +249,6 @@ namespace Dummy.Threads
                     }
                     m_Packet.keys = compressedKeys;
 
-                    if (m_Packet is DrivingPlayerInputPacket drivingPlayerInputPacket)
-                    {
-                        var vehicle = Player.movement.getVehicle();
-
-                        if (vehicle != null)
-                        {
-                            var transform = vehicle.transform;
-                            drivingPlayerInputPacket.position = vehicle.asset.engine is EEngine.TRAIN
-                                ? Patch_InteractableVehicle.PackRoadPositionOriginal(vehicle.roadPosition)
-                                : vehicle.transform.position;
-
-                            drivingPlayerInputPacket.rotation = transform.rotation;
-
-                            drivingPlayerInputPacket.speed = (byte)(Mathf.Clamp(vehicle.speed, -100f, 100f) + 128f);
-                            drivingPlayerInputPacket.physicsSpeed = (byte)(Mathf.Clamp(vehicle.physicsSpeed, -100f, 100f) + 128f);
-                            drivingPlayerInputPacket.turn = (byte)(Move.x + 1);
-                        }
-                    }
-
                     var netWriter = NetMessages.GetInvokableWriter();
                     netWriter.Reset();
                     m_Packet.write(netWriter);
