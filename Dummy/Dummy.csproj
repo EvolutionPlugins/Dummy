@@ -24,13 +24,13 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(Configuration)' == 'Release'">
-    <Compile Remove="Commands/Tests/*"/>
-    <None Include="Commands/Tests/*"/>
+    <Compile Remove="Commands/Tests/*" />
+    <None Include="Commands/Tests/*" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="config.yaml"/>
-    <EmbeddedResource Include="translations.yaml"/>
+    <EmbeddedResource Include="config.yaml" />
+    <EmbeddedResource Include="translations.yaml" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -38,7 +38,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Publicize Include="Assembly-CSharp" IncludeCompilerGeneratedMembers="false"/>
+    <Publicize Include="Assembly-CSharp" IncludeCompilerGeneratedMembers="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,8 +46,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="OpenMod.Unturned" Version="3.8.7"/>
-    <PackageReference Include="OpenMod.Unturned.Redist" Version="*-*"/>
+    <PackageReference Include="OpenMod.Unturned" Version="3.8.10" />
+    <PackageReference Include="OpenMod.Unturned.Redist" Version="3.24.6.1" />
   </ItemGroup>
 
   <Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
