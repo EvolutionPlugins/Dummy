@@ -84,5 +84,11 @@ namespace Dummy.NetTransports
                 method.readMethod(in cic);
             }
         }
+
+        public bool TryGetSteamId(out ulong steamId)
+        {
+            steamId = 0;
+            return false;
+        }
     }
 }
