@@ -25,7 +25,7 @@ namespace Dummy.Permissions
                 return true;
             }
 
-            var options = pluginAccessor.Instance!.Configuration.GetValue<ConfigurationOptions>("options");
+            var options = pluginAccessor.Instance!.Configuration.Get<Configuration>()!.Options;
             return options!.CanExecuteCommands || options.IsAdmin;
         })
         {
